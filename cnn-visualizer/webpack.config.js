@@ -3,10 +3,11 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-    entry: './src/app.js',
+    entry: './src/app.js', // ✅ Fix: Ensure this matches your main JS file
     output: {
         filename: 'bundle.js',
         path: path.resolve(__dirname, 'dist'),
+        clean: true // ✅ Automatically clean old files in `dist/`
     },
     module: {
         rules: [
@@ -33,12 +34,13 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
-            template: './src/index.html',
+            template: './public/index.html',
             filename: 'index.html'
         }),
         new CopyWebpackPlugin({
             patterns: [
-                { from: 'models', to: 'models' }
+                { from: 'public/assets', to: 'assets' }, // ✅ Fix: Copies `assets` folder
+                { from: 'models', to: 'models' }  // ✅ Ensure models are copied
             ]
         })
     ],
@@ -50,9 +52,8 @@ module.exports = {
             directory: path.join(__dirname, 'dist'),
         },
         compress: true,
-        port: 8080,
+        port: 3000,
         open: true,
-        // Add this to help with debugging
         client: {
             overlay: true,
             logging: 'info',

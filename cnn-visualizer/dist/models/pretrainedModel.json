@@ -1,0 +1,48 @@
+{
+  "model": {
+    "name": "Pretrained CNN Model",
+    "version": "1.0",
+    "layers": [
+      {
+        "type": "conv2d",
+        "filters": 32,
+        "kernel_size": [3, 3],
+        "activation": "relu",
+        "input_shape": [224, 224, 3]
+      },
+      {
+        "type": "maxpooling2d",
+        "pool_size": [2, 2]
+      },
+      {
+        "type": "conv2d",
+        "filters": 64,
+        "kernel_size": [3, 3],
+        "activation": "relu"
+      },
+      {
+        "type": "maxpooling2d",
+        "pool_size": [2, 2]
+      },
+      {
+        "type": "flatten"
+      },
+      {
+        "type": "dense",
+        "units": 128,
+        "activation": "relu"
+      },
+      {
+        "type": "dense",
+        "units": 10,
+        "activation": "softmax"
+      }
+    ],
+    "optimizer": {
+      "type": "adam",
+      "learning_rate": 0.001
+    },
+    "loss_function": "categorical_crossentropy",
+    "metrics": ["accuracy"]
+  }
+}

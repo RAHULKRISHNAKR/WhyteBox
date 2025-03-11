@@ -1,14 +1,20 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import CNNModel from './components/CNNModel';
-import ExplainabilityView from './components/ExplainabilityView';
-import LayerVisualizer from './components/LayerVisualizer';
-import UserControls from './components/UserControls';
-import ThreeJSCNNVisualizer from './components/ThreeJSCNNVisualizer';
-import HomePage from './components/HomePage';
-import BeginnersGuide from './components/BeginnersGuide';
-import ExplainabilityDocs from './components/ExplainabilityDocs';
-import './assets/css/styles.css';
+import CNNModel from '../public/components/CNNModel';
+import ExplainabilityView from '../public/components/ExplainabilityView';
+import LayerVisualizer from '../public/components/LayerVisualizer';
+import UserControls from '../public/components/UserControls';
+import ThreeJSCNNVisualizer from '../public/components/ThreeJSCNNVisualizer';
+import HomePage from '../public/components/HomePage';
+import BeginnersGuide from '../public/components/BeginnersGuide';
+import ExplainabilityDocs from '../public/components/ExplainabilityDocs';
+import '../public/assets/css/styles.css';
+import * as THREE from 'three';
+window.THREE = THREE; // ✅ Makes Three.js global
+import * as TWEEN from '@tweenjs/tween.js';
+window.TWEEN = TWEEN; // Ensure it's available globally
+
+
 
 class App extends React.Component {
     constructor(props) {

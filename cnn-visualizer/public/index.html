@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhyteBox - CNN Visualizer</title>
+
+    
+    <!-- ✅ Fix: Corrected path to CSS -->
+    <link rel="stylesheet" href="/assets/css/styles.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.min.js"></script>
+    
+    <!-- ✅ TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.18.0/dist/tf.min.js"></script>
+    
+    <!-- ✅ Fix: Load Three.js from CDN -->
+    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+
+    <script>
+        function handleTensorSpaceError(event) {
+            console.error("❌ TensorSpace failed to load:", event);
+        }
+    </script>
+    
+    <!-- ✅ Fix: Load TensorSpace from correct path -->
+    <script src="/assets/js/tensorspace.min.js" onerror="handleTensorSpaceError(1)"></script>
+
+    <script>
+        // ✅ Updated TensorSpace Fallback System
+        let tsErrorCount = 0;
+        const tensorspaceSources = [
+            "/assets/js/tensorspace.min.js", // ✅ Local source (first try)
+            "https://cdn.jsdelivr.net/npm/tensorspace@0.6.1/dist/tensorspace.min.js", // ✅ Primary CDN
+            "https://unpkg.com/tensorspace@0.6.1/dist/tensorspace.min.js", // ✅ Secondary CDN
+            "https://cdn.jsdelivr.net/npm/tensorspace@0.3.0/dist/tensorspace.min.js" // ✅ Fallback to older version
+        ];
+        
+        function handleTensorSpaceError(sourceIndex) {
+            tsErrorCount++;
+            console.log(`TensorSpace source #${sourceIndex} failed. Trying next source...`);
+            
+            if (sourceIndex < tensorspaceSources.length - 1) {
+                // Try next source
+                const script = document.createElement('script');
+                script.src = tensorspaceSources[sourceIndex + 1];
+                script.onload = () => checkTensorSpaceLoaded(true);
+                script.onerror = () => handleTensorSpaceError(sourceIndex + 1);
+                document.head.appendChild(script);
+            } else {
+                // All sources failed, create fallback
+                console.error("All TensorSpace sources failed to load");
+                setTimeout(createFallbackTSP, 1000);
+            }
+        }
+        
+        function checkTensorSpaceLoaded(fromRetry = false) {
+            if (window.tensorspace) {
+                console.log("TensorSpace loaded successfully as window.tensorspace");
+                window.TSP = window.tensorspace;
+                const event = new CustomEvent('tsp-loaded');
+                window.dispatchEvent(event);
+                return true;
+            } else if (window.TSP) {
+                console.log("TensorSpace loaded successfully as window.TSP");
+                const event = new CustomEvent('tsp-loaded');
+                window.dispatchEvent(event);
+                return true;
+            } else if (fromRetry) {
+                console.error("TensorSpace still not available after loading attempt");
+                return false;
+            }
+            return false;
+        }
+        
+        // When DOM is loaded, check for TensorSpace
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM Content Loaded");
+            
+            // Check if TensorSpace loaded on initial page load
+            setTimeout(() => {
+                if (!checkTensorSpaceLoaded()) {
+                    handleTensorSpaceError(0);
+                }
+            }, 1000);
+            
+            // If nothing works in 10 seconds, create a minimal fallback
+            setTimeout(() => {
+                if (!window.TSP && !window.tensorspace) {
+                    createFallbackTSP();
+                }
+            }, 10000);
+        });
+        
+        function createFallbackTSP() {
+            console.log("Creating fallback TSP object");
+            window.TSP = {
+                sequential: function(container) {
+                    const layers = [];
+                    return {
+                        add: function(layer) { layers.push(layer); return this; },
+                        init: function(cb) { setTimeout(cb, 100); return Promise.resolve(); },
+                        load: function() {
+                            if (container) {
+                                while (container.firstChild) container.removeChild(container.firstChild);
+                                const msg = document.createElement('div');
+                                msg.innerHTML = '<p style="padding:20px;text-align:center">TensorSpace library could not be loaded.<br>Please refresh the page or try a different browser.</p>';
+                                container.appendChild(msg);
+                            }
+                        },
+                        predict: function() {},
+                        resetModel: function() {},
+                        layers: layers,
+                        dispose: function() {}
+                    };
+                },
+                layers: {
+                    GreyscaleInput: function(c) { return {name: c.name, onMouseOver(){}, onMouseOut(){}, onClick(){}}; },
+                    Conv2d: function(c) { return {name: c.name, onMouseOver(){}, onMouseOut(){}, onClick(){}}; },
+                    Pooling2d: function(c) { return {name: c.name, onMouseOver(){}, onMouseOut(){}, onClick(){}}; },
+                    Activation: function(c) { return {name: c.name, onMouseOver(){}, onMouseOut(){}, onClick(){}}; },
+                    Dense: function(c) { return {name: c.name, onMouseOver(){}, onMouseOut(){}, onClick(){}}; },
+                    Flatten: function(c) { return {name: c.name, onMouseOver(){}, onMouseOut(){}, onClick(){}}; }
+                }
+            };
+            const event = new CustomEvent('tsp-loaded');
+            window.dispatchEvent(event);
+        }
+    </script>
+</head>
+<body>
+    <div id="app"></div>
+</body>
+</html>
