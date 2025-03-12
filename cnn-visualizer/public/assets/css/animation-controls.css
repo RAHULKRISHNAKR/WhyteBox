@@ -1,0 +1,118 @@
+.animation-controls {
+  margin-top: 20px;
+  padding: 15px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.animation-controls h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 18px;
+  color: #333;
+}
+
+.input-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.sample-image-btn {
+  padding: 8px 12px;
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.sample-image-btn:hover {
+  background-color: #3a7bc8;
+}
+
+.sample-image-btn:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.image-preview {
+  margin: 15px 0;
+  padding: 10px;
+  background-color: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  display: inline-block;
+}
+
+.image-preview h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  color: #555;
+}
+
+.image-preview img {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.playback-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+  padding: 10px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+}
+
+.playback-controls button {
+  padding: 6px 12px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  min-width: 60px;
+}
+
+.playback-controls button:hover {
+  background-color: #5a6268;
+}
+
+.playback-controls button:disabled {
+  background-color: #adb5bd;
+  cursor: not-allowed;
+}
+
+.playback-controls select {
+  padding: 6px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.progress-indicator {
+  margin-left: auto;
+  font-size: 14px;
+  color: #495057;
+  font-weight: 500;
+}
+
+.activation-info {
+  margin-top: 15px;
+  padding: 15px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.activation-info h4 {
+  margin-top: 0;
+  color: #4a90e2;
+}

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as tf from '@tensorflow/tfjs';
 import * as THREE from 'three';
+import '../assets/css/animation-controls.css';
 
 // Renamed the prop from 'model' to 'modelData' for clarity
 const ModelVisualizer = ({ modelData }) => {

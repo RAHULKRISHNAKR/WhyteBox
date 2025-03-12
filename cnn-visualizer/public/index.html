@@ -127,6 +127,21 @@
             window.dispatchEvent(event);
         }
     </script>
+
+    <!-- Add a fallback for Three.js -->
+    <script>
+        // Check if Three.js loaded correctly
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                if (typeof THREE === 'undefined') {
+                    console.error('Three.js failed to load. Attempting fallback...');
+                    const script = document.createElement('script');
+                    script.src = "https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js";
+                    document.head.appendChild(script);
+                }
+            }, 1000);
+        });
+    </script>
 </head>
 <body>
     <div id="app"></div>

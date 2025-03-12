@@ -210,6 +210,7 @@ class App extends React.Component {
                                     onParameterChange={this.handleParameterChange}
                                 />
                                 <ThreeJSCNNVisualizer 
+                                    key="primary-visualizer"
                                     model={model} 
                                     modelType={selectedModelType}
                                     onLayerSelect={this.handleLayerChange}
