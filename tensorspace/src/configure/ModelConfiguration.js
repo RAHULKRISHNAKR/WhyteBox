@@ -1,0 +1,414 @@
+/**
+ * @author syt123450 / https://github.com/syt123450
+ */
+
+function ModelConfiguration( config ) {
+
+	this.layerInitStatus = false;
+	this.layerShape = "rect";
+	this.aggregationStrategy = "average";
+	this.relationSystem = true;
+	this.textSystem = true;
+	this.stats = false;
+	this.animeTime = 2000;
+	this.minOpacity = 0.4;
+	this.predictDataShapes = undefined;
+	this.feedInputs = undefined;
+	this.hasCloseButton = true;
+	this.color = {
+
+		background: 0x000000,
+		input1d: 0xEEEEEE,
+		greyscaleInput: 0xEEEEEE,
+		RGBInput: 0xEEEEEE,
+		conv1d: 0xF7FE2E,
+		conv2d: 0xF7FE2E,
+		depthwiseConv2d: 0xFBBF1F,
+		conv2dTranspose: 0xff5722,
+		cropping1d: 0xcefc86,
+		cropping2d: 0xcefc86,
+		pooling1d: 0x00ffff,
+		pooling2d: 0x00ffff,
+		dense: 0x00ff00,
+		padding1d: 0x6eb6ff,
+		padding2d: 0x6eb6ff,
+		output1d: 0xEEEEEE,
+		output2d: 0xEEEEEE,
+		outputDetection: 0xEEEEEE,
+		yoloGrid: 0xEEEEEE,
+		flatten: 0xdfe2fe,
+		globalPooling1d: 0x6eb6ff,
+		globalPooling2d: 0x6eb6ff,
+		upSampling1d: 0x30e3ca,
+		upSampling2d: 0x30e3ca,
+		reshape: 0xa287f4,
+		activation1d: 0xfc5c9c,
+		activation2d: 0xfc5c9c,
+		activation3d: 0xfc5c9c,
+		basicLayer1d: 0xf08a5d,
+		basicLayer2d: 0xf08a5d,
+		basicLayer3d: 0xf08a5d,
+
+		add: 0xe23e57,
+		subtract: 0xe23e57,
+		multiply: 0xe23e57,
+		maximum: 0xe23e57,
+		average: 0xe23e57,
+		dot: 0xe23e57,
+		concatenate: 0xf9a1bc
+
+	};
+
+	if ( config !== undefined ) {
+
+		if ( config.layerShape !== undefined ) {
+
+			this.layerShape = config.layerShape;
+
+		}
+
+		if ( config.aggregationStrategy !== undefined ) {
+
+			if ( config.aggregationStrategy === "average" || config.aggregationStrategy === "max" ) {
+
+				this.aggregationStrategy = config.aggregationStrategy;
+
+			} else {
+
+				console.error( "\"aggregationStrategy\" property do not support config for " + config.aggregationStrategy + " use \"average\" or \"max\" instead." );
+
+			}
+
+		}
+
+		if ( config.relationSystem !== undefined ) {
+
+			if ( config.relationSystem === "enable" ) {
+
+				this.relationSystem = true;
+
+			} else if ( config.relationSystem === "disable" ) {
+
+				this.relationSystem = false;
+
+			} else {
+
+				console.error( "\"relationSystem\" property do not support config for " + config.relationSystem + " use \"enable\" or \"disable\" instead." );
+
+			}
+
+		}
+
+		if ( config.textSystem !== undefined ) {
+
+			if ( config.textSystem === "enable" ) {
+
+				this.textSystem = true;
+
+			} else if ( config.textSystem === "disable" ) {
+
+				this.textSystem = false;
+
+			} else {
+
+				console.error( "\"textSystem\" property do not support config for " + config.textSystem + " use \"enable\" or \"disable\" instead." );
+
+			}
+
+		}
+
+		if ( config.layerInitStatus !== undefined ) {
+
+			if ( config.layerInitStatus === "close" ) {
+
+				this.layerInitStatus = false;
+
+			} else if ( config.layerInitStatus === "open" ) {
+
+				this.layerInitStatus = true;
+
+			} else {
+
+				console.error( "LayerInitStatus " + config.layerInitStatus +" is not support." );
+
+			}
+
+		}
+
+		if ( config.animeTime !== undefined ) {
+
+			if ( config.animeTime > 0 ) {
+
+				this.animeTime = config.animeTime;
+
+			}
+
+		}
+
+		if ( config.minOpacity !== undefined ) {
+
+			if ( config.minOpacity > 0 ) {
+
+				this.minOpacity = config.minOpacity;
+
+			}
+
+		}
+
+		if ( config.stats !== undefined ) {
+
+			this.stats = config.stats;
+
+		}
+
+		if ( config.predictDataShapes !== undefined ) {
+
+			this.predictDataShapes = config.predictDataShapes;
+
+		}
+
+		if ( config.feedInputs !== undefined ) {
+
+			this.feedInputs = config.feedInputs;
+
+		}
+		
+		if ( config.hasCloseButton !== undefined ) {
+			
+			this.hasCloseButton = config.hasCloseButton;
+			
+		}
+
+		if ( config.color !== undefined ) {
+
+			if ( config.color.background !== undefined ) {
+
+				this.color.background = config.color.background;
+
+			}
+
+			if ( config.color.input1d !== undefined ) {
+
+				this.color.input1d = config.color.input1d;
+
+			}
+
+			if ( config.color.greyscaleInput !== undefined ) {
+
+				this.color.greyscaleInput = config.color.greyscaleInput;
+
+			}
+
+			if ( config.color.RGBInput !== undefined ) {
+
+				this.color.RGBInput = config.color.RGBInput;
+
+			}
+
+			if ( config.color.conv1d !== undefined ) {
+
+				this.color.conv1d = config.color.conv1d;
+
+			}
+
+			if ( config.color.conv2d !== undefined ) {
+
+				this.color.conv2d = config.color.conv2d;
+
+			}
+
+			if ( config.color.conv2dTranspose !== undefined ) {
+
+				this.color.conv2dTranspose = config.color.conv2dTranspose;
+
+			}
+
+			if ( config.color.cropping1d !== undefined ) {
+
+				this.color.cropping1d = config.color.cropping1d;
+
+			}
+
+			if ( config.color.cropping2d !== undefined ) {
+
+				this.color.cropping2d = config.color.cropping2d;
+
+			}
+
+			if ( config.color.pooling1d !== undefined ) {
+
+				this.color.pooling1d = config.color.pooling1d;
+
+			}
+
+			if ( config.color.pooling2d !== undefined ) {
+
+				this.color.pooling2d = config.color.pooling2d;
+
+			}
+
+			if ( config.color.dense !== undefined ) {
+
+				this.color.dense = config.color.dense;
+
+			}
+
+			if ( config.color.padding1d !== undefined ) {
+
+				this.color.padding1d = config.color.padding1d;
+
+			}
+
+			if ( config.color.padding2d !== undefined ) {
+
+				this.color.padding2d = config.color.padding2d;
+
+			}
+
+			if ( config.color.output1d !== undefined ) {
+
+				this.color.output1d = config.color.output1d;
+
+			}
+
+			if ( config.color.output2d !== undefined ) {
+
+				this.color.output2d = config.color.output2d;
+
+			}
+
+			if ( config.color.outputDetection !== undefined ) {
+
+				this.color.outputDetection = config.color.outputDetection;
+
+			}
+
+			if ( config.color.yoloGrid !== undefined ) {
+
+				this.color.yoloGrid = config.color.yoloGrid;
+
+			}
+
+			if ( config.color.flatten !== undefined ) {
+
+				this.color.flatten = config.color.flatten;
+
+			}
+
+			if ( config.color.globalPooling1d !== undefined ) {
+
+				this.color.globalPooling1d = config.color.globalPooling1d;
+
+			}
+
+			if ( config.color.globalPooling2d !== undefined ) {
+
+				this.color.globalPooling2d = config.color.globalPooling2d;
+
+			}
+
+			if ( config.color.upSampling1d !== undefined ) {
+
+				this.color.upSampling1d = config.color.upSampling1d;
+
+			}
+
+			if ( config.color.upSampling2d !== undefined ) {
+
+				this.color.upSampling2d = config.color.upSampling2d;
+
+			}
+
+			if ( config.color.reshape !== undefined ) {
+
+				this.color.reshape = config.color.reshape;
+
+			}
+
+			if ( config.color.activation1d !== undefined ) {
+
+				this.color.activation1d = config.color.activation1d;
+
+			}
+
+			if ( config.color.activation2d !== undefined ) {
+
+				this.color.activation2d = config.color.activation2d;
+
+			}
+
+			if ( config.color.activation3d !== undefined ) {
+
+				this.color.activation3d = config.color.activation3d;
+
+			}
+
+			if ( config.color.basicLayer1d !== undefined ) {
+
+				this.color.basicLayer1d = config.color.basicLayer1d;
+
+			}
+
+			if ( config.color.basicLayer2d !== undefined ) {
+
+				this.color.basicLayer2d = config.color.basicLayer2d;
+
+			}
+
+			if ( config.color.basicLayer3d !== undefined ) {
+
+				this.color.basicLayer3d = config.color.basicLayer3d;
+
+			}
+
+			if ( config.color.add !== undefined ) {
+
+				this.color.add = config.color.add;
+
+			}
+
+			if ( config.color.subtract !== undefined ) {
+
+				this.color.subtract = config.color.subtract;
+
+			}
+
+			if ( config.color.multiply !== undefined ) {
+
+				this.color.multiply = config.color.multiply;
+
+			}
+
+			if ( config.color.maximum !== undefined ) {
+
+				this.color.maximum = config.color.maximum;
+
+			}
+
+			if ( config.color.average !== undefined ) {
+
+				this.color.average = config.color.average;
+
+			}
+
+			if ( config.color.dot !== undefined ) {
+
+				this.color.dot = config.color.dot;
+
+			}
+
+			if ( config.color.concatenate !== undefined ) {
+
+				this.color.concatenate = config.color.concatenate;
+
+			}
+
+		}
+
+	}
+
+	return this;
+
+}
+
+export { ModelConfiguration };

@@ -1,0 +1,298 @@
+/**
+ * @author syt123450 / https://github.com/syt123450
+ */
+
+import * as THREE from "three";
+import { SideFaceRatio } from "../utils/Constant";
+import { TextFont } from "../assets/fonts/TextFont";
+import { TextHelper } from "../utils/TextHelper";
+import { RenderPreprocessor } from "../utils/RenderPreprocessor";
+
+function InputMap3d( width, height, unitLength, actualDepth, initCenter, color, minOpacity ) {
+
+	this.width = width;
+	this.height = height;
+	this.depth = 3;
+	this.unitLength = unitLength;
+	this.actualWidth = this.unitLength * this.width;
+	this.actualHeight = this.unitLength * this.height;
+	this.actualDepth = actualDepth;
+
+	this.minOpacity = minOpacity;
+	this.sideOpacity = SideFaceRatio * this.minOpacity;
+
+	this.fmCenter = {
+
+		x: initCenter.x,
+		y: initCenter.y,
+		z: initCenter.z
+
+	};
+
+	this.color = color;
+
+	this.neuralLength = 3 * width * height;
+
+	this.dataArray = undefined;
+	this.dataArrayCache = undefined;
+	this.dataTexture = undefined;
+	
+	this.basicMaterial = undefined;
+
+	this.colorMap = undefined;
+	this.colorGroup = undefined;
+
+	this.font = TextFont;
+	this.textSize = TextHelper.calcFmTextSize( this.actualWidth );
+
+	this.init();
+
+}
+
+InputMap3d.prototype = {
+
+	init: function() {
+
+		let amount = 3 * this.width * this.height;
+
+		let data = new Uint8Array( amount );
+		this.dataArray = data;
+
+		for ( let i = 0; i < amount; i++ ) {
+
+			data[ i ] = 255 * this.minOpacity;
+
+		}
+
+		let dataTex = new THREE.DataTexture( data, this.width, this.height, THREE.RGBFormat );
+		this.dataTexture = dataTex;
+
+		dataTex.magFilter = THREE.NearestFilter;
+		dataTex.needsUpdate = true;
+
+		let boxGeometry = new THREE.BoxBufferGeometry( this.actualWidth, this.actualDepth, this.actualHeight );
+
+		let material = new THREE.MeshBasicMaterial( { map: dataTex } );
+
+		let basicMaterial = new THREE.MeshBasicMaterial( {
+
+			color: this.color,
+			transparent: true,
+			opacity: this.sideOpacity
+
+		} );
+		
+		this.basicMaterial = basicMaterial;
+
+		let materials = [
+
+			basicMaterial,
+			basicMaterial,
+			material,
+			material,
+			basicMaterial,
+			basicMaterial
+		];
+
+		let cube = new THREE.Mesh( boxGeometry, materials );
+
+		cube.elementType = "RGBInputElement";
+		cube.clickable = true;
+		cube.hoverable = true;
+		cube.draggable = true;
+		cube.emissiveable = true;
+		
+		cube.context = this;
+
+		this.colorMap = cube;
+
+		let colorGroup = new THREE.Object3D();
+		colorGroup.position.set( this.fmCenter.x, this.fmCenter.y, this.fmCenter.z );
+		colorGroup.add( this.colorMap );
+
+		this.colorGroup = colorGroup;
+
+	},
+
+	getElement: function() {
+
+		return this.colorGroup;
+
+	},
+
+	updateVis: function( colors ) {
+
+		let renderData = RenderPreprocessor.preProcessRGBInputColor( colors, this.width, this.height );
+
+		for ( let i = 0; i < this.dataArray.length; i++ ) {
+
+			this.dataArray[ i ] = 255 * renderData[ i ];
+
+		}
+
+		this.dataTexture.needsUpdate = true;
+
+	},
+
+	clear: function() {
+
+		for ( let i = 0; i < this.dataArray.length; i++ ) {
+
+			this.dataArray[ i ] = 255 * this.minOpacity;
+
+		}
+
+		this.dataTexture.needsUpdate = true;
+
+	},
+
+	setLayerIndex: function( layerIndex ) {
+
+		this.colorMap.layerIndex = layerIndex;
+
+	},
+
+	showText: function() {
+
+		let widthInString = this.width.toString();
+		let heightInString = this.height.toString();
+
+		let material = new THREE.MeshBasicMaterial( { color: this.color } );
+
+		let widthGeometry = new THREE.TextGeometry( widthInString, {
+
+			font: this.font,
+			size: this.textSize,
+			height: Math.min( this.unitLength, 1 ),
+			curveSegments: 8
+
+		} );
+
+		let widthText = new THREE.Mesh( widthGeometry, material );
+
+		let widthTextPos = TextHelper.calcFmWidthTextPos(
+
+			widthInString.length,
+			this.textSize,
+			this.actualWidth,
+			{
+
+				x: this.colorMap.position.x,
+				y: this.colorMap.position.y,
+				z: this.colorMap.position.z
+
+			}
+
+		);
+
+		widthText.position.set(
+
+			widthTextPos.x,
+			widthTextPos.y,
+			widthTextPos.z
+
+		);
+
+		widthText.rotateX( - Math.PI / 2 );
+
+		let heightGeometry = new THREE.TextGeometry( heightInString, {
+
+			font: this.font,
+			size: this.textSize,
+			height: Math.min( this.unitLength, 1 ),
+			curveSegments: 8
+
+		} );
+
+		let heightText = new THREE.Mesh( heightGeometry, material );
+
+		let heightTextPos = TextHelper.calcFmHeightTextPos(
+
+			heightInString.length,
+			this.textSize,
+			this.actualHeight,
+			{
+
+				x: this.colorMap.position.x,
+				y: this.colorMap.position.y,
+				z: this.colorMap.position.z
+
+			}
+
+		);
+
+		heightText.position.set(
+
+			heightTextPos.x,
+			heightTextPos.y,
+			heightTextPos.z
+
+		);
+
+		heightText.rotateX( - Math.PI / 2 );
+
+		this.widthText = widthText;
+		this.heightText = heightText;
+
+		this.colorGroup.add( this.widthText );
+		this.colorGroup.add( this.heightText );
+		this.isTextShown = true;
+
+	},
+
+	hideText: function() {
+
+		this.colorGroup.remove( this.widthText );
+		this.colorGroup.remove( this.heightText );
+		this.widthText = undefined;
+		this.heightText = undefined;
+
+		this.isTextShown = false;
+
+	},
+	
+	emissive: function() {
+		
+		let cacheData = new Uint8Array( this.dataArray.length );
+		
+		for ( let i = 0; i < this.dataArray.length; i ++ ) {
+			
+			cacheData[ i ] = this.dataArray[ i ];
+			
+		}
+		
+		this.dataArrayCache = cacheData;
+		
+		for ( let i = 0; i < this.dataArray.length; i ++ ) {
+			
+			this.dataArray[ i ] = Math.min( this.dataArray[ i ] + 30, 255 );
+			
+		}
+		
+		this.basicMaterial.opacity += 0.2;
+		
+		this.dataTexture.needsUpdate = true;
+		this.basicMaterial.needsUpdate = true;
+		
+	},
+	
+	darken: function() {
+		
+		for ( let i = 0; i < this.dataArray.length; i ++ ) {
+			
+			this.dataArray[ i ] = this.dataArrayCache[ i ];
+			
+		}
+		
+		this.dataArrayCache = undefined;
+		
+		this.basicMaterial.opacity -= 0.2;
+		
+		this.dataTexture.needsUpdate = true;
+		this.basicMaterial.needsUpdate = true;
+		
+	}
+
+};
+
+export { InputMap3d };

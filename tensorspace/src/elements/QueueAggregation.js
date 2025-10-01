@@ -1,0 +1,105 @@
+/**
+ * @author syt123450 / https://github.com/syt123450
+ */
+
+import * as THREE from "three";
+import { FrameColor } from "../utils/Constant";
+
+function QueueAggregation( actualWidth, actualHeight, actualDepth, color, minOpacity ) {
+
+	this.actualWidth = actualWidth;
+	this.actualHeight = actualHeight;
+	this.actualDepth = actualDepth;
+	this.color = color;
+	this.minOpacity = minOpacity;
+
+	this.cube = undefined;
+	this.aggregationElement = undefined;
+	
+	this.material = undefined;
+
+	this.init();
+
+}
+
+QueueAggregation.prototype = {
+
+	init: function() {
+
+		let geometry = new THREE.BoxBufferGeometry( this.actualWidth, this.actualDepth, this.actualHeight );
+
+		let material = new THREE.MeshBasicMaterial( {
+
+			color: this.color,
+			opacity: this.minOpacity,
+			transparent: true
+
+		} );
+		
+		this.material = material;
+
+		let cube = new THREE.Mesh( geometry, material );
+
+		cube.position.set( 0, 0, 0 );
+		cube.clickable = true;
+		cube.hoverable = true;
+		cube.draggable = true;
+		cube.emissiveable = true;
+		cube.elementType = "aggregationElement";
+
+		cube.context = this;
+		
+		this.cube = cube;
+
+		let edgesGeometry = new THREE.EdgesGeometry( geometry );
+
+		let edgesLine = new THREE.LineSegments(
+
+			edgesGeometry,
+			new THREE.LineBasicMaterial( { color: FrameColor } )
+
+		);
+
+		let aggregationGroup = new THREE.Object3D();
+		aggregationGroup.add( cube );
+		aggregationGroup.add( edgesLine );
+
+		this.aggregationElement = aggregationGroup;
+
+	},
+
+	getElement: function() {
+
+		return this.aggregationElement;
+
+	},
+
+	setLayerIndex: function( layerIndex ) {
+
+		this.cube.layerIndex = layerIndex;
+
+	},
+
+	setPositionedLayer: function( layerType ) {
+
+		this.cube.positionedLayer = layerType;
+
+	},
+	
+	emissive: function() {
+		
+		this.material.opacity += 0.2;
+		this.material.needsUpdate = true;
+		
+	},
+	
+	darken: function() {
+		
+		this.material.opacity -= 0.2;
+		this.material.needsUpdate = true;
+		
+	}
+
+};
+
+export { QueueAggregation };

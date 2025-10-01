@@ -1,0 +1,12 @@
+node_modules/
+package-lock.json
+.idea/
+.all-contributorsrc
+.babelrc
+.travis.yml
+
+test
+assets
+examples
+
+rollup.config.js
