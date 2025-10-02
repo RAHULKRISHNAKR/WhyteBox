@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ResNet Dual View MVP</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+  <!-- Babylon.js -->
+  <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="https://cdn.babylonjs.com/gui/babylon.gui.min.js"></script>
+  <!-- TensorSpace deps (placeholder - we are not shipping full dist yet) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tween.js/18.6.4/tween.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
+  <!-- In-repo TensorSpace source cannot be directly used without build. Future: add build step; for MVP we emulate a tiny subset API. -->
+</head>
+<body>
+  <header>
+    <h1>ResNet MVP Dual View</h1>
+    <div class="controls">
+      <button id="toggleViewBtn">View: Feature Maps</button>
+      <button id="runBtn">Run Forward</button>
+      <button id="randomInputBtn">New Random Input</button>
+      <span id="status">Idle</span>
+    </div>
+  </header>
+  <div id="layout" class="mode-maps">
+    <section id="featureMapView">
+      <div class="panelHead">Feature Map View (TensorSpace style emulation)</div>
+      <canvas id="tsCanvas"></canvas>
+      <div class="legend" id="fmLegend"></div>
+    </section>
+    <section id="nodeGraphView">
+      <div class="panelHead">Node Graph View</div>
+      <canvas id="nodeCanvas"></canvas>
+    </section>
+    <aside id="sidePanel">
+      <div class="sub">Input</div>
+      <div id="inputInfo" class="infoBox">-</div>
+      <div class="sub">Output (Top-K)</div>
+      <div id="outputInfo" class="infoBox">-</div>
+      <div class="sub">Last Forward Time</div>
+      <div id="perfInfo" class="infoBox">-</div>
+    </aside>
+  </div>
+  <footer>
+    <small>MVP: Simplified ResNet block visualization. Not full fidelity yet.</small>
+  </footer>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

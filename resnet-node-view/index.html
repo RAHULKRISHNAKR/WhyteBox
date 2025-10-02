@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>ResNet Node View</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="stylesheet" href="style.css" />
+<script src="https://cdn.babylonjs.com/babylon.js"></script>
+</head>
+<body>
+<header>
+  <h1>ResNet Node View</h1>
+  <div class="controls">
+    <button id="playPauseBtn">Pause</button>
+    <button id="speedBtn">Speed: 1x</button>
+    <span id="status">Running</span>
+  </div>
+</header>
+<main>
+  <div id="sceneWrapper"><canvas id="renderCanvas"></canvas></div>
+  <aside id="infoPanel">
+    <div class="section">
+      <div class="title">Input</div>
+      <div id="inputVec" class="box monospace small"></div>
+    </div>
+    <div class="section">
+      <div class="title">Current Layer</div>
+      <div id="currentLayer" class="box small">-</div>
+    </div>
+    <div class="section">
+      <div class="title">Output (Top 5)</div>
+      <div id="outputVec" class="box monospace small">-</div>
+    </div>
+    <div class="section">
+      <div class="title">Help</div>
+      <div class="box tiny">Hover nodes for shape. Click to lock.
+Space: Play/Pause
+</div>
+    </div>
+  </aside>
+</main>
+<footer><small>ResNet Node Graph MVP – Focused on structural & flow correctness.</small></footer>
+<script type="module" src="./src/main.js"></script>
+</body>
+</html>
