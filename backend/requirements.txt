@@ -1,0 +1,53 @@
+# WhyteBox Backend Requirements
+# Python 3.8+
+
+# Core Deep Learning Frameworks
+torch>=2.0.0
+torchvision>=0.15.0
+tensorflow>=2.13.0
+keras>=2.13.0
+onnx>=1.14.0
+onnxruntime>=1.15.0
+
+# Model Utilities
+timm>=0.9.0
+transformers>=4.30.0
+
+# API and Web Framework
+flask>=2.3.0
+flask-cors>=4.0.0
+werkzeug>=2.3.0
+
+# Data Processing
+numpy>=1.24.0
+pandas>=2.0.0
+
+# Validation and Schema
+jsonschema>=4.17.0
+pydantic>=2.0.0
+
+# Utilities
+pyyaml>=6.0
+python-dotenv>=1.0.0
+requests>=2.31.0
+
+# Visualization Support (for testing)
+matplotlib>=3.7.0
+pillow>=10.0.0
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-mock>=3.11.0
+
+# Code Quality
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.4.0
+
+# Documentation
+sphinx>=7.0.0
+sphinx-rtd-theme>=1.2.0
+
+# Logging
+colorlog>=6.7.0
