@@ -63,7 +63,7 @@ backend/
 
 ### Installation
 
-1. **Create virtual environment**:
+1. **Create virtual environment** (optional):
    ```bash
    cd backend
    python -m venv venv
@@ -75,7 +75,26 @@ backend/
    pip install -r requirements.txt
    ```
 
-### Basic Usage
+### 🎯 **NEW: Interactive Model Converter (Easiest Way!)**
+
+**Browse and convert 20+ models with a single command:**
+
+```powershell
+cd backend
+python examples\interactive_converter.py
+```
+
+**Features:**
+- ✅ Select from 20+ pre-trained models (VGG, ResNet, MobileNet, etc.)
+- ✅ Automatic caching (instant loading for converted models)
+- ✅ Complete model details displayed in terminal
+- ✅ JSON files ready for frontend visualization
+
+**See:** [Interactive Converter Guide](INTERACTIVE_CONVERTER_GUIDE.md) | [Demo](INTERACTIVE_DEMO.md)
+
+---
+
+### Basic Usage (Programmatic)
 
 #### Convert a PyTorch Model
 

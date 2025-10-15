@@ -158,8 +158,8 @@ class UniversalConverter:
         for conn in connections:
             converted_conn = {
                 'id': f"conn_{len(converted_connections)}",
-                'from_layer': conn.get('from_layer'),
-                'to_layer': conn.get('to_layer'),
+                'source_layer': conn.get('from_layer') or conn.get('source_layer'),
+                'target_layer': conn.get('to_layer') or conn.get('target_layer'),
                 'connection_type': conn.get('connection_type', 'sequential'),
                 'data_flow': conn.get('data_flow', 'forward'),
                 'visualization': {
@@ -218,8 +218,8 @@ class UniversalConverter:
         # Build adjacency information
         adjacency = {}
         for conn in connections:
-            from_id = conn['from_layer']
-            to_id = conn['to_layer']
+            from_id = conn.get('source_layer') or conn.get('from_layer')
+            to_id = conn.get('target_layer') or conn.get('to_layer')
             
             if from_id not in adjacency:
                 adjacency[from_id] = {'incoming': [], 'outgoing': []}
