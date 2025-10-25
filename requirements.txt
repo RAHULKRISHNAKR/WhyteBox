@@ -1,0 +1,8 @@
+torch==2.0.1
+numpy
+torchvision
+timm
+transformers
+tabulate
+flask
+flask_cors
