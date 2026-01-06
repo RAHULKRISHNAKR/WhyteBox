@@ -1,0 +1,414 @@
+{
+    "metadata": {
+        "model_name": "SimpleTestModel",
+        "framework": "pytorch",
+        "framework_version": "2.0.0",
+        "converter_version": "1.0.0",
+        "total_layers": 8,
+        "total_parameters": 25000,
+        "trainable_parameters": 25000,
+        "input_shape": [
+            1,
+            3,
+            28,
+            28
+        ],
+        "output_shape": [
+            1,
+            10
+        ],
+        "timestamp": "2025-12-14T20:33:00.000000"
+    },
+    "layers": [
+        {
+            "id": "layer_0",
+            "name": "input",
+            "type": "Input",
+            "index": 0,
+            "input_shape": [
+                1,
+                3,
+                28,
+                28
+            ],
+            "output_shape": [
+                1,
+                3,
+                28,
+                28
+            ],
+            "parameters": {},
+            "num_parameters": 0,
+            "trainable": false,
+            "visualization": {
+                "color": "#20E830",
+                "size_hint": 1.0,
+                "position_hint": [
+                    0,
+                    0,
+                    0
+                ]
+            }
+        },
+        {
+            "id": "layer_1",
+            "name": "conv1",
+            "type": "Conv2d",
+            "index": 1,
+            "input_shape": [
+                1,
+                3,
+                28,
+                28
+            ],
+            "output_shape": [
+                1,
+                32,
+                28,
+                28
+            ],
+            "parameters": {
+                "in_channels": 3,
+                "out_channels": 32,
+                "kernel_size": [
+                    3,
+                    3
+                ],
+                "stride": [
+                    1,
+                    1
+                ],
+                "padding": [
+                    1,
+                    1
+                ]
+            },
+            "num_parameters": 896,
+            "trainable": true,
+            "visualization": {
+                "color": "#4A90E2",
+                "size_hint": 1.5,
+                "position_hint": [
+                    0,
+                    0,
+                    0
+                ]
+            }
+        },
+        {
+            "id": "layer_2",
+            "name": "relu1",
+            "type": "ReLU",
+            "index": 2,
+            "input_shape": [
+                1,
+                32,
+                28,
+                28
+            ],
+            "output_shape": [
+                1,
+                32,
+                28,
+                28
+            ],
+            "parameters": {},
+            "num_parameters": 0,
+            "trainable": false,
+            "visualization": {
+                "color": "#FF6B6B",
+                "size_hint": 0.5,
+                "position_hint": [
+                    0,
+                    0,
+                    0
+                ]
+            }
+        },
+        {
+            "id": "layer_3",
+            "name": "pool1",
+            "type": "MaxPool2d",
+            "index": 3,
+            "input_shape": [
+                1,
+                32,
+                28,
+                28
+            ],
+            "output_shape": [
+                1,
+                32,
+                14,
+                14
+            ],
+            "parameters": {
+                "kernel_size": [
+                    2,
+                    2
+                ],
+                "stride": [
+                    2,
+                    2
+                ]
+            },
+            "num_parameters": 0,
+            "trainable": false,
+            "visualization": {
+                "color": "#F5A623",
+                "size_hint": 1.0,
+                "position_hint": [
+                    0,
+                    0,
+                    0
+                ]
+            }
+        },
+        {
+            "id": "layer_4",
+            "name": "conv2",
+            "type": "Conv2d",
+            "index": 4,
+            "input_shape": [
+                1,
+                32,
+                14,
+                14
+            ],
+            "output_shape": [
+                1,
+                64,
+                14,
+                14
+            ],
+            "parameters": {
+                "in_channels": 32,
+                "out_channels": 64,
+                "kernel_size": [
+                    3,
+                    3
+                ],
+                "stride": [
+                    1,
+                    1
+                ],
+                "padding": [
+                    1,
+                    1
+                ]
+            },
+            "num_parameters": 18496,
+            "trainable": true,
+            "visualization": {
+                "color": "#4A90E2",
+                "size_hint": 1.8,
+                "position_hint": [
+                    0,
+                    0,
+                    0
+                ]
+            }
+        },
+        {
+            "id": "layer_5",
+            "name": "relu2",
+            "type": "ReLU",
+            "index": 5,
+            "input_shape": [
+                1,
+                64,
+                14,
+                14
+            ],
+            "output_shape": [
+                1,
+                64,
+                14,
+                14
+            ],
+            "parameters": {},
+            "num_parameters": 0,
+            "trainable": false,
+            "visualization": {
+                "color": "#FF6B6B",
+                "size_hint": 0.5,
+                "position_hint": [
+                    0,
+                    0,
+                    0
+                ]
+            }
+        },
+        {
+            "id": "layer_6",
+            "name": "fc1",
+            "type": "Linear",
+            "index": 6,
+            "input_shape": [
+                1,
+                12544
+            ],
+            "output_shape": [
+                1,
+                128
+            ],
+            "parameters": {
+                "in_features": 12544,
+                "out_features": 128
+            },
+            "num_parameters": 1605760,
+            "trainable": true,
+            "visualization": {
+                "color": "#50C878",
+                "size_hint": 1.2,
+                "position_hint": [
+                    0,
+                    0,
+                    0
+                ]
+            }
+        },
+        {
+            "id": "layer_7",
+            "name": "output",
+            "type": "Output",
+            "index": 7,
+            "input_shape": [
+                1,
+                128
+            ],
+            "output_shape": [
+                1,
+                10
+            ],
+            "parameters": {
+                "in_features": 128,
+                "out_features": 10
+            },
+            "num_parameters": 1290,
+            "trainable": true,
+            "visualization": {
+                "color": "#F96020",
+                "size_hint": 1.0,
+                "position_hint": [
+                    0,
+                    0,
+                    0
+                ]
+            }
+        }
+    ],
+    "connections": [
+        {
+            "id": "conn_0",
+            "source_layer": "layer_0",
+            "target_layer": "layer_1",
+            "connection_type": "sequential",
+            "visualization": {
+                "color": "#999999",
+                "width": 2.0,
+                "style": "solid"
+            }
+        },
+        {
+            "id": "conn_1",
+            "source_layer": "layer_1",
+            "target_layer": "layer_2",
+            "connection_type": "sequential",
+            "visualization": {
+                "color": "#999999",
+                "width": 2.0,
+                "style": "solid"
+            }
+        },
+        {
+            "id": "conn_2",
+            "source_layer": "layer_2",
+            "target_layer": "layer_3",
+            "connection_type": "sequential",
+            "visualization": {
+                "color": "#999999",
+                "width": 2.0,
+                "style": "solid"
+            }
+        },
+        {
+            "id": "conn_3",
+            "source_layer": "layer_3",
+            "target_layer": "layer_4",
+            "connection_type": "sequential",
+            "visualization": {
+                "color": "#999999",
+                "width": 2.0,
+                "style": "solid"
+            }
+        },
+        {
+            "id": "conn_4",
+            "source_layer": "layer_4",
+            "target_layer": "layer_5",
+            "connection_type": "sequential",
+            "visualization": {
+                "color": "#999999",
+                "width": 2.0,
+                "style": "solid"
+            }
+        },
+        {
+            "id": "conn_5",
+            "source_layer": "layer_5",
+            "target_layer": "layer_6",
+            "connection_type": "sequential",
+            "visualization": {
+                "color": "#999999",
+                "width": 2.0,
+                "style": "solid"
+            }
+        },
+        {
+            "id": "conn_6",
+            "source_layer": "layer_6",
+            "target_layer": "layer_7",
+            "connection_type": "sequential",
+            "visualization": {
+                "color": "#999999",
+                "width": 2.0,
+                "style": "solid"
+            }
+        }
+    ],
+    "architecture": {
+        "architecture_type": "Sequential",
+        "depth": 8,
+        "has_skip_connections": false,
+        "has_branches": false,
+        "complexity": "low"
+    },
+    "visualization_hints": {
+        "suggested_layout": "linear",
+        "camera_position": [
+            0,
+            5,
+            20
+        ],
+        "layer_spacing": 2.5,
+        "vertical_spacing": 1.5,
+        "color_scheme": "layer_type",
+        "show_connections": true,
+        "show_parameters": true,
+        "animation_speed": 1.0
+    },
+    "topology": {
+        "total_nodes": 8,
+        "total_edges": 7,
+        "input_layers": [
+            "layer_0"
+        ],
+        "output_layers": [
+            "layer_7"
+        ],
+        "max_depth": 8,
+        "branching_factor": 1.0,
+        "has_cycles": false
+    }
+}

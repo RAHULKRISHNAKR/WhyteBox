@@ -1,0 +1,2332 @@
+{
+  "metadata": {
+    "model_name": "VGG16_PyTorch",
+    "framework": "pytorch",
+    "framework_version": "2.8.0+cpu",
+    "converter_version": "1.0.0",
+    "total_layers": 41,
+    "total_parameters": 138357544,
+    "trainable_parameters": 138357544,
+    "input_shape": [
+      1,
+      3,
+      224,
+      224
+    ],
+    "output_shape": [
+      1,
+      1000
+    ],
+    "timestamp": "2025-10-15T14:06:55.741700",
+    "conversion_timestamp": "2025-10-15T14:06:55.741700"
+  },
+  "layers": [
+    {
+      "id": "layer_0",
+      "name": "features.0",
+      "type": "Conv2d",
+      "index": 0,
+      "input_shape": [
+        1,
+        3,
+        224,
+        224
+      ],
+      "output_shape": [
+        1,
+        64,
+        224,
+        224
+      ],
+      "parameters": {
+        "in_channels": 3,
+        "out_channels": 64,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "stride": [
+          1,
+          1
+        ],
+        "padding": [
+          1,
+          1
+        ],
+        "dilation": [
+          1,
+          1
+        ],
+        "groups": 1,
+        "has_bias": true
+      },
+      "activation": null,
+      "trainable": true,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#4A90E2",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.0"
+      }
+    },
+    {
+      "id": "layer_1",
+      "name": "features.1",
+      "type": "ReLU",
+      "index": 1,
+      "input_shape": [
+        1,
+        64,
+        224,
+        224
+      ],
+      "output_shape": [
+        1,
+        64,
+        224,
+        224
+      ],
+      "parameters": {
+        "inplace": true
+      },
+      "activation": "relu",
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#FF6B6B",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.1"
+      }
+    },
+    {
+      "id": "layer_2",
+      "name": "features.2",
+      "type": "Conv2d",
+      "index": 2,
+      "input_shape": [
+        1,
+        64,
+        224,
+        224
+      ],
+      "output_shape": [
+        1,
+        64,
+        224,
+        224
+      ],
+      "parameters": {
+        "in_channels": 64,
+        "out_channels": 64,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "stride": [
+          1,
+          1
+        ],
+        "padding": [
+          1,
+          1
+        ],
+        "dilation": [
+          1,
+          1
+        ],
+        "groups": 1,
+        "has_bias": true
+      },
+      "activation": null,
+      "trainable": true,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#4A90E2",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.2"
+      }
+    },
+    {
+      "id": "layer_3",
+      "name": "features.3",
+      "type": "ReLU",
+      "index": 3,
+      "input_shape": [
+        1,
+        64,
+        224,
+        224
+      ],
+      "output_shape": [
+        1,
+        64,
+        224,
+        224
+      ],
+      "parameters": {
+        "inplace": true
+      },
+      "activation": "relu",
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#FF6B6B",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.3"
+      }
+    },
+    {
+      "id": "layer_4",
+      "name": "features.4",
+      "type": "MaxPool2d",
+      "index": 4,
+      "input_shape": [
+        1,
+        64,
+        224,
+        224
+      ],
+      "output_shape": [
+        1,
+        64,
+        112,
+        112
+      ],
+      "parameters": {
+        "kernel_size": [
+          2
+        ],
+        "stride": [
+          2
+        ],
+        "padding": [
+          0
+        ]
+      },
+      "activation": null,
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#F5A623",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.4"
+      }
+    },
+    {
+      "id": "layer_5",
+      "name": "features.5",
+      "type": "Conv2d",
+      "index": 5,
+      "input_shape": [
+        1,
+        64,
+        112,
+        112
+      ],
+      "output_shape": [
+        1,
+        128,
+        112,
+        112
+      ],
+      "parameters": {
+        "in_channels": 64,
+        "out_channels": 128,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "stride": [
+          1,
+          1
+        ],
+        "padding": [
+          1,
+          1
+        ],
+        "dilation": [
+          1,
+          1
+        ],
+        "groups": 1,
+        "has_bias": true
+      },
+      "activation": null,
+      "trainable": true,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#4A90E2",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.5"
+      }
+    },
+    {
+      "id": "layer_6",
+      "name": "features.6",
+      "type": "ReLU",
+      "index": 6,
+      "input_shape": [
+        1,
+        128,
+        112,
+        112
+      ],
+      "output_shape": [
+        1,
+        128,
+        112,
+        112
+      ],
+      "parameters": {
+        "inplace": true
+      },
+      "activation": "relu",
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#FF6B6B",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.6"
+      }
+    },
+    {
+      "id": "layer_7",
+      "name": "features.7",
+      "type": "Conv2d",
+      "index": 7,
+      "input_shape": [
+        1,
+        128,
+        112,
+        112
+      ],
+      "output_shape": [
+        1,
+        128,
+        112,
+        112
+      ],
+      "parameters": {
+        "in_channels": 128,
+        "out_channels": 128,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "stride": [
+          1,
+          1
+        ],
+        "padding": [
+          1,
+          1
+        ],
+        "dilation": [
+          1,
+          1
+        ],
+        "groups": 1,
+        "has_bias": true
+      },
+      "activation": null,
+      "trainable": true,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#4A90E2",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.7"
+      }
+    },
+    {
+      "id": "layer_8",
+      "name": "features.8",
+      "type": "ReLU",
+      "index": 8,
+      "input_shape": [
+        1,
+        128,
+        112,
+        112
+      ],
+      "output_shape": [
+        1,
+        128,
+        112,
+        112
+      ],
+      "parameters": {
+        "inplace": true
+      },
+      "activation": "relu",
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#FF6B6B",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.8"
+      }
+    },
+    {
+      "id": "layer_9",
+      "name": "features.9",
+      "type": "MaxPool2d",
+      "index": 9,
+      "input_shape": [
+        1,
+        128,
+        112,
+        112
+      ],
+      "output_shape": [
+        1,
+        128,
+        56,
+        56
+      ],
+      "parameters": {
+        "kernel_size": [
+          2
+        ],
+        "stride": [
+          2
+        ],
+        "padding": [
+          0
+        ]
+      },
+      "activation": null,
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#F5A623",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.9"
+      }
+    },
+    {
+      "id": "layer_10",
+      "name": "features.10",
+      "type": "Conv2d",
+      "index": 10,
+      "input_shape": [
+        1,
+        128,
+        56,
+        56
+      ],
+      "output_shape": [
+        1,
+        256,
+        56,
+        56
+      ],
+      "parameters": {
+        "in_channels": 128,
+        "out_channels": 256,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "stride": [
+          1,
+          1
+        ],
+        "padding": [
+          1,
+          1
+        ],
+        "dilation": [
+          1,
+          1
+        ],
+        "groups": 1,
+        "has_bias": true
+      },
+      "activation": null,
+      "trainable": true,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#4A90E2",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.10"
+      }
+    },
+    {
+      "id": "layer_11",
+      "name": "features.11",
+      "type": "ReLU",
+      "index": 11,
+      "input_shape": [
+        1,
+        256,
+        56,
+        56
+      ],
+      "output_shape": [
+        1,
+        256,
+        56,
+        56
+      ],
+      "parameters": {
+        "inplace": true
+      },
+      "activation": "relu",
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#FF6B6B",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.11"
+      }
+    },
+    {
+      "id": "layer_12",
+      "name": "features.12",
+      "type": "Conv2d",
+      "index": 12,
+      "input_shape": [
+        1,
+        256,
+        56,
+        56
+      ],
+      "output_shape": [
+        1,
+        256,
+        56,
+        56
+      ],
+      "parameters": {
+        "in_channels": 256,
+        "out_channels": 256,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "stride": [
+          1,
+          1
+        ],
+        "padding": [
+          1,
+          1
+        ],
+        "dilation": [
+          1,
+          1
+        ],
+        "groups": 1,
+        "has_bias": true
+      },
+      "activation": null,
+      "trainable": true,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#4A90E2",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.12"
+      }
+    },
+    {
+      "id": "layer_13",
+      "name": "features.13",
+      "type": "ReLU",
+      "index": 13,
+      "input_shape": [
+        1,
+        256,
+        56,
+        56
+      ],
+      "output_shape": [
+        1,
+        256,
+        56,
+        56
+      ],
+      "parameters": {
+        "inplace": true
+      },
+      "activation": "relu",
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#FF6B6B",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.13"
+      }
+    },
+    {
+      "id": "layer_14",
+      "name": "features.14",
+      "type": "Conv2d",
+      "index": 14,
+      "input_shape": [
+        1,
+        256,
+        56,
+        56
+      ],
+      "output_shape": [
+        1,
+        256,
+        56,
+        56
+      ],
+      "parameters": {
+        "in_channels": 256,
+        "out_channels": 256,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "stride": [
+          1,
+          1
+        ],
+        "padding": [
+          1,
+          1
+        ],
+        "dilation": [
+          1,
+          1
+        ],
+        "groups": 1,
+        "has_bias": true
+      },
+      "activation": null,
+      "trainable": true,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#4A90E2",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.14"
+      }
+    },
+    {
+      "id": "layer_15",
+      "name": "features.15",
+      "type": "ReLU",
+      "index": 15,
+      "input_shape": [
+        1,
+        256,
+        56,
+        56
+      ],
+      "output_shape": [
+        1,
+        256,
+        56,
+        56
+      ],
+      "parameters": {
+        "inplace": true
+      },
+      "activation": "relu",
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#FF6B6B",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.15"
+      }
+    },
+    {
+      "id": "layer_16",
+      "name": "features.16",
+      "type": "MaxPool2d",
+      "index": 16,
+      "input_shape": [
+        1,
+        256,
+        56,
+        56
+      ],
+      "output_shape": [
+        1,
+        256,
+        28,
+        28
+      ],
+      "parameters": {
+        "kernel_size": [
+          2
+        ],
+        "stride": [
+          2
+        ],
+        "padding": [
+          0
+        ]
+      },
+      "activation": null,
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#F5A623",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.16"
+      }
+    },
+    {
+      "id": "layer_17",
+      "name": "features.17",
+      "type": "Conv2d",
+      "index": 17,
+      "input_shape": [
+        1,
+        256,
+        28,
+        28
+      ],
+      "output_shape": [
+        1,
+        512,
+        28,
+        28
+      ],
+      "parameters": {
+        "in_channels": 256,
+        "out_channels": 512,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "stride": [
+          1,
+          1
+        ],
+        "padding": [
+          1,
+          1
+        ],
+        "dilation": [
+          1,
+          1
+        ],
+        "groups": 1,
+        "has_bias": true
+      },
+      "activation": null,
+      "trainable": true,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#4A90E2",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.17"
+      }
+    },
+    {
+      "id": "layer_18",
+      "name": "features.18",
+      "type": "ReLU",
+      "index": 18,
+      "input_shape": [
+        1,
+        512,
+        28,
+        28
+      ],
+      "output_shape": [
+        1,
+        512,
+        28,
+        28
+      ],
+      "parameters": {
+        "inplace": true
+      },
+      "activation": "relu",
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#FF6B6B",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.18"
+      }
+    },
+    {
+      "id": "layer_19",
+      "name": "features.19",
+      "type": "Conv2d",
+      "index": 19,
+      "input_shape": [
+        1,
+        512,
+        28,
+        28
+      ],
+      "output_shape": [
+        1,
+        512,
+        28,
+        28
+      ],
+      "parameters": {
+        "in_channels": 512,
+        "out_channels": 512,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "stride": [
+          1,
+          1
+        ],
+        "padding": [
+          1,
+          1
+        ],
+        "dilation": [
+          1,
+          1
+        ],
+        "groups": 1,
+        "has_bias": true
+      },
+      "activation": null,
+      "trainable": true,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#4A90E2",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.19"
+      }
+    },
+    {
+      "id": "layer_20",
+      "name": "features.20",
+      "type": "ReLU",
+      "index": 20,
+      "input_shape": [
+        1,
+        512,
+        28,
+        28
+      ],
+      "output_shape": [
+        1,
+        512,
+        28,
+        28
+      ],
+      "parameters": {
+        "inplace": true
+      },
+      "activation": "relu",
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#FF6B6B",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.20"
+      }
+    },
+    {
+      "id": "layer_21",
+      "name": "features.21",
+      "type": "Conv2d",
+      "index": 21,
+      "input_shape": [
+        1,
+        512,
+        28,
+        28
+      ],
+      "output_shape": [
+        1,
+        512,
+        28,
+        28
+      ],
+      "parameters": {
+        "in_channels": 512,
+        "out_channels": 512,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "stride": [
+          1,
+          1
+        ],
+        "padding": [
+          1,
+          1
+        ],
+        "dilation": [
+          1,
+          1
+        ],
+        "groups": 1,
+        "has_bias": true
+      },
+      "activation": null,
+      "trainable": true,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#4A90E2",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.21"
+      }
+    },
+    {
+      "id": "layer_22",
+      "name": "features.22",
+      "type": "ReLU",
+      "index": 22,
+      "input_shape": [
+        1,
+        512,
+        28,
+        28
+      ],
+      "output_shape": [
+        1,
+        512,
+        28,
+        28
+      ],
+      "parameters": {
+        "inplace": true
+      },
+      "activation": "relu",
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#FF6B6B",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.22"
+      }
+    },
+    {
+      "id": "layer_23",
+      "name": "features.23",
+      "type": "MaxPool2d",
+      "index": 23,
+      "input_shape": [
+        1,
+        512,
+        28,
+        28
+      ],
+      "output_shape": [
+        1,
+        512,
+        14,
+        14
+      ],
+      "parameters": {
+        "kernel_size": [
+          2
+        ],
+        "stride": [
+          2
+        ],
+        "padding": [
+          0
+        ]
+      },
+      "activation": null,
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#F5A623",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.23"
+      }
+    },
+    {
+      "id": "layer_24",
+      "name": "features.24",
+      "type": "Conv2d",
+      "index": 24,
+      "input_shape": [
+        1,
+        512,
+        14,
+        14
+      ],
+      "output_shape": [
+        1,
+        512,
+        14,
+        14
+      ],
+      "parameters": {
+        "in_channels": 512,
+        "out_channels": 512,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "stride": [
+          1,
+          1
+        ],
+        "padding": [
+          1,
+          1
+        ],
+        "dilation": [
+          1,
+          1
+        ],
+        "groups": 1,
+        "has_bias": true
+      },
+      "activation": null,
+      "trainable": true,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#4A90E2",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.24"
+      }
+    },
+    {
+      "id": "layer_25",
+      "name": "features.25",
+      "type": "ReLU",
+      "index": 25,
+      "input_shape": [
+        1,
+        512,
+        14,
+        14
+      ],
+      "output_shape": [
+        1,
+        512,
+        14,
+        14
+      ],
+      "parameters": {
+        "inplace": true
+      },
+      "activation": "relu",
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#FF6B6B",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.25"
+      }
+    },
+    {
+      "id": "layer_26",
+      "name": "features.26",
+      "type": "Conv2d",
+      "index": 26,
+      "input_shape": [
+        1,
+        512,
+        14,
+        14
+      ],
+      "output_shape": [
+        1,
+        512,
+        14,
+        14
+      ],
+      "parameters": {
+        "in_channels": 512,
+        "out_channels": 512,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "stride": [
+          1,
+          1
+        ],
+        "padding": [
+          1,
+          1
+        ],
+        "dilation": [
+          1,
+          1
+        ],
+        "groups": 1,
+        "has_bias": true
+      },
+      "activation": null,
+      "trainable": true,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#4A90E2",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.26"
+      }
+    },
+    {
+      "id": "layer_27",
+      "name": "features.27",
+      "type": "ReLU",
+      "index": 27,
+      "input_shape": [
+        1,
+        512,
+        14,
+        14
+      ],
+      "output_shape": [
+        1,
+        512,
+        14,
+        14
+      ],
+      "parameters": {
+        "inplace": true
+      },
+      "activation": "relu",
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#FF6B6B",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.27"
+      }
+    },
+    {
+      "id": "layer_28",
+      "name": "features.28",
+      "type": "Conv2d",
+      "index": 28,
+      "input_shape": [
+        1,
+        512,
+        14,
+        14
+      ],
+      "output_shape": [
+        1,
+        512,
+        14,
+        14
+      ],
+      "parameters": {
+        "in_channels": 512,
+        "out_channels": 512,
+        "kernel_size": [
+          3,
+          3
+        ],
+        "stride": [
+          1,
+          1
+        ],
+        "padding": [
+          1,
+          1
+        ],
+        "dilation": [
+          1,
+          1
+        ],
+        "groups": 1,
+        "has_bias": true
+      },
+      "activation": null,
+      "trainable": true,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#4A90E2",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.28"
+      }
+    },
+    {
+      "id": "layer_29",
+      "name": "features.29",
+      "type": "ReLU",
+      "index": 29,
+      "input_shape": [
+        1,
+        512,
+        14,
+        14
+      ],
+      "output_shape": [
+        1,
+        512,
+        14,
+        14
+      ],
+      "parameters": {
+        "inplace": true
+      },
+      "activation": "relu",
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#FF6B6B",
+        "opacity": 1.0,
+        "size_hint": 3.0,
+        "display_name": "features.29"
+      }
+    },
+    {
+      "id": "layer_30",
+      "name": "features.30",
+      "type": "MaxPool2d",
+      "index": 30,
+      "input_shape": [
+        1,
+        512,
+        14,
+        14
+      ],
+      "output_shape": [
+        1,
+        512,
+        7,
+        7
+      ],
+      "parameters": {
+        "kernel_size": [
+          2
+        ],
+        "stride": [
+          2
+        ],
+        "padding": [
+          0
+        ]
+      },
+      "activation": null,
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#F5A623",
+        "opacity": 1.0,
+        "size_hint": 2.088525644840386,
+        "display_name": "features.30"
+      }
+    },
+    {
+      "id": "layer_31",
+      "name": "avgpool",
+      "type": "AdaptiveAvgPool2d",
+      "index": 31,
+      "input_shape": [
+        1,
+        512,
+        7,
+        7
+      ],
+      "output_shape": [
+        1,
+        512,
+        7,
+        7
+      ],
+      "parameters": {},
+      "activation": null,
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#F5A623",
+        "opacity": 1.0,
+        "size_hint": 2.088525644840386,
+        "display_name": "avgpool"
+      }
+    },
+    {
+      "id": "layer_32",
+      "name": "classifier.0",
+      "type": "Linear",
+      "index": 32,
+      "input_shape": [
+        1,
+        25088
+      ],
+      "output_shape": [
+        1,
+        4096
+      ],
+      "parameters": {
+        "in_features": 25088,
+        "out_features": 4096,
+        "has_bias": true
+      },
+      "activation": null,
+      "trainable": true,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#50C878",
+        "opacity": 1.0,
+        "size_hint": 1.2125732532083184,
+        "display_name": "classifier.0"
+      }
+    },
+    {
+      "id": "layer_33",
+      "name": "classifier.1",
+      "type": "ReLU",
+      "index": 33,
+      "input_shape": [
+        1,
+        4096
+      ],
+      "output_shape": [
+        1,
+        4096
+      ],
+      "parameters": {
+        "inplace": true
+      },
+      "activation": "relu",
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#FF6B6B",
+        "opacity": 1.0,
+        "size_hint": 1.2125732532083184,
+        "display_name": "classifier.1"
+      }
+    },
+    {
+      "id": "layer_34",
+      "name": "classifier.2",
+      "type": "Dropout",
+      "index": 34,
+      "input_shape": [
+        1,
+        4096
+      ],
+      "output_shape": [
+        1,
+        4096
+      ],
+      "parameters": {
+        "p": 0.5,
+        "inplace": false
+      },
+      "activation": null,
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#B8E986",
+        "opacity": 1.0,
+        "size_hint": 1.2125732532083184,
+        "display_name": "classifier.2"
+      }
+    },
+    {
+      "id": "layer_35",
+      "name": "classifier.3",
+      "type": "Linear",
+      "index": 35,
+      "input_shape": [
+        1,
+        4096
+      ],
+      "output_shape": [
+        1,
+        4096
+      ],
+      "parameters": {
+        "in_features": 4096,
+        "out_features": 4096,
+        "has_bias": true
+      },
+      "activation": null,
+      "trainable": true,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#50C878",
+        "opacity": 1.0,
+        "size_hint": 1.2125732532083184,
+        "display_name": "classifier.3"
+      }
+    },
+    {
+      "id": "layer_36",
+      "name": "classifier.4",
+      "type": "ReLU",
+      "index": 36,
+      "input_shape": [
+        1,
+        4096
+      ],
+      "output_shape": [
+        1,
+        4096
+      ],
+      "parameters": {
+        "inplace": true
+      },
+      "activation": "relu",
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#FF6B6B",
+        "opacity": 1.0,
+        "size_hint": 1.2125732532083184,
+        "display_name": "classifier.4"
+      }
+    },
+    {
+      "id": "layer_37",
+      "name": "classifier.5",
+      "type": "Dropout",
+      "index": 37,
+      "input_shape": [
+        1,
+        4096
+      ],
+      "output_shape": [
+        1,
+        4096
+      ],
+      "parameters": {
+        "p": 0.5,
+        "inplace": false
+      },
+      "activation": null,
+      "trainable": false,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#B8E986",
+        "opacity": 1.0,
+        "size_hint": 1.2125732532083184,
+        "display_name": "classifier.5"
+      }
+    },
+    {
+      "id": "layer_38",
+      "name": "classifier.6",
+      "type": "Linear",
+      "index": 38,
+      "input_shape": [
+        1,
+        4096
+      ],
+      "output_shape": [
+        1,
+        1000
+      ],
+      "parameters": {
+        "in_features": 4096,
+        "out_features": 1000,
+        "has_bias": true
+      },
+      "activation": null,
+      "trainable": true,
+      "parameter_count": 0,
+      "visualization": {
+        "color": "#50C878",
+        "opacity": 1.0,
+        "size_hint": 0.7943282347242814,
+        "display_name": "classifier.6"
+      }
+    }
+  ],
+  "connections": [
+    {
+      "id": "conn_0",
+      "from_layer": "layer_0",
+      "to_layer": "layer_1",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_1",
+      "from_layer": "layer_1",
+      "to_layer": "layer_2",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_2",
+      "from_layer": "layer_2",
+      "to_layer": "layer_3",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_3",
+      "from_layer": "layer_3",
+      "to_layer": "layer_4",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_4",
+      "from_layer": "layer_4",
+      "to_layer": "layer_5",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_5",
+      "from_layer": "layer_5",
+      "to_layer": "layer_6",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_6",
+      "from_layer": "layer_6",
+      "to_layer": "layer_7",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_7",
+      "from_layer": "layer_7",
+      "to_layer": "layer_8",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_8",
+      "from_layer": "layer_8",
+      "to_layer": "layer_9",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_9",
+      "from_layer": "layer_9",
+      "to_layer": "layer_10",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_10",
+      "from_layer": "layer_10",
+      "to_layer": "layer_11",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_11",
+      "from_layer": "layer_11",
+      "to_layer": "layer_12",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_12",
+      "from_layer": "layer_12",
+      "to_layer": "layer_13",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_13",
+      "from_layer": "layer_13",
+      "to_layer": "layer_14",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_14",
+      "from_layer": "layer_14",
+      "to_layer": "layer_15",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_15",
+      "from_layer": "layer_15",
+      "to_layer": "layer_16",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_16",
+      "from_layer": "layer_16",
+      "to_layer": "layer_17",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_17",
+      "from_layer": "layer_17",
+      "to_layer": "layer_18",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_18",
+      "from_layer": "layer_18",
+      "to_layer": "layer_19",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_19",
+      "from_layer": "layer_19",
+      "to_layer": "layer_20",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_20",
+      "from_layer": "layer_20",
+      "to_layer": "layer_21",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_21",
+      "from_layer": "layer_21",
+      "to_layer": "layer_22",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_22",
+      "from_layer": "layer_22",
+      "to_layer": "layer_23",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_23",
+      "from_layer": "layer_23",
+      "to_layer": "layer_24",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_24",
+      "from_layer": "layer_24",
+      "to_layer": "layer_25",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_25",
+      "from_layer": "layer_25",
+      "to_layer": "layer_26",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_26",
+      "from_layer": "layer_26",
+      "to_layer": "layer_27",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_27",
+      "from_layer": "layer_27",
+      "to_layer": "layer_28",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_28",
+      "from_layer": "layer_28",
+      "to_layer": "layer_29",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_29",
+      "from_layer": "layer_29",
+      "to_layer": "layer_30",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_30",
+      "from_layer": "layer_30",
+      "to_layer": "layer_31",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_31",
+      "from_layer": "layer_31",
+      "to_layer": "layer_32",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_32",
+      "from_layer": "layer_32",
+      "to_layer": "layer_33",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_33",
+      "from_layer": "layer_33",
+      "to_layer": "layer_34",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_34",
+      "from_layer": "layer_34",
+      "to_layer": "layer_35",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_35",
+      "from_layer": "layer_35",
+      "to_layer": "layer_36",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_36",
+      "from_layer": "layer_36",
+      "to_layer": "layer_37",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    },
+    {
+      "id": "conn_37",
+      "from_layer": "layer_37",
+      "to_layer": "layer_38",
+      "connection_type": "sequential",
+      "data_flow": "forward",
+      "visualization": {
+        "color": "#4A90E2",
+        "width": 1.0,
+        "style": "solid"
+      }
+    }
+  ],
+  "architecture": {
+    "layer_type_distribution": {
+      "Conv2d": 13,
+      "ReLU": 15,
+      "MaxPool2d": 5,
+      "AdaptiveAvgPool2d": 1,
+      "Linear": 3,
+      "Dropout": 2
+    },
+    "stages": [
+      {
+        "layers": [
+          "layer_0",
+          "layer_1",
+          "layer_2",
+          "layer_3",
+          "layer_4",
+          "layer_5",
+          "layer_6",
+          "layer_7",
+          "layer_8",
+          "layer_9",
+          "layer_10",
+          "layer_11",
+          "layer_12",
+          "layer_13",
+          "layer_14",
+          "layer_15",
+          "layer_16",
+          "layer_17",
+          "layer_18",
+          "layer_19",
+          "layer_20",
+          "layer_21",
+          "layer_22",
+          "layer_23",
+          "layer_24",
+          "layer_25",
+          "layer_26",
+          "layer_27",
+          "layer_28",
+          "layer_29",
+          "layer_30",
+          "layer_31",
+          "layer_32",
+          "layer_33",
+          "layer_34",
+          "layer_35",
+          "layer_36",
+          "layer_37",
+          "layer_38"
+        ],
+        "type": "Conv2d"
+      }
+    ],
+    "depth": 39,
+    "has_skip_connections": false,
+    "architecture_type": "VGG"
+  },
+  "visualization_hints": {
+    "recommended_layout": "linear",
+    "color_scheme": "gradient",
+    "camera_position": {
+      "x": 58.5,
+      "y": 5.0,
+      "z": 78.0,
+      "target_x": 19.5,
+      "target_y": 0.0,
+      "target_z": 0.0
+    },
+    "layer_spacing": 2.0,
+    "vertical_spacing": 1.5,
+    "show_feature_maps": true,
+    "show_connections": true,
+    "interactive_layers": [
+      "layer_0",
+      "layer_2",
+      "layer_5",
+      "layer_7",
+      "layer_10",
+      "layer_12",
+      "layer_14",
+      "layer_17",
+      "layer_19",
+      "layer_21",
+      "layer_24",
+      "layer_26",
+      "layer_28",
+      "layer_32",
+      "layer_35",
+      "layer_38"
+    ],
+    "highlight_layers": [
+      "layer_0",
+      "layer_38"
+    ]
+  },
+  "topology": {
+    "is_sequential": true,
+    "has_branches": false,
+    "has_merges": false,
+    "max_branching_factor": 1,
+    "max_merge_factor": 1,
+    "adjacency": {
+      "layer_0": {
+        "incoming": [],
+        "outgoing": [
+          "layer_1"
+        ]
+      },
+      "layer_1": {
+        "incoming": [
+          "layer_0"
+        ],
+        "outgoing": [
+          "layer_2"
+        ]
+      },
+      "layer_2": {
+        "incoming": [
+          "layer_1"
+        ],
+        "outgoing": [
+          "layer_3"
+        ]
+      },
+      "layer_3": {
+        "incoming": [
+          "layer_2"
+        ],
+        "outgoing": [
+          "layer_4"
+        ]
+      },
+      "layer_4": {
+        "incoming": [
+          "layer_3"
+        ],
+        "outgoing": [
+          "layer_5"
+        ]
+      },
+      "layer_5": {
+        "incoming": [
+          "layer_4"
+        ],
+        "outgoing": [
+          "layer_6"
+        ]
+      },
+      "layer_6": {
+        "incoming": [
+          "layer_5"
+        ],
+        "outgoing": [
+          "layer_7"
+        ]
+      },
+      "layer_7": {
+        "incoming": [
+          "layer_6"
+        ],
+        "outgoing": [
+          "layer_8"
+        ]
+      },
+      "layer_8": {
+        "incoming": [
+          "layer_7"
+        ],
+        "outgoing": [
+          "layer_9"
+        ]
+      },
+      "layer_9": {
+        "incoming": [
+          "layer_8"
+        ],
+        "outgoing": [
+          "layer_10"
+        ]
+      },
+      "layer_10": {
+        "incoming": [
+          "layer_9"
+        ],
+        "outgoing": [
+          "layer_11"
+        ]
+      },
+      "layer_11": {
+        "incoming": [
+          "layer_10"
+        ],
+        "outgoing": [
+          "layer_12"
+        ]
+      },
+      "layer_12": {
+        "incoming": [
+          "layer_11"
+        ],
+        "outgoing": [
+          "layer_13"
+        ]
+      },
+      "layer_13": {
+        "incoming": [
+          "layer_12"
+        ],
+        "outgoing": [
+          "layer_14"
+        ]
+      },
+      "layer_14": {
+        "incoming": [
+          "layer_13"
+        ],
+        "outgoing": [
+          "layer_15"
+        ]
+      },
+      "layer_15": {
+        "incoming": [
+          "layer_14"
+        ],
+        "outgoing": [
+          "layer_16"
+        ]
+      },
+      "layer_16": {
+        "incoming": [
+          "layer_15"
+        ],
+        "outgoing": [
+          "layer_17"
+        ]
+      },
+      "layer_17": {
+        "incoming": [
+          "layer_16"
+        ],
+        "outgoing": [
+          "layer_18"
+        ]
+      },
+      "layer_18": {
+        "incoming": [
+          "layer_17"
+        ],
+        "outgoing": [
+          "layer_19"
+        ]
+      },
+      "layer_19": {
+        "incoming": [
+          "layer_18"
+        ],
+        "outgoing": [
+          "layer_20"
+        ]
+      },
+      "layer_20": {
+        "incoming": [
+          "layer_19"
+        ],
+        "outgoing": [
+          "layer_21"
+        ]
+      },
+      "layer_21": {
+        "incoming": [
+          "layer_20"
+        ],
+        "outgoing": [
+          "layer_22"
+        ]
+      },
+      "layer_22": {
+        "incoming": [
+          "layer_21"
+        ],
+        "outgoing": [
+          "layer_23"
+        ]
+      },
+      "layer_23": {
+        "incoming": [
+          "layer_22"
+        ],
+        "outgoing": [
+          "layer_24"
+        ]
+      },
+      "layer_24": {
+        "incoming": [
+          "layer_23"
+        ],
+        "outgoing": [
+          "layer_25"
+        ]
+      },
+      "layer_25": {
+        "incoming": [
+          "layer_24"
+        ],
+        "outgoing": [
+          "layer_26"
+        ]
+      },
+      "layer_26": {
+        "incoming": [
+          "layer_25"
+        ],
+        "outgoing": [
+          "layer_27"
+        ]
+      },
+      "layer_27": {
+        "incoming": [
+          "layer_26"
+        ],
+        "outgoing": [
+          "layer_28"
+        ]
+      },
+      "layer_28": {
+        "incoming": [
+          "layer_27"
+        ],
+        "outgoing": [
+          "layer_29"
+        ]
+      },
+      "layer_29": {
+        "incoming": [
+          "layer_28"
+        ],
+        "outgoing": [
+          "layer_30"
+        ]
+      },
+      "layer_30": {
+        "incoming": [
+          "layer_29"
+        ],
+        "outgoing": [
+          "layer_31"
+        ]
+      },
+      "layer_31": {
+        "incoming": [
+          "layer_30"
+        ],
+        "outgoing": [
+          "layer_32"
+        ]
+      },
+      "layer_32": {
+        "incoming": [
+          "layer_31"
+        ],
+        "outgoing": [
+          "layer_33"
+        ]
+      },
+      "layer_33": {
+        "incoming": [
+          "layer_32"
+        ],
+        "outgoing": [
+          "layer_34"
+        ]
+      },
+      "layer_34": {
+        "incoming": [
+          "layer_33"
+        ],
+        "outgoing": [
+          "layer_35"
+        ]
+      },
+      "layer_35": {
+        "incoming": [
+          "layer_34"
+        ],
+        "outgoing": [
+          "layer_36"
+        ]
+      },
+      "layer_36": {
+        "incoming": [
+          "layer_35"
+        ],
+        "outgoing": [
+          "layer_37"
+        ]
+      },
+      "layer_37": {
+        "incoming": [
+          "layer_36"
+        ],
+        "outgoing": [
+          "layer_38"
+        ]
+      },
+      "layer_38": {
+        "incoming": [
+          "layer_37"
+        ],
+        "outgoing": []
+      }
+    }
+  }
+}

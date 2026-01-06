@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Neural Network Visualization - WhyteBox</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .canvas-container {
+            flex: 1;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            position: relative;
+        }
+
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            outline: none;
+            touch-action: none;
+        }
+
+        .controls-panel {
+            width: 320px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            overflow-y: auto;
+        }
+
+        .panel-section {
+            margin-bottom: 25px;
+        }
+
+        .panel-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 8px;
+        }
+
+        .model-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .model-info p {
+            margin: 8px 0;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .file-input-container {
+            position: relative;
+            margin: 10px 0;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        label.file-label {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background: white;
+            border: 2px dashed #667eea;
+            color: #667eea;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        label.file-label:hover {
+            background: #f0f4ff;
+            border-color: #764ba2;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            display: none;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .demo-models {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .demo-model-btn {
+            background: linear-gradient(135deg, #48c6ef 0%, #6f86d6 100%);
+            font-size: 0.9em;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 5px 0;
+        }
+
+        .toggle-label {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 26px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #667eea;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(24px);
+        }
+
+        /* Layer Info Tooltip */
+        #layerInfoTooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+            max-width: 350px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(102, 126, 234, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        #layerInfoTooltip.visible {
+            display: block;
+        }
+
+        #layerInfoTooltip h4 {
+            margin: 0 0 12px 0;
+            color: #667eea;
+            font-size: 1.1em;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+            padding-bottom: 8px;
+        }
+
+        #layerInfoTooltip .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 6px 0;
+            font-size: 0.9em;
+        }
+
+        #layerInfoTooltip .info-label {
+            color: #aaa;
+            margin-right: 10px;
+        }
+
+        #layerInfoTooltip .info-value {
+            color: #fff;
+            font-weight: 500;
+            text-align: right;
+        }
+
+        #layerInfoTooltip .shape-display {
+            background: rgba(102, 126, 234, 0.2);
+            padding: 8px;
+            border-radius: 6px;
+            margin: 8px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+        }
+    </style>
+
+    <!-- BabylonJS -->
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1>🧠 WhyteBox 3D Visualization</h1>
+        <p class="subtitle">Interactive Neural Network Architecture Explorer</p>
+    </header>
+
+    <main>
+        <div class="canvas-container">
+            <canvas id="renderCanvas"></canvas>
+
+            <!-- Layer Info Tooltip -->
+            <div id="layerInfoTooltip">
+                <h4 id="tooltipLayerName">Layer Name</h4>
+                <div class="info-row">
+                    <span class="info-label">Type:</span>
+                    <span class="info-value" id="tooltipLayerType">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Index:</span>
+                    <span class="info-value" id="tooltipLayerIndex">-</span>
+                </div>
+                <div class="shape-display">
+                    <div class="info-row">
+                        <span class="info-label">Input Shape:</span>
+                        <span class="info-value" id="tooltipInputShape">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Output Shape:</span>
+                        <span class="info-value" id="tooltipOutputShape">-</span>
+                    </div>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Parameters:</span>
+                    <span class="info-value" id="tooltipParameters">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Trainable:</span>
+                    <span class="info-value" id="tooltipTrainable">-</span>
+                </div>
+            </div>
+
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>Loading model...</p>
+            </div>
+        </div>
+
+        <aside class="controls-panel">
+            <div class="panel-section">
+                <h3>📊 Model Information</h3>
+                <div id="modelInfo" class="model-info">
+                    <p><span class="info-label">Model:</span> No model loaded</p>
+                    <p><span class="info-label">Framework:</span> -</p>
+                    <p><span class="info-label">Layers:</span> -</p>
+                    <p><span class="info-label">Parameters:</span> -</p>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3>🎬 Demo Models</h3>
+                <div class="demo-models">
+                    <button class="demo-model-btn" onclick="loadDemoModel('test')">
+                        🧪 Load Test Model (Simple)
+                    </button>
+                    <button class="demo-model-btn" onclick="loadDemoModel('vgg16')">
+                        Load VGG16 (Backend Required)
+                    </button>
+                    <button class="demo-model-btn" onclick="loadDemoModel('resnet')">
+                        Load ResNet (Backend Required)
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3>📂 Load Custom Model</h3>
+                <div class="file-input-container">
+                    <input type="file" id="fileInput" accept=".json" onchange="loadCustomModel(event)">
+                    <label for="fileInput" class="file-label">
+                        📄 Choose JSON file...
+                    </label>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3>⚙️ View Controls</h3>
+                <div class="toggle-container">
+                    <span class="toggle-label">Show Connections</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="connectionsToggle" checked onchange="toggleConnections()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <button onclick="resetCamera()">🎥 Reset Camera</button>
+            </div>
+
+            <div class="panel-section">
+                <h3>ℹ️ Controls</h3>
+                <div class="model-info">
+                    <p><strong>🖱️ Left Click + Drag:</strong> Rotate</p>
+                    <p><strong>🖱️ Right Click + Drag:</strong> Pan</p>
+                    <p><strong>🖱️ Scroll Wheel:</strong> Zoom</p>
+                    <p><strong>🖱️ Click Layer:</strong> Select</p>
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Include all source files -->
+    <script src="../src/utils/ColorUtils.js"></script>
+    <script src="../src/utils/GeometryUtils.js"></script>
+    <script src="../src/core/Scene3DManager.js"></script>
+    <script src="../src/loaders/ModelLoader.js"></script>
+    <script src="../src/visualization/LayerVisualizerRegistry.js"></script>
+    <script src="../src/visualization/layerVisualizers/ConvolutionalVisualizer.js"></script>
+    <script src="../src/visualization/layerVisualizers/PoolingVisualizer.js"></script>
+    <script src="../src/visualization/layerVisualizers/DenseVisualizer.js"></script>
+    <script src="../src/visualization/layerVisualizers/ActivationVisualizer.js"></script>
+    <script src="../src/visualization/layerVisualizers/NormalizationVisualizer.js"></script>
+    <script src="../src/visualization/layerVisualizers/UtilityVisualizer.js"></script>
+    <script src="../src/visualization/layerVisualizers/InputOutputVisualizer.js"></script>
+    <script src="../src/visualization/layerVisualizers/DefaultVisualizer.js"></script>
+    <script src="../src/visualization/ConnectionRenderer.js"></script>
+    <script src="../src/visualization/layouts/LinearLayout.js"></script>
+    <script src="../src/visualization/layouts/HierarchicalLayout.js"></script>
+    <script src="../src/visualization/ModelVisualizer.js"></script>
+
+    <script>
+        let visualizer = null;
+
+        // Load a demo model
+        async function loadDemoModel(modelName) {
+            const loading = document.getElementById('loading');
+            loading.classList.add('active');
+
+            try {
+                let url;
+                if (modelName === 'test') {
+                    url = 'test_model.json';
+                } else if (modelName === 'vgg16') {
+                    url = '../../backend/output/vgg16_pytorch_visualization.json';
+                } else if (modelName === 'resnet') {
+                    url = '../../backend/output/resnet_visualization.json';
+                }
+
+                // Dispose of previous visualizer
+                if (visualizer) {
+                    visualizer.dispose();
+                }
+
+                // Create new visualizer
+                visualizer = new ModelVisualizer();
+                await visualizer.visualizeModel(url, 'renderCanvas');
+
+                // Update model info display
+                updateModelInfo();
+
+            } catch (error) {
+                console.error('Error loading demo model:', error);
+                alert('Failed to load demo model: ' + error.message);
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        // Load custom model from file
+        async function loadCustomModel(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const loading = document.getElementById('loading');
+            loading.classList.add('active');
+
+            try {
+                const reader = new FileReader();
+
+                reader.onload = async (e) => {
+                    try {
+                        const modelData = JSON.parse(e.target.result);
+
+                        // Dispose of previous visualizer
+                        if (visualizer) {
+                            visualizer.dispose();
+                        }
+
+                        // Create new visualizer
+                        visualizer = new ModelVisualizer();
+                        await visualizer.visualizeModel(modelData, 'renderCanvas');
+
+                        // Update model info display
+                        updateModelInfo();
+
+                    } catch (error) {
+                        console.error('Error parsing or visualizing model:', error);
+                        alert('Failed to load model. Please check the JSON format.');
+                    } finally {
+                        loading.classList.remove('active');
+                    }
+                };
+
+                reader.readAsText(file);
+
+            } catch (error) {
+                console.error('Error reading file:', error);
+                loading.classList.remove('active');
+            }
+        }
+
+        // Update model information display
+        function updateModelInfo() {
+            if (!visualizer) return;
+
+            const metadata = visualizer.getMetadata();
+            if (!metadata) return;
+
+            const infoDiv = document.getElementById('modelInfo');
+            infoDiv.innerHTML = `
+                <p><span class="info-label">Model:</span> ${metadata.model_name}</p>
+                <p><span class="info-label">Framework:</span> ${metadata.framework}</p>
+                <p><span class="info-label">Layers:</span> ${metadata.total_layers}</p>
+                <p><span class="info-label">Parameters:</span> ${metadata.total_parameters?.toLocaleString() || 'N/A'}</p>
+            `;
+        }
+
+        // Toggle connections visibility
+        function toggleConnections() {
+            if (!visualizer) return;
+
+            const toggle = document.getElementById('connectionsToggle');
+            visualizer.toggleConnections(toggle.checked);
+        }
+
+        // Reset camera to default position
+        function resetCamera() {
+            if (!visualizer) return;
+            visualizer.resetCamera();
+        }
+
+        // Initialize with a demo model on page load (optional)
+        window.addEventListener('load', () => {
+            console.log('WhyteBox 3D Visualization ready!');
+            console.log('Load a demo model or upload your own JSON file to begin.');
+
+            // Setup hover events
+            setupHoverEvents();
+        });
+
+        // Setup hover events for layer info display
+        function setupHoverEvents() {
+            const canvas = document.getElementById('renderCanvas');
+            const tooltip = document.getElementById('layerInfoTooltip');
+
+            canvas.addEventListener('mousemove', (event) => {
+                if (!visualizer || !visualizer.initialized) return;
+
+                const scene = visualizer.sceneManager.getScene();
+                const camera = visualizer.sceneManager.getCamera();
+
+                // Get pointer position
+                const pickResult = scene.pick(scene.pointerX, scene.pointerY);
+
+                if (pickResult.hit && pickResult.pickedMesh) {
+                    const mesh = pickResult.pickedMesh;
+
+                    // Check if mesh has layer metadata
+                    if (mesh.metadata && mesh.metadata.layerData) {
+                        showLayerTooltip(mesh.metadata.layerData, event);
+                    } else {
+                        hideLayerTooltip();
+                    }
+                } else {
+                    hideLayerTooltip();
+                }
+            });
+
+            canvas.addEventListener('mouseleave', () => {
+                hideLayerTooltip();
+            });
+        }
+
+        // Show layer tooltip with details
+        function showLayerTooltip(layerData, event) {
+            const tooltip = document.getElementById('layerInfoTooltip');
+
+            // Update tooltip content
+            document.getElementById('tooltipLayerName').textContent = layerData.name || 'Unknown';
+            document.getElementById('tooltipLayerType').textContent = layerData.type || 'Unknown';
+            document.getElementById('tooltipLayerIndex').textContent = layerData.index !== undefined ? layerData.index : '-';
+
+            // Format shapes
+            const inputShape = layerData.input_shape
+                ? JSON.stringify(layerData.input_shape).replace(/,/g, ', ')
+                : '-';
+            const outputShape = layerData.output_shape
+                ? JSON.stringify(layerData.output_shape).replace(/,/g, ', ')
+                : '-';
+
+            document.getElementById('tooltipInputShape').textContent = inputShape;
+            document.getElementById('tooltipOutputShape').textContent = outputShape;
+
+            // Format parameters count
+            const params = layerData.num_parameters !== undefined
+                ? layerData.num_parameters.toLocaleString()
+                : '-';
+            document.getElementById('tooltipParameters').textContent = params;
+
+            // Trainable status
+            const trainable = layerData.trainable !== undefined
+                ? (layerData.trainable ? 'Yes ✓' : 'No ✗')
+                : '-';
+            document.getElementById('tooltipTrainable').textContent = trainable;
+
+            // Position tooltip near cursor
+            const canvasRect = document.getElementById('renderCanvas').getBoundingClientRect();
+            const offsetX = 20;
+            const offsetY = 20;
+
+            let left = event.clientX - canvasRect.left + offsetX;
+            let top = event.clientY - canvasRect.top + offsetY;
+
+            // Prevent tooltip from going off-screen
+            const tooltipRect = tooltip.getBoundingClientRect();
+            if (left + tooltipRect.width > canvasRect.width) {
+                left = event.clientX - canvasRect.left - tooltipRect.width - offsetX;
+            }
+            if (top + tooltipRect.height > canvasRect.height) {
+                top = event.clientY - canvasRect.top - tooltipRect.height - offsetY;
+            }
+
+            tooltip.style.left = left + 'px';
+            tooltip.style.top = top + 'px';
+            tooltip.classList.add('visible');
+        }
+
+        // Hide layer tooltip
+        function hideLayerTooltip() {
+            const tooltip = document.getElementById('layerInfoTooltip');
+            tooltip.classList.remove('visible');
+        }
+    </script>
+</body>
+
+</html>
