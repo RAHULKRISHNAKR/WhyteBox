@@ -146,9 +146,26 @@ class PyTorchExtractor(BaseExtractor):
         except Exception as e:
             logger.warning(f"Forward pass failed: {e}. Layer shapes may be incomplete.")
         
-        # Remove hooks
         for hook in hooks:
             hook.remove()
+        
+        # ADD SYNTHETIC INPUT LAYER (for educational visualization)
+        input_layer = {
+            'id': 'layer_input',
+            'name': 'Input Image',
+            'type': 'Input',
+            'index': -1,
+            'input_shape': list(self.input_shape),
+            'output_shape': list(self.input_shape),
+            'parameters': {
+                'channels': self.input_shape[1] if len(self.input_shape) > 1 else 1,
+                'height': self.input_shape[2] if len(self.input_shape) > 2 else 1,
+                'width': self.input_shape[3] if len(self.input_shape) > 3 else 1
+            },
+            'trainable': False,
+            'visualization': {'color': '#20E830', 'size_hint': 1.0}
+        }
+        layers.append(input_layer)
         
         # Extract layer information
         layer_idx = 0
@@ -158,6 +175,26 @@ class PyTorchExtractor(BaseExtractor):
                 if layer_info:
                     layers.append(layer_info)
                     layer_idx += 1
+        
+        # ADD SYNTHETIC OUTPUT LAYER (for educational visualization)
+        last_output_shape = layers[-1]['output_shape'] if layers else list(self.input_shape)
+        output_layer = {
+            'id': 'layer_output',
+            'name': 'Predictions',
+            'type': 'Output',
+            'index': layer_idx,
+            'input_shape': last_output_shape,
+            'output_shape': last_output_shape,
+            'parameters': {
+                'num_classes': last_output_shape[-1] if last_output_shape else 1000,
+                'top_k': 3
+            },
+            'trainable': False,
+            'visualization': {'color': '#F96020', 'size_hint': 1.0}
+        }
+        layers.append(output_layer)
+        
+        logger.info(f"Extracted {len(layers)} layers (including Input/Output)")
         
         return layers
     
@@ -303,11 +340,20 @@ class PyTorchExtractor(BaseExtractor):
         """Extract connections between layers."""
         connections = []
         
-        # For sequential models, connections are straightforward
-        layers_list = [name for name, _ in self.model.named_modules() 
-                      if len(list(self.model.get_submodule(name).children())) == 0 and name]
+        # Get layer count (excluding synthetic layers)
+        actual_layers = [name for name, _ in self.model.named_modules() 
+                        if len(list(self.model.get_submodule(name).children())) == 0 and name]
         
-        for i in range(len(layers_list) - 1):
+        # Connection from Input layer to first real layer
+        connections.append({
+            'from_layer': 'layer_input',
+            'to_layer': 'layer_0',
+            'connection_type': 'sequential',
+            'data_flow': 'forward'
+        })
+        
+        # Connections between actual model layers
+        for i in range(len(actual_layers) - 1):
             connections.append({
                 'from_layer': f'layer_{i}',
                 'to_layer': f'layer_{i+1}',
@@ -315,8 +361,14 @@ class PyTorchExtractor(BaseExtractor):
                 'data_flow': 'forward'
             })
         
-        # TODO: Detect skip connections for ResNet-style architectures
-        # This requires more sophisticated graph analysis
+        # Connection from last real layer to Output layer
+        if actual_layers:
+            connections.append({
+                'from_layer': f'layer_{len(actual_layers) - 1}',
+                'to_layer': 'layer_output',
+                'connection_type': 'sequential',
+                'data_flow': 'forward'
+            })
         
         return connections
     

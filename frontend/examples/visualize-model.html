@@ -15,36 +15,48 @@
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
+            height: 100vh;
+            /* Fixed height - no page scrolling */
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+            /* Prevent page-level scrolling */
         }
 
         header {
             background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            padding: 20px;
+            padding: 15px 20px;
+            /* Reduced vertical padding */
             text-align: center;
             color: white;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+            /* Don't shrink header */
         }
 
         h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 2em;
+            /* Slightly smaller */
+            margin-bottom: 5px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
         }
 
         .subtitle {
-            font-size: 1.1em;
+            font-size: 0.9em;
             opacity: 0.9;
         }
 
         main {
             flex: 1;
             display: flex;
-            gap: 20px;
-            padding: 20px;
+            gap: 15px;
+            /* Reduced gap */
+            padding: 15px;
+            /* Reduced padding */
+            min-height: 0;
+            /* Important for flexbox */
+            overflow: hidden;
         }
 
         .canvas-container {
@@ -54,6 +66,8 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             overflow: hidden;
             position: relative;
+            min-height: 0;
+            /* Important for flexbox */
         }
 
         #renderCanvas {
@@ -70,24 +84,50 @@
         }
 
         .controls-panel {
-            width: 320px;
+            width: 280px;
+            /* Narrower panel - was 320px */
             background: rgba(255, 255, 255, 0.95);
             border-radius: 15px;
-            padding: 20px;
+            padding: 15px;
+            /* Reduced padding */
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             overflow-y: auto;
+            overflow-x: hidden;
+            flex-shrink: 0;
+            /* Don't shrink panel */
+            max-height: 100%;
+            /* Ensure it doesn't overflow */
+        }
+
+        /* Scrollbar styling for controls panel */
+        .controls-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .controls-panel::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 3px;
+        }
+
+        .controls-panel::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
         }
 
         .panel-section {
-            margin-bottom: 25px;
+            margin-bottom: 15px;
+            /* Reduced from 25px */
         }
 
         .panel-section h3 {
             color: #667eea;
-            margin-bottom: 15px;
-            font-size: 1.2em;
+            margin-bottom: 10px;
+            /* Reduced from 15px */
+            font-size: 1em;
+            /* Slightly smaller */
             border-bottom: 2px solid #667eea;
-            padding-bottom: 8px;
+            padding-bottom: 5px;
+            /* Reduced from 8px */
         }
 
         .model-info {
@@ -454,19 +494,64 @@
                 </div>
             </div>
 
-            <div class="panel-section">
-                <h3>🎬 Demo Models</h3>
-                <div class="demo-models">
-                    <button class="demo-model-btn" onclick="loadDemoModel('test')">
-                        🧪 Load Test Model (Simple)
+            <!-- Explainability Panel -->
+            <div class="panel-section" id="explainabilityPanel">
+                <h3>🔍 Explainability</h3>
+                <div class="inference-controls">
+                    <label style="display: block; margin-bottom: 10px; color: #333;">
+                        <strong>Method:</strong>
+                    </label>
+                    <select id="explainMethodSelect"
+                        style="width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #ccc;">
+                        <option value="gradcam">Grad-CAM</option>
+                        <option value="saliency">Saliency Map</option>
+                    </select>
+
+                    <label style="display: block; margin-bottom: 10px; color: #333;">
+                        <strong>Colormap:</strong>
+                    </label>
+                    <select id="colormapSelect"
+                        style="width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 6px; border: 1px solid #ccc;">
+                        <option value="jet">Jet (Blue → Red)</option>
+                        <option value="viridis">Viridis (Purple → Yellow)</option>
+                    </select>
+
+                    <label style="display: block; margin-bottom: 5px; color: #333;">
+                        <strong>Overlay Opacity:</strong> <span id="opacityValue">60%</span>
+                    </label>
+                    <input type="range" id="opacitySlider" min="0" max="100" value="60"
+                        style="width: 100%; margin-bottom: 15px;" oninput="updateOpacity(this.value)">
+
+                    <button class="demo-model-btn" id="explainBtn" onclick="explainPrediction()" disabled>
+                        🔍 Explain Prediction
                     </button>
-                    <button class="demo-model-btn" onclick="loadDemoModel('vgg16')">
-                        Load VGG16 (Backend Required)
-                    </button>
-                    <button class="demo-model-btn" onclick="loadDemoModel('resnet')">
-                        Load ResNet (Backend Required)
+                    <button class="demo-model-btn" id="clearExplainBtn" onclick="clearExplanation()" disabled
+                        style="margin-top: 10px;">
+                        🗑️ Clear Explanation
                     </button>
                 </div>
+                <div id="explainabilityInfo"
+                    style="display: none; margin-top: 15px; background: #f8f9fa; padding: 10px; border-radius: 6px;">
+                    <p style="margin: 5px 0; color: #333;"><strong>Method:</strong> <span id="explainMethod">-</span>
+                    </p>
+                    <p style="margin: 5px 0; color: #333;"><strong>Target Class:</strong> <span
+                            id="explainTargetClass">-</span></p>
+                    <p style="margin: 5px 0; color: #333;"><strong>Target Layer:</strong> <span
+                            id="explainTargetLayer">-</span></p>
+                </div>
+            </div>
+
+            <div class="panel-section">
+                <h3>🎬 Select Model</h3>
+                <select id="modelSelect" onchange="handleModelSelection()"
+                    style="width: 100%; padding: 10px; border-radius: 6px; margin-bottom: 10px; background: white; border: 2px solid #667eea;">
+                    <option value="">Loading models...</option>
+                </select>
+                <button id="loadModelBtn" class="demo-model-btn" onclick="loadSelectedModel()" disabled
+                    style="opacity: 0.6;">
+                    Load Model
+                </button>
+                <div id="modelStatus" style="margin-top: 8px; font-size: 0.85em; min-height: 20px;"></div>
             </div>
 
             <div class="panel-section">
@@ -525,11 +610,168 @@
     <script src="../src/visualization/layouts/LinearLayout.js"></script>
     <script src="../src/visualization/layouts/HierarchicalLayout.js"></script>
     <script src="../src/visualization/ModelVisualizer.js"></script>
+    <script src="../src/explainability/ExplainabilityOverlay.js"></script>
+    <script src="../src/explainability/ExplainabilityController.js"></script>
 
     <script>
         let visualizer = null;
+        let currentModel = null; // Track current model for explainability
 
-        // Load a demo model
+        // Load available models from backend on page load
+        async function loadAvailableModels() {
+            try {
+                const response = await fetch('http://localhost:5000/api/models/list');
+                const data = await response.json();
+
+                const select = document.getElementById('modelSelect');
+                select.innerHTML = '<option value="">-- Select a CNN Model --</option>';
+
+                data.models.forEach(model => {
+                    const option = document.createElement('option');
+                    option.value = model.name;
+
+                    let statusIcon = '';
+                    if (!model.is_downloaded) {
+                        statusIcon = ' 📥'; // Needs download
+                    } else if (!model.has_visualization) {
+                        statusIcon = ' ⚙️'; // Needs generation
+                    } else {
+                        statusIcon = ' ✓'; // Ready
+                    }
+
+                    option.textContent = `${model.display_name}${statusIcon}`;
+                    option.dataset.isDownloaded = model.is_downloaded;
+                    option.dataset.hasVisualization = model.has_visualization;
+                    option.dataset.framework = model.framework;
+                    option.dataset.sizeMb = model.model_size_mb;
+                    select.appendChild(option);
+                });
+
+                console.log(`✓ Loaded ${data.models.length} CNN models`);
+            } catch (error) {
+                console.error('Failed to load models:', error);
+                document.getElementById('modelSelect').innerHTML = '<option>⚠️ Backend not available</option>';
+            }
+        }
+
+        // Handle model selection
+        function handleModelSelection() {
+            const select = document.getElementById('modelSelect');
+            const option = select.options[select.selectedIndex];
+            const loadBtn = document.getElementById('loadModelBtn');
+            const statusDiv = document.getElementById('modelStatus');
+
+            if (!option.value) {
+                loadBtn.disabled = true;
+                loadBtn.style.opacity = '0.6';
+                statusDiv.textContent = '';
+                return;
+            }
+
+            loadBtn.disabled = false;
+            loadBtn.style.opacity = '1';
+
+            const isDownloaded = option.dataset.isDownloaded === 'true';
+            const hasViz = option.dataset.hasVisualization === 'true';
+            const sizeMb = option.dataset.sizeMb;
+
+            if (!isDownloaded) {
+                statusDiv.textContent = `📥 Will download model (~${sizeMb > 0 ? sizeMb : '50-500'}MB) + generate visualization`;
+                statusDiv.style.color = '#f59e0b';
+            } else if (!hasViz) {
+                statusDiv.textContent = '⚙️ Will generate visualization (~10-30s)';
+                statusDiv.style.color = '#f59e0b';
+            } else {
+                statusDiv.textContent = '✓ Ready to load';
+                statusDiv.style.color = '#4ade80';
+            }
+        }
+
+        // Load selected model (with auto-download/generation)
+        async function loadSelectedModel() {
+            const select = document.getElementById('modelSelect');
+            const option = select.options[select.selectedIndex];
+            const modelName = option.value;
+            const hasViz = option.dataset.hasVisualization === 'true';
+            const framework = option.dataset.framework;
+
+            if (!modelName) return;
+
+            const loading = document.getElementById('loading');
+            const statusDiv = document.getElementById('modelStatus');
+            loading.classList.add('active');
+
+            try {
+                // If visualization doesn't exist, generate it first (auto-downloads model if needed)
+                if (!hasViz) {
+                    statusDiv.textContent = '🔄 Generating visualization...';
+                    statusDiv.style.color = '#667eea';
+
+                    const genResponse = await fetch('http://localhost:5000/api/models/generate', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            model_name: modelName,
+                            framework: framework,
+                            download_if_missing: true
+                        })
+                    });
+
+                    const genData = await genResponse.json();
+
+                    if (!genData.success) {
+                        throw new Error(genData.error || 'Failed to generate visualization');
+                    }
+
+                    console.log(`✓ Generated: ${genData.visualization_file}`);
+
+                    // Update dropdown to show it now has visualization
+                    option.dataset.hasVisualization = 'true';
+                    option.dataset.isDownloaded = 'true';
+                    option.textContent = option.textContent.replace(/[📥⚙️]/g, '') + ' ✓';
+                }
+
+                // Load the visualization JSON from backend API
+                const vizPath = `http://localhost:5000/api/download/${modelName}_visualization.json`;
+
+                // Dispose of previous visualizer
+                if (visualizer) {
+                    visualizer.dispose();
+                }
+
+                // Create new visualizer
+                visualizer = new ModelVisualizer();
+                await visualizer.visualizeModel(vizPath, 'renderCanvas');
+
+                // Store current model info for explainability
+                currentModel = {
+                    modelPath: modelName + '_pretrained.pth',
+                    framework: framework,
+                    name: modelName
+                };
+
+                // Update model info display
+                updateModelInfo();
+
+                statusDiv.textContent = '✅ Model loaded successfully!';
+                statusDiv.style.color = '#4ade80';
+
+            } catch (error) {
+                console.error('Error loading model:', error);
+                alert('Failed to load model: ' + error.message);
+                statusDiv.textContent = '❌ Error: ' + error.message;
+                statusDiv.style.color = '#ef4444';
+            } finally {
+                loading.classList.remove('active');
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', () => {
+            loadAvailableModels();
+        });
+
+        // Load a demo model (kept for backwards compatibility)
         async function loadDemoModel(modelName) {
             const loading = document.getElementById('loading');
             loading.classList.add('active');
@@ -552,6 +794,13 @@
                 // Create new visualizer
                 visualizer = new ModelVisualizer();
                 await visualizer.visualizeModel(url, 'renderCanvas');
+
+                // Store current model info for explainability
+                currentModel = {
+                    modelPath: modelName === 'vgg16' ? 'vgg16_pretrained.pth' : modelName + '.pth',
+                    framework: 'pytorch',
+                    name: modelName
+                };
 
                 // Update model info display
                 updateModelInfo();
@@ -644,7 +893,26 @@
 
             // Setup hover events
             setupHoverEvents();
+
+            // Setup layer expansion listener for auto-applying activations
+            setupLayerExpansionListener();
         });
+
+        // Listen for layer expansion events and auto-apply activations if available
+        function setupLayerExpansionListener() {
+            window.addEventListener('layerExpanded', (event) => {
+                const { layerId, layerData } = event.detail;
+                console.log(`🔔 Layer expanded: ${layerId}`);
+
+                // If we have stored activations, apply them to the newly expanded layer
+                if (storedActivations) {
+                    console.log('✨ Applying stored activations to newly expanded layer...');
+                    applyActivations(storedActivations);
+                } else {
+                    console.log('ℹ️ No activations available yet. Run inference to see activation heatmaps!');
+                }
+            });
+        }
 
         // Setup hover events for layer info display
         function setupHoverEvents() {
@@ -894,12 +1162,19 @@
             predictionResults.style.display = 'block';
         }
 
+        // Store activations globally for later use
+        let storedActivations = null;
+
         // Apply activations to feature maps
         function applyActivations(activations) {
             if (!visualizer || !visualizer.expansionController) {
                 console.warn('Visualizer not ready for activation application');
                 return;
             }
+
+            // Store activations globally so they can be applied to layers expanded later
+            storedActivations = activations;
+            console.log('📊 Stored activations for', Object.keys(activations).length, 'layers');
 
             if (!featureMapTexturer) {
                 featureMapTexturer = new FeatureMapTexturer(visualizer.sceneManager.getScene());
@@ -909,8 +1184,9 @@
             const expandedLayers = visualizer.expansionController.expandedLayers;
 
             if (expandedLayers.size === 0) {
-                console.log('No expanded layers to apply activations to');
-                console.log('Click on a Conv2d layer to expand it and see activations!');
+                console.log('💡 No layers are currently expanded');
+                console.log('   👉 Click on a Conv2d or Dense layer to expand it and see activation heatmaps!');
+                console.log('   📋 Available layers with activation data:', Object.keys(activations).join(', '));
                 return;
             }
 
@@ -924,7 +1200,7 @@
                 const activationData = findActivationForLayer(layerId, layerData, activations);
 
                 if (activationData) {
-                    console.log(`Applying activations to layer ${layerId}`, activationData);
+                    console.log(`🎨 Applying activations to layer ${layerId}`, activationData);
 
                     // Apply texture to each feature map
                     featureMaps.forEach((fm) => {
@@ -935,19 +1211,22 @@
                                 fm.channelIndex
                             );
                         } catch (error) {
-                            console.error(`Error applying activation to feature map ${fm.index}:`, error);
+                            console.error(`❌ Error applying activation to feature map ${fm.index}:`, error);
                         }
                     });
 
                     appliedCount++;
+                } else {
+                    console.log(`⚠️ No activation data found for layer ${layerId} (${layerData.name})`);
                 }
             });
 
             if (appliedCount > 0) {
-                console.log(`✅ Applied activations to ${appliedCount} layers`);
+                console.log(`✅ Successfully applied activations to ${appliedCount} expanded layer(s)`);
             } else {
-                console.log('ℹ️ No matching activations found for expanded layers');
-                console.log('Available activations:', Object.keys(activations));
+                console.log('ℹ️ No matching activations found for the currently expanded layers');
+                console.log('   📋 Expanded layers:', Array.from(expandedLayers.keys()).join(', '));
+                console.log('   📋 Available activations:', Object.keys(activations).join(', '));
             }
         }
 
@@ -984,6 +1263,156 @@
 
             return null;
         }
+
+        // ======================
+        // EXPLAINABILITY FUNCTIONS
+        // ======================
+
+        let explainabilityController = null;
+        let explainabilityOverlay = null;
+        let currentExplainImage = null;
+
+        // Initialize explainability controller
+        function initializeExplainability() {
+            if (!explainabilityController) {
+                explainabilityController = new ExplainabilityController('http://localhost:5000');
+            }
+        }
+
+        // Handle image upload - enable explainability after inference
+        const originalHandleImageUpload = window.handleImageUpload;
+        window.handleImageUpload = function (event) {
+            if (originalHandleImageUpload) {
+                originalHandleImageUpload(event);
+            }
+
+            // Store reference to uploaded image
+            const file = event.target.files[0];
+            if (file) {
+                currentExplainImage = file;
+                // Show explainability panel
+                document.getElementById('explainabilityPanel').style.display = 'block';
+            }
+        };
+
+        // Explain prediction
+        async function explainPrediction() {
+            if (!currentExplainImage) {
+                alert('Please upload an image and run inference first');
+                return;
+            }
+
+            if (!currentModel) {
+                alert('Please load a model first');
+                return;
+            }
+
+            try {
+                initializeExplainability();
+
+                const explainBtn = document.getElementById('explainBtn');
+                explainBtn.disabled = true;
+                explainBtn.textContent = '⏳ Generating...';
+
+                // Get selected method and options
+                const method = document.getElementById('explainMethodSelect').value;
+                const colormap = document.getElementById('colormapSelect').value;
+                const opacity = parseInt(document.getElementById('opacitySlider').value) / 100;
+
+                console.log(`🔍 Requesting ${method} explanation...`);
+
+                // Request explainability
+                const result = await explainabilityController.requestExplainability(
+                    currentExplainImage,
+                    currentModel.modelPath,
+                    currentModel.framework || 'pytorch',
+                    method,
+                    {
+                        input_shape: '(224, 224)'
+                    }
+                );
+
+                // Display heatmap overlay
+                const imageElement = document.getElementById('previewImg');
+                if (!imageElement) {
+                    throw new Error('Image preview not found');
+                }
+
+                // Create explainability overlay if doesn't exist
+                const imagePreview = document.getElementById('imagePreview');
+                if (!imagePreview) {
+                    throw new Error('Image preview container not found');
+                }
+
+                // Make sure image preview is positioned relatively for overlay
+                imagePreview.style.position = 'relative';
+
+                if (!explainabilityOverlay) {
+                    explainabilityOverlay = new ExplainabilityOverlay(imagePreview);
+                }
+
+                // Render overlay
+                explainabilityOverlay.renderOverlay(imageElement, result.heatmap.data, {
+                    opacity: opacity,
+                    colormap: colormap
+                });
+
+                // Show explainability info
+                document.getElementById('explainMethod').textContent = method.toUpperCase();
+                document.getElementById('explainTargetClass').textContent =
+                    `${result.target_class} (${(result.predictions[0].confidence * 100).toFixed(2)}%)`;
+                document.getElementById('explainTargetLayer').textContent = result.target_layer || 'N/A';
+                document.getElementById('explainabilityInfo').style.display = 'block';
+
+                // Enable clear button
+                document.getElementById('clearExplainBtn').disabled = false;
+
+                console.log('✅ Explainability overlay rendered');
+
+            } catch (error) {
+                console.error('❌ Explainability error:', error);
+                alert(`Failed to generate explanation: ${error.message}`);
+            } finally {
+                const explainBtn = document.getElementById('explainBtn');
+                explainBtn.disabled = false;
+                explainBtn.textContent = '🔍 Explain Prediction';
+            }
+        }
+
+        // Clear explanation
+        function clearExplanation() {
+            if (explainabilityOverlay) {
+                explainabilityOverlay.clear();
+            }
+            document.getElementById('explainabilityInfo').style.display = 'none';
+            document.getElementById('clearExplainBtn').disabled = true;
+            console.log('🗑️ Cleared explainability overlay');
+        }
+
+        // Update opacity slider
+        function updateOpacity(value) {
+            document.getElementById('opacityValue').textContent = value + '%';
+            if (explainabilityOverlay && explainabilityOverlay.currentHeatmap) {
+                explainabilityOverlay.setOpacity(parseInt(value) / 100);
+            }
+        }
+
+        // Update colormap
+        document.getElementById('colormapSelect').addEventListener('change', function () {
+            if (explainabilityOverlay && explainabilityOverlay.currentHeatmap) {
+                explainabilityOverlay.setColormap(this.value);
+            }
+        });
+
+        // Enable explain button after inference
+        const originalRunInference = window.runInference;
+        window.runInference = async function () {
+            if (originalRunInference) {
+                await originalRunInference();
+            }
+            // Enable explain button after successful inference
+            document.getElementById('explainBtn').disabled = false;
+        };
     </script>
 </body>
 

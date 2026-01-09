@@ -62,27 +62,41 @@ class Scene3DManager {
         // Create an ArcRotateCamera (orbiting camera)
         this.camera = new BABYLON.ArcRotateCamera(
             'camera',
-            Math.PI / 2,  // alpha (horizontal rotation)
-            Math.PI / 3,  // beta (vertical rotation)
-            30,           // radius (distance from target)
+            -Math.PI / 2,  // alpha (horizontal rotation) - view from side
+            Math.PI / 2.5,  // beta (vertical rotation) - slight angle from top
+            50,            // radius (distance from target) - further back to see full model
             new BABYLON.Vector3(0, 0, 0), // target position
             this.scene
         );
 
-        // Camera limits
-        this.camera.lowerRadiusLimit = 5;
-        this.camera.upperRadiusLimit = 150;
+        // Camera limits - allow more freedom
+        this.camera.lowerRadiusLimit = 3;
+        this.camera.upperRadiusLimit = 200;
         this.camera.lowerBetaLimit = 0.1;
-        this.camera.upperBetaLimit = Math.PI / 2 + 0.5;
+        this.camera.upperBetaLimit = (Math.PI / 2) * 0.99; // Almost top-down view
 
         // Attach camera controls to canvas
         this.camera.attachControl(this.canvas, true);
 
-        // Smooth camera movements
-        this.camera.inertia = 0.9;
-        this.camera.wheelPrecision = 50;
-        this.camera.pinchPrecision = 50;
-        this.camera.panningSensibility = 100;
+        // IMPROVED CAMERA CONTROLS
+        // Reduce inertia for more responsive feel (0.9 was too sluggish)
+        this.camera.inertia = 0.7;
+
+        // Much better zoom sensitivity (lower = more sensitive, 50 was too slow)
+        this.camera.wheelPrecision = 5;      // Desktop mouse wheel
+        this.camera.pinchPrecision = 10;     // Touch pinch
+
+        // Better panning sensitivity (lower = more sensitive)
+        this.camera.panningSensibility = 50;
+
+        // Faster rotation speed
+        this.camera.angularSensibilityX = 500;  // Horizontal rotation
+        this.camera.angularSensibilityY = 500;  // Vertical rotation
+
+        // Enable smooth zooming
+        this.camera.useNaturalPinchZoom = true;
+
+        console.log('📸 Camera initialized with improved controls');
     }
 
     /**
@@ -118,11 +132,11 @@ class Scene3DManager {
         if (position && position.length === 3) {
             const targetPos = this.camera.target;
             const cameraPos = new BABYLON.Vector3(position[0], position[1], position[2]);
-            
+
             // Calculate spherical coordinates from cartesian
             const direction = cameraPos.subtract(targetPos);
             const radius = direction.length();
-            
+
             this.camera.radius = radius;
             this.camera.alpha = Math.atan2(direction.x, direction.z);
             this.camera.beta = Math.acos(direction.y / radius);
@@ -149,7 +163,7 @@ class Scene3DManager {
 
         const boundingInfo = mesh.getBoundingInfo();
         const center = boundingInfo.boundingBox.centerWorld;
-        
+
         this.camera.setTarget(center);
         this.camera.radius = distance;
     }
@@ -216,12 +230,12 @@ class Scene3DManager {
      */
     dispose() {
         this.stopRenderLoop();
-        
+
         if (this.scene) {
             this.scene.dispose();
             this.scene = null;
         }
-        
+
         if (this.engine) {
             this.engine.dispose();
             this.engine = null;

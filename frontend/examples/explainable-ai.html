@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XAI Explainability - WhyteBox</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        header {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 20px auto;
+            padding: 20px;
+            display: flex;
+            gap: 20px;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            flex-shrink: 0;
+        }
+
+        .sidebar h3 {
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.3);
+            padding-bottom: 10px;
+        }
+
+        .method-btn {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .method-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .method-btn.active {
+            background: rgba(102, 126, 234, 0.3);
+            border-color: #667eea;
+        }
+
+        .method-btn .checkmark {
+            display: none;
+            color: #4ade80;
+        }
+
+        .method-btn.active .checkmark {
+            display: inline;
+        }
+
+        .compare-btn {
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .compare-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .clear-btn {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            background: rgba(255, 100, 100, 0.3);
+            border: 1px solid rgba(255, 100, 100, 0.5);
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+
+        .main-content {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            color: #333;
+        }
+
+        .method-display {
+            display: none;
+        }
+
+        .method-display.active {
+            display: block;
+        }
+
+        .method-title {
+            font-size: 2em;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .method-description {
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .generation-time {
+            display: inline-block;
+            background: rgba(102, 126, 234, 0.1);
+            padding: 8px 15px;
+            border-radius: 6px;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+
+        .visualization-area {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 30px;
+            min-height: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+        }
+
+        .comparison-item {
+            background: #1a1a2e;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .comparison-item h4 {
+            color: white;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .comparison-item img {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+
+        .upload-section {
+            margin-bottom: 20px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: block;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .file-input-label:hover {
+            background: #5568d3;
+        }
+
+        #imagePreview {
+            margin-top: 15px;
+            text-align: center;
+        }
+
+        #previewImg {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+        }
+
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            background: white;
+            min-width: 150px;
+        }
+
+        .slider-container {
+            flex: 1;
+        }
+
+        .slider-container label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .spinner {
+            border: 4px solid rgba(102, 126, 234, 0.1);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>🔍 XAI Explainability</h1>
+        <p>Visualize and compare different explainability methods</p>
+    </header>
+
+    <div class="container">
+        <div class="sidebar">
+            <h3>Visualization Methods</h3>
+
+            <button class="method-btn" data-method="gradcam" onclick="selectMethod('gradcam')">
+                <span>Grad-CAM</span>
+                <span class="checkmark">✓</span>
+            </button>
+
+            <button class="method-btn" data-method="saliency" onclick="selectMethod('saliency')">
+                <span>Saliency Maps</span>
+                <span class="checkmark">✓</span>
+            </button>
+
+            <button class="method-btn" data-method="integrated" onclick="selectMethod('integrated')" disabled
+                style="opacity: 0.5;">
+                <span>Integrated Gradients</span>
+                <span class="checkmark">✓</span>
+            </button>
+
+            <button class="method-btn" data-method="lime" onclick="selectMethod('lime')" disabled style="opacity: 0.5;">
+                <span>LIME</span>
+                <span class="checkmark">✓</span>
+            </button>
+
+            <button class="method-btn" data-method="shap" onclick="selectMethod('shap')" disabled style="opacity: 0.5;">
+                <span>SHAP</span>
+                <span class="checkmark">✓</span>
+            </button>
+
+            <button class="compare-btn" onclick="toggleComparison()">
+                <span id="compareText">Enable Comparison</span>
+            </button>
+
+            <button class="clear-btn" onclick="clearAll()">Clear All Visualizations</button>
+
+            <div class="upload-section" style="margin-top: 30px;">
+                <h3>Select Model</h3>
+                <select id="modelSelect" style="width: 100%; padding: 12px; border-radius: 8px; margin-bottom: 15px;">
+                    <option value="">-- Select Model --</option>
+                    <option value="vgg16_pretrained.pth">VGG16 Pretrained</option>
+                    <option value="vgg16_state_dict.pth">VGG16 State Dict</option>
+                </select>
+
+                <h3 style="margin-top: 20px;">Upload Image</h3>
+                <div class="file-input-wrapper">
+                    <input type="file" id="imageInput" accept="image/*" onchange="handleImageUpload(event)">
+                    <label class="file-input-label" for="imageInput">
+                        📷 Choose Image
+                    </label>
+                </div>
+                <div id="imagePreview" style="display: none;">
+                    <img id="previewImg" src="" alt="Preview">
+                </div>
+            </div>
+
+            <div style="margin-top: 30px;">
+                <h3>Settings</h3>
+                <div class="slider-container">
+                    <label>Overlay Opacity: <span id="opacityValue">60%</span></label>
+                    <input type="range" id="opacitySlider" min="0" max="100" value="60"
+                        oninput="updateOpacity(this.value)">
+                </div>
+                <div style="margin-top: 15px;">
+                    <label>Colormap:</label>
+                    <select id="colormapSelect" onchange="updateColormap()">
+                        <option value="jet">Jet (Blue → Red)</option>
+                        <option value="viridis">Viridis (Purple → Yellow)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Grad-CAM Display -->
+            <div class="method-display" id="display-gradcam">
+                <h2 class="method-title">Gradient-weighted Class Activation Mapping (Grad-CAM)</h2>
+                <p class="method-description">
+                    Grad-CAM visualizes the regions of input that are important for predictions by using the gradients
+                    of target concepts,
+                    flowing into the final convolutional layer to produce a coarse localization map.
+                </p>
+                <div class="generation-time">Generation time: <span id="time-gradcam">--</span></div>
+                <div class="visualization-area" id="viz-gradcam">
+                    <div class="loading">
+                        <p>Upload an image and load a model to generate Grad-CAM visualization</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saliency Display -->
+            <div class="method-display" id="display-saliency">
+                <h2 class="method-title">Saliency Maps</h2>
+                <p class="method-description">
+                    Saliency maps highlight the pixels that have the strongest influence on the model's prediction
+                    by computing the gradient of the output with respect to the input image.
+                </p>
+                <div class="generation-time">Generation time: <span id="time-saliency">--</span></div>
+                <div class="visualization-area" id="viz-saliency">
+                    <div class="loading">
+                        <p>Upload an image and load a model to generate Saliency Map</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Comparison View -->
+            <div class="method-display" id="display-comparison">
+                <h2 class="method-title">Method Comparison</h2>
+                <p class="method-description">
+                    Compare multiple explainability methods side-by-side to understand how different techniques
+                    highlight different aspects of the model's decision-making process.
+                </p>
+                <div class="comparison-grid" id="comparisonGrid">
+                    <!-- Comparison items will be dynamically added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../src/explainability/ExplainabilityOverlay.js"></script>
+    <script src="../src/explainability/ExplainabilityController.js"></script>
+
+    <script>
+        let selectedMethods = new Set();
+        let currentMode = 'single'; // 'single' or 'comparison'
+        let currentImage = null;
+        let explainController = null;
+        let results = {};
+
+        // Initialize
+        function init() {
+            explainController = new ExplainabilityController('http://localhost:5000');
+            // Select Grad-CAM by default
+            selectMethod('gradcam');
+        }
+
+        function selectMethod(method) {
+            if (currentMode === 'single') {
+                // Single mode: only one method at a time
+                document.querySelectorAll('.method-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                selectedMethods.clear();
+            }
+
+            const btn = document.querySelector(`[data-method="${method}"]`);
+            if (btn.disabled) return;
+
+            if (selectedMethods.has(method)) {
+                selectedMethods.delete(method);
+                btn.classList.remove('active');
+            } else {
+                selectedMethods.add(method);
+                btn.classList.add('active');
+            }
+
+            updateDisplay();
+        }
+
+        function toggleComparison() {
+            if (currentMode === 'single') {
+                currentMode = 'comparison';
+                document.getElementById('compareText').textContent = 'Disable Comparison';
+                // Allow multiple selections
+            } else {
+                currentMode = 'single';
+                document.getElementById('compareText').textContent = 'Enable Comparison';
+                // Reset to single selection
+                const firstSelected = Array.from(selectedMethods)[0];
+                selectedMethods.clear();
+                if (firstSelected) {
+                    selectedMethods.add(firstSelected);
+                    document.querySelectorAll('.method-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    document.querySelector(`[data-method="${firstSelected}"]`).classList.add('active');
+                }
+            }
+            updateDisplay();
+        }
+
+        function updateDisplay() {
+            // Hide all displays
+            document.querySelectorAll('.method-display').forEach(disp => {
+                disp.classList.remove('active');
+            });
+
+            if (currentMode === 'comparison' && selectedMethods.size > 0) {
+                // Show comparison view
+                document.getElementById('display-comparison').classList.add('active');
+                updateComparisonGrid();
+            } else if (selectedMethods.size === 1) {
+                // Show single method view
+                const method = Array.from(selectedMethods)[0];
+                document.getElementById(`display-${method}`).classList.add('active');
+            }
+        }
+
+        function updateComparisonGrid() {
+            const grid = document.getElementById('comparisonGrid');
+            grid.innerHTML = '';
+
+            selectedMethods.forEach(method => {
+                const item = document.createElement('div');
+                item.className = 'comparison-item';
+                item.innerHTML = `
+                    <h4>${getMethodName(method)}</h4>
+                    <div class="visualization-area" id="comparison-${method}">
+                        <div class="loading">
+                            <p>Generate ${getMethodName(method)} visualization</p>
+                        </div>
+                    </div>
+                    <div class="generation-time" style="margin-top: 10px;">
+                        Time: <span id="time-comp-${method}">--</span>
+                    </div>
+                `;
+                grid.appendChild(item);
+            });
+        }
+
+        function getMethodName(method) {
+            const names = {
+                'gradcam': 'Grad-CAM',
+                'saliency': 'Saliency Maps',
+                'integrated': 'Integrated Gradients',
+                'lime': 'LIME',
+                'shap': 'SHAP'
+            };
+            return names[method] || method;
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            currentImage = file;
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('imagePreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+
+            // Auto-generate if methods are selected
+            if (selectedMethods.size > 0) {
+                generateVisualizations();
+            }
+        }
+
+        async function generateVisualizations() {
+            if (!currentImage) {
+                alert('Please upload an image first');
+                return;
+            }
+
+            // Get model from dropdown
+            const modelPath = document.getElementById('modelSelect').value;
+            if (!modelPath) {
+                alert('Please select a model first');
+                return;
+            }
+
+            const framework = 'pytorch';
+
+            for (const method of selectedMethods) {
+                await generateSingleVisualization(method, modelPath, framework);
+            }
+        }
+
+        async function generateSingleVisualization(method, modelPath, framework) {
+            const startTime = performance.now();
+
+            try {
+                const result = await explainController.requestExplainability(
+                    currentImage,
+                    modelPath,
+                    framework,
+                    method,
+                    { input_shape: '(224, 224)' }
+                );
+
+                const endTime = performance.now();
+                const duration = ((endTime - startTime) / 1000).toFixed(2);
+
+                // Update time display
+                document.getElementById(`time-${method}`).textContent = `${duration}s`;
+                if (currentMode === 'comparison') {
+                    document.getElementById(`time-comp-${method}`).textContent = `${duration}s`;
+                }
+
+                // Store result
+                results[method] = result;
+
+                // Render visualization
+                renderVisualization(method, result);
+
+            } catch (error) {
+                console.error(`Error generating ${method}:`, error);
+                alert(`Failed to generate ${method}: ${error.message}`);
+            }
+        }
+
+        function renderVisualization(method, result) {
+            // TODO: Implement actual rendering with heatmap overlay
+            const vizArea = document.getElementById(`viz-${method}`);
+            vizArea.innerHTML = `
+                <div style="color: white; text-align: center;">
+                    <p>Visualization generated successfully!</p>
+                    <p>Target Class: ${result.target_class}</p>
+                    <p>Confidence: ${(result.predictions[0].confidence * 100).toFixed(2)}%</p>
+                    <p style="margin-top: 10px; opacity: 0.7;">TODO: Render heatmap overlay</p>
+                </div>
+            `;
+
+            if (currentMode === 'comparison') {
+                const compViz = document.getElementById(`comparison-${method}`);
+                if (compViz) {
+                    compViz.innerHTML = vizArea.innerHTML;
+                }
+            }
+        }
+
+        function updateOpacity(value) {
+            document.getElementById('opacityValue').textContent = value + '%';
+            // TODO: Update actual overlay opacity
+        }
+
+        function updateColormap() {
+            // TODO: Update colormap for rendered overlays
+        }
+
+        function clearAll() {
+            results = {};
+            document.querySelectorAll('.visualization-area').forEach(area => {
+                area.innerHTML = '<div class="loading"><p>No visualization generated</p></div>';
+            });
+            document.querySelectorAll('[id^="time-"]').forEach(span => {
+                span.textContent = '--';
+            });
+        }
+
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,185 @@
+﻿WhyteBox: An AI-Integrated 3D Visualization Platform for Neural Network Education
+1. Project Overview 
+Project Name: WhyteBox
+Inspiration: https://tensorspace.org/ , https://bbycroft.net/llm 
+Objective:
+Build an AI-integrated 3D visualization platform that helps non-experts understand how Neural Networks work by allowing them to visually explore:
+* Network layers and connections
+* Filters and feature maps
+* Image regions influencing predictions (Explainable AI)
+The system must turn trained neural networks into an interactive, educational white-box experience.
+________________
+
+
+2. Target Users & Use Case
+Target Users
+* Students learning neural networks
+* Non-experts curious about how AI models work
+* Educators demonstrating NN behavior visually
+Primary Use Case
+A user uploads/selects a neural network model and an image, runs inference, and visually explores how the model processes the image and arrives at a prediction.
+________________
+
+
+________________
+3. Functional Requirements (What the System MUST Do)
+3.1 Model Handling
+* Support trained neural network models (initially CNN-based)
+* Framework support:
+   * PyTorch (mandatory)
+   * TensorFlow/Keras (optional but preferred)
+________________
+
+
+3.2 Backend Requirements
+The backend must:
+1. Run Model Inference
+   * Accept image input
+   * Run forward pass on the selected model
+   * Return top-K predictions with confidence scores
+2. Extract Intermediate Activations
+   * Capture layer-wise outputs during inference
+   * Support convolutional, pooling, and dense layers
+   * Allow limiting number of feature maps per layer (performance control)
+3. Provide Explainability Data
+   * Compute relevance/saliency maps for image inputs
+   * Expose explainability results via API
+4. Expose REST APIs
+   * /model/structure
+   * /inference
+   * /activations
+   * /explainability
+5. Return Data in JSON Format
+   * Layer metadata
+   * Activation tensors (serialized)
+   * Prediction results
+   * Explainability outputs
+________________
+
+
+3.3 Frontend Requirements
+The frontend must:
+1. 3D Visualization
+   * Render neural network layers in a 3D scene
+   * Visually show connections (including skip/branching)
+   * Use color and size to differentiate layer types
+2. User Interaction
+   * Hover → show layer info
+   * Click → focus layer
+   * Expand → show feature maps
+   * Toggle → enable explainability mode
+3. Feature Map Visualization
+   * Display feature maps as heatmaps
+   * Support grid-based expansion of layers
+   * Handle large tensors using abstraction (top-K, summaries)
+4. Explainability Visualization
+   * Overlay relevance on input images
+   * Visually link relevance to internal layers
+5. Navigation
+   * Zoom, rotate, pan
+   * Reset view
+   * Switch models cleanly
+________________
+
+
+4. Non-Functional Requirements (Constraints) 
+Performance
+* Do not load all activations by default
+* Feature maps must be fetched on demand
+* Limit feature maps per layer (default: 32 or 64)
+Usability
+* UI must be understandable by non-experts
+* Avoid exposing raw tensors or math-heavy explanations
+* Prefer visual intuition over technical detail
+Architecture
+* Backend and frontend must be fully decoupled
+* Frontend must not depend on ML frameworks
+* All ML computation must happen in backend
+________________
+
+
+5. Technology Constraints 
+Backend (Recommended)
+* Python
+* PyTorch
+* Flask / FastAPI
+* NumPy
+Frontend (Recommended)
+* JavaScript / TypeScript
+* Babylon.js (for 3D)
+* Any SPA framework (React preferred)
+Exact tools can vary, but capabilities must remain identical.
+________________
+
+
+6. Explainability Scope 
+Explainability is intended for educational intuition, not scientific rigor.
+* Acceptable:
+   * Saliency maps
+   * Gradient-based relevance
+Explainability should be:
+* Toggleable
+* Clearly labeled as “interpretive”
+________________
+
+
+7. Expected Final Output 
+7.1 User Interface
+* A web application
+* Model selection option
+* Image upload option
+* 3D neural network visualization
+* Expandable layers with feature maps
+* Explainability overlay on input image
+________________
+
+
+7.2 Demonstration Scenario
+1. User selects a CNN model
+2. User uploads an image
+3. System shows prediction results
+4. User explores:
+   * Layer structure
+   * Feature maps
+   * Relevant image regions
+5. User gains intuitive understanding of model behavior
+________________
+
+
+8. Deliverables 
+* Fully working web application
+* Backend source code
+* Frontend source code
+* API documentation
+* Setup & run instructions
+* Demo-ready configuration
+________________
+
+
+9. Explicit Non-Goals
+The project does NOT need:
+* Model training
+* Dataset management
+* Real-time video inference
+* Full transformer support (v1)
+* Mobile app
+________________
+
+
+10. Success Criteria
+The project is successful if:
+* A non-expert can explain what a layer does after using it
+* Feature maps visibly change with different images
+* Explainability highlights meaningful regions
+* System runs smoothly on standard hardware
+* Architecture is clean and modular
+________________
+
+
+________________
+Summary
+Build an educational, interactive 3D system that shows how a neural network processes an image internally, focusing on intuition and explainability rather than mathematical detail.
+________________
+
+
+What we tried to do:

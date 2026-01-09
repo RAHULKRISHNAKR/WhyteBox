@@ -20,18 +20,113 @@ class FeatureMapTexturer {
         if (encoding === 'direct') {
             // Data is directly in array format
             const flat = this._flattenArray(serializedData.data);
-            console.log(`Deserialized ${flat.length} values from direct encoding`);
+            console.log(`✅ Deserialized ${flat.length} values from direct encoding`);
             return new Float32Array(flat);
         } else if (encoding === 'base64_npy_float16') {
-            // Need to decode base64 and convert from float16
-            console.warn('Base64 numpy decoding not fully implemented in browser');
-            console.warn('This would require a numpy.js library or custom decoder');
-            // For now, return empty array - would need proper numpy.js or similar
-            return new Float32Array(0);
+            // Decode base64 and parse numpy .npy format
+            try {
+                const decoded = this._decodeBase64Numpy(serializedData.data);
+                console.log(`✅ Deserialized ${decoded.length} values from base64_npy_float16`);
+                return decoded;
+            } catch (error) {
+                console.error('❌ Failed to decode base64 numpy data:', error);
+                return new Float32Array(0);
+            }
         } else {
-            console.error('Unknown encoding:', encoding);
+            console.error('❌ Unknown encoding:', encoding);
             console.error('Supported encodings: direct, base64_npy_float16');
             return new Float32Array(0);
+        }
+    }
+
+    /**
+     * Decode base64-encoded numpy .npy file with float16 data
+     * @private
+     */
+    _decodeBase64Numpy(base64String) {
+        // Decode base64 to binary
+        const binaryString = atob(base64String);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+            bytes[i] = binaryString.charCodeAt(i);
+        }
+
+        // Parse .npy format header
+        // .npy format: magic (6 bytes) + version (2 bytes) + header_len (2 or 4 bytes) + header + data
+        const magic = String.fromCharCode(...bytes.slice(0, 6));
+        if (magic !== '\x93NUMPY') {
+            throw new Error('Invalid numpy file format');
+        }
+
+        const majorVersion = bytes[6];
+        const minorVersion = bytes[7];
+
+        let headerLen;
+        let dataStart;
+
+        if (majorVersion === 1) {
+            // Version 1.0: header length is 2 bytes (little-endian)
+            headerLen = bytes[8] | (bytes[9] << 8);
+            dataStart = 10 + headerLen;
+        } else if (majorVersion === 2 || majorVersion === 3) {
+            // Version 2.0/3.0: header length is 4 bytes (little-endian)
+            headerLen = bytes[8] | (bytes[9] << 8) | (bytes[10] << 16) | (bytes[11] << 24);
+            dataStart = 12 + headerLen;
+        } else {
+            throw new Error(`Unsupported numpy version: ${majorVersion}.${minorVersion}`);
+        }
+
+        // Extract data portion (skip header)
+        const dataBytes = bytes.slice(dataStart);
+
+        // Convert float16 to float32
+        return this._float16ToFloat32Array(dataBytes);
+    }
+
+    /**
+     * Convert float16 bytes to Float32Array
+     * @private
+     */
+    _float16ToFloat32Array(bytes) {
+        const numFloats = bytes.length / 2; // Each float16 is 2 bytes
+        const result = new Float32Array(numFloats);
+
+        for (let i = 0; i < numFloats; i++) {
+            const offset = i * 2;
+            const float16Bytes = (bytes[offset + 1] << 8) | bytes[offset]; // Little-endian
+            result[i] = this._float16ToFloat32(float16Bytes);
+        }
+
+        return result;
+    }
+
+    /**
+     * Convert a single float16 value to float32
+     * @private
+     */
+    _float16ToFloat32(float16Bits) {
+        const sign = (float16Bits & 0x8000) >> 15;
+        const exponent = (float16Bits & 0x7C00) >> 10;
+        const fraction = float16Bits & 0x03FF;
+
+        if (exponent === 0) {
+            // Subnormal or zero
+            if (fraction === 0) {
+                return sign ? -0.0 : 0.0;
+            }
+            // Subnormal
+            const value = fraction / 1024.0 * Math.pow(2, -14);
+            return sign ? -value : value;
+        } else if (exponent === 31) {
+            // Infinity or NaN
+            if (fraction === 0) {
+                return sign ? -Infinity : Infinity;
+            }
+            return NaN;
+        } else {
+            // Normalized
+            const value = (1 + fraction / 1024.0) * Math.pow(2, exponent - 15);
+            return sign ? -value : value;
         }
     }
 
@@ -61,23 +156,45 @@ class FeatureMapTexturer {
 
         // Extract dimensions based on shape
         let width, height, numChannels;
+        let isPyTorch = false;
 
         if (shape.length === 4) {
-            // 4D tensor: [batch, channels, height, width] (PyTorch)
-            // or [batch, height, width, channels] (Keras/TF)
-            // Detect format based on dimension sizes
-            if (shape[1] < shape[3]) {
-                // PyTorch format: [batch, channels, height, width]
-                numChannels = shape[1];
-                height = shape[2];
-                width = shape[3];
-                console.log('Detected PyTorch format (NCHW)');
+            // 4D tensor: [batch, channels, height, width] (PyTorch NCHW)
+            // or [batch, height, width, channels] (Keras/TF NHWC)
+            const dim1 = shape[1];
+            const dim2 = shape[2];
+            const dim3 = shape[3];
+
+            // Better heuristic: If dim1 is large (>64) and larger than spatial dims, it's likely NCHW
+            // Example: [1, 512, 28, 28] -> 512 channels (NCHW)
+            if (dim1 > 64 && dim1 > dim2 && dim1 > dim3) {
+                // PyTorch NCHW
+                isPyTorch = true;
+                numChannels = dim1;
+                height = dim2;
+                width = dim3;
+                console.log(`✓ PyTorch (NCHW): ${numChannels}ch ${height}x${width}`);
+            } else if (dim3 > 64 && dim3 > dim1 && dim3 > dim2) {
+                // Keras/TF NHWC
+                isPyTorch = false;
+                height = dim1;
+                width = dim2;
+                numChannels = dim3;
+                console.log(`✓ Keras/TF (NHWC): ${height}x${width}x${numChannels}ch`);
+            } else if (dim1 < dim3) {
+                // Fallback: smaller first dim = channels
+                isPyTorch = true;
+                numChannels = dim1;
+                height = dim2;
+                width = dim3;
+                console.log(`✓ PyTorch (NCHW): ${numChannels}ch ${height}x${width}`);
             } else {
-                // Keras/TF format: [batch, height, width, channels]
-                height = shape[1];
-                width = shape[2];
-                numChannels = shape[3];
-                console.log('Detected Keras/TF format (NHWC)');
+                // Fallback: larger first dim = height
+                isPyTorch = false;
+                height = dim1;
+                width = dim2;
+                numChannels = dim3;
+                console.log(`✓ Keras/TF (NHWC): ${height}x${width}x${numChannels}ch`);
             }
         } else if (shape.length === 3) {
             // 3D tensor (batch dimension removed): [channels, height, width] (PyTorch)
@@ -163,22 +280,24 @@ class FeatureMapTexturer {
      * @private
      */
     _extractChannel(activations, shape, channelIndex) {
-        console.log(`Extracting channel ${channelIndex} from shape:`, shape);
+        console.log(`Extracting channel ${channelIndex} from shape: (${shape.length}) [${shape.join(', ')}]`);
 
         if (shape.length === 4) {
             // 4D tensor
             const [batch, dim1, dim2, dim3] = shape;
 
-            // Detect PyTorch vs Keras/TF format
-            if (dim1 < dim3) {
+            // Use same improved heuristic as texture creation
+            const isNCHW = (dim1 > 64 && dim1 > dim2 && dim1 > dim3) || dim1 < dim3;
+
+            if (isNCHW) {
                 // PyTorch format: [batch, channels, height, width]
                 const numChannels = dim1;
                 const height = dim2;
                 const width = dim3;
 
                 if (channelIndex >= numChannels) {
-                    console.warn(`Channel index ${channelIndex} out of range (0-${numChannels - 1}), using 0`);
-                    channelIndex = 0;
+                    console.warn(`⚠️ Channel ${channelIndex} out of range (0-${numChannels - 1}), clamping to ${numChannels - 1}`);
+                    channelIndex = numChannels - 1;
                 }
 
                 const channelSize = height * width;
@@ -186,7 +305,7 @@ class FeatureMapTexturer {
                 const channelStart = batchOffset * (numChannels * channelSize) + channelIndex * channelSize;
                 const channelEnd = channelStart + channelSize;
 
-                console.log(`PyTorch 4D extraction: channel ${channelIndex}, range [${channelStart}:${channelEnd}], size ${channelSize}`);
+                console.log(`PyTorch 4D: ch ${channelIndex}/${numChannels}, extracted ${channelSize} values`);
                 return activations.slice(channelStart, channelEnd);
             } else {
                 // Keras/TF format: [batch, height, width, channels]

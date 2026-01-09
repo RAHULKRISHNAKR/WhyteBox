@@ -256,6 +256,19 @@ class ModelVisualizer {
                     if (meshData && layerData) {
                         // Toggle expansion
                         this.expansionController.toggleExpansion(layerId, meshData, layerData);
+                        
+                        // IMPORTANT: If activations are available and layer was just expanded,
+                        // trigger an event so the page can apply activations
+                        // This is handled by checking in a short timeout if layer is now expanded
+                        setTimeout(() => {
+                            if (this.expansionController.isExpanded(layerId)) {
+                                // Trigger custom event that the page can listen to
+                                const event = new CustomEvent('layerExpanded', {
+                                    detail: { layerId, layerData }
+                                });
+                                window.dispatchEvent(event);
+                            }
+                        }, 100);
                     }
                 }
             }

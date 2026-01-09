@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>WhyteBox Diagnostic Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔍 WhyteBox Diagnostic Test</h1>
+
+    <div class="test-section">
+        <h2>Step 1: Backend Connection Test</h2>
+        <button onclick="testBackend()">Test Backend (Port 5000)</button>
+        <div id="backend-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 2: File Loading Test</h2>
+        <button onclick="testFiles()">Test JavaScript Files</button>
+        <div id="files-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 3: Browser Console Check</h2>
+        <p>Open browser console (F12) and look for:</p>
+        <ul>
+            <li>❌ Any RED error messages</li>
+            <li>⚠️ Any YELLOW warnings about missing files</li>
+            <li>✅ GREEN messages showing files loaded</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>Step 4: Instructions</h2>
+        <ol>
+            <li><strong>Make sure backend is running:</strong> <code>python api/app.py</code> in backend folder</li>
+            <li><strong>Make sure frontend is running:</strong> <code>python -m http.server 8000</code> in frontend
+                folder</li>
+            <li><strong>Hard refresh browser:</strong> Press <code>Ctrl+Shift+R</code> (Windows) or
+                <code>Cmd+Shift+R</code> (Mac)</li>
+            <li><strong>Open console:</strong> Press <code>F12</code></li>
+            <li><strong>Click tests above</strong> and check results</li>
+        </ol>
+    </div>
+
+    <script>
+        async function testBackend() {
+            const result = document.getElementById('backend-result');
+            result.innerHTML = 'Testing...';
+
+            try {
+                const response = await fetch('http://localhost:5000/api/health');
+                const data = await response.json();
+
+                if (data.status === 'healthy') {
+                    result.innerHTML = `<div class="result success">✅ Backend is RUNNING and healthy!</div>`;
+                } else {
+                    result.innerHTML = `<div class="result error">⚠️ Backend responded but status is: ${data.status}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="result error">❌ Backend is NOT running or unreachable<br>Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testFiles() {
+            const result = document.getElementById('files-result');
+            result.innerHTML = 'Testing...';
+
+            const files = [
+                '../src/visualization/ModelVisualizer.js',
+                '../src/visualization/LayerExpansionController.js',
+                '../src/inference/FeatureMapTexturer.js',
+                '../src/inference/InferenceController.js',
+                '../src/core/Scene3DManager.js'
+            ];
+
+            let html = '';
+            let allGood = true;
+
+            for (const file of files) {
+                try {
+                    const response = await fetch(file);
+                    if (response.ok) {
+                        html += `<div class="result success">✅ ${file}</div>`;
+                    } else {
+                        html += `<div class="result error">❌ ${file} - Status: ${response.status}</div>`;
+                        allGood = false;
+                    }
+                } catch (error) {
+                    html += `<div class="result error">❌ ${file} - Error: ${error.message}</div>`;
+                    allGood = false;
+                }
+            }
+
+            if (allGood) {
+                html = '<div class="result success"><strong>✅ All JavaScript files found!</strong></div>' + html;
+            } else {
+                html = '<div class="result error"><strong>❌ Some files are missing or unreachable!</strong></div>' + html;
+            }
+
+            result.innerHTML = html;
+        }
+
+        // Auto-run tests on load
+        window.addEventListener('load', () => {
+            console.log('🔍 Diagnostic page loaded');
+            console.log('Click the buttons above to run tests');
+        });
+    </script>
+</body>
+
+</html>

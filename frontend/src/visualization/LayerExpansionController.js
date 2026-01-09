@@ -11,17 +11,31 @@ class LayerExpansionController {
     }
 
     /**
+     * Check if a layer is expanded
+     * @param {string} layerId - Layer ID
+     * @returns {boolean}
+     */
+    isExpanded(layerId) {
+        return this.expandedLayers.has(layerId);
+    }
+
+    /**
      * Toggle layer expansion
      * @param {string} layerId - Layer ID
      * @param {Object} meshData - Mesh data from visualizer
      * @param {Object} layerData - Layer data from backend
      */
     async toggleExpansion(layerId, meshData, layerData) {
-        if (this.expandedLayers.has(layerId)) {
+        const isCurrentlyExpanded = this.expandedLayers.has(layerId);
+        console.log(`🔄 Toggle expansion for ${layerId}: currently ${isCurrentlyExpanded ? 'EXPANDED' : 'COLLAPSED'}`);
+
+        if (isCurrentlyExpanded) {
             // Layer is expanded, collapse it
+            console.log(`⬇️ Collapsing layer ${layerId}...`);
             await this.collapseLayer(layerId);
         } else {
             // Layer is collapsed, expand it
+            console.log(`⬆️ Expanding layer ${layerId}...`);
             await this.expandLayer(layerId, meshData, layerData);
         }
     }
