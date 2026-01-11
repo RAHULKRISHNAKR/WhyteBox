@@ -1,0 +1,368 @@
+{
+    "schema_version": "1.0",
+    "metadata": {
+        "model_name": "BERT-Tiny-Sample",
+        "framework": "pytorch",
+        "framework_version": "2.0.0",
+        "converter_version": "1.0.0",
+        "total_layers": 8,
+        "total_parameters": 4500000,
+        "description": "Sample BERT-like transformer for testing visualization",
+        "input_shape": [
+            1,
+            128,
+            768
+        ],
+        "output_shape": [
+            1,
+            2
+        ],
+        "timestamp": "2026-01-12T00:00:00.000000"
+    },
+    "architecture": {
+        "architecture_type": "Transformer",
+        "is_sequential": false,
+        "has_skip_connections": true,
+        "depth": 8,
+        "has_branches": false,
+        "complexity": "medium"
+    },
+    "layers": [
+        {
+            "id": "layer_0",
+            "name": "Token Embeddings",
+            "type": "Embedding",
+            "index": 0,
+            "input_shape": [
+                1,
+                128
+            ],
+            "output_shape": [
+                1,
+                128,
+                768
+            ],
+            "parameters": {
+                "num_embeddings": 30522,
+                "embedding_dim": 768
+            },
+            "num_parameters": 23440896,
+            "trainable": true,
+            "visualization": {
+                "color": "#9B59B6",
+                "size_hint": 1.5
+            }
+        },
+        {
+            "id": "layer_1",
+            "name": "Positional Encoding",
+            "type": "Embedding",
+            "index": 1,
+            "input_shape": [
+                1,
+                128
+            ],
+            "output_shape": [
+                1,
+                128,
+                768
+            ],
+            "parameters": {
+                "num_embeddings": 512,
+                "embedding_dim": 768
+            },
+            "num_parameters": 393216,
+            "trainable": true,
+            "visualization": {
+                "color": "#8E44AD",
+                "size_hint": 1.2
+            }
+        },
+        {
+            "id": "layer_2",
+            "name": "Multi-Head Attention",
+            "type": "MultiHeadAttention",
+            "index": 2,
+            "input_shape": [
+                1,
+                128,
+                768
+            ],
+            "output_shape": [
+                1,
+                128,
+                768
+            ],
+            "parameters": {
+                "num_heads": 12,
+                "head_dim": 64,
+                "hidden_size": 768
+            },
+            "num_parameters": 2359296,
+            "trainable": true,
+            "visualization": {
+                "color": "#2980B9",
+                "size_hint": 2.0
+            }
+        },
+        {
+            "id": "layer_3",
+            "name": "Layer Norm 1",
+            "type": "LayerNorm",
+            "index": 3,
+            "input_shape": [
+                1,
+                128,
+                768
+            ],
+            "output_shape": [
+                1,
+                128,
+                768
+            ],
+            "parameters": {
+                "normalized_shape": [
+                    768
+                ]
+            },
+            "num_parameters": 1536,
+            "trainable": true,
+            "visualization": {
+                "color": "#27AE60",
+                "size_hint": 0.8
+            }
+        },
+        {
+            "id": "layer_4",
+            "name": "Feed-Forward Up",
+            "type": "Linear",
+            "index": 4,
+            "input_shape": [
+                1,
+                128,
+                768
+            ],
+            "output_shape": [
+                1,
+                128,
+                3072
+            ],
+            "parameters": {
+                "in_features": 768,
+                "out_features": 3072
+            },
+            "num_parameters": 2359296,
+            "trainable": true,
+            "visualization": {
+                "color": "#E74C3C",
+                "size_hint": 1.5
+            }
+        },
+        {
+            "id": "layer_5",
+            "name": "Feed-Forward Down",
+            "type": "Linear",
+            "index": 5,
+            "input_shape": [
+                1,
+                128,
+                3072
+            ],
+            "output_shape": [
+                1,
+                128,
+                768
+            ],
+            "parameters": {
+                "in_features": 3072,
+                "out_features": 768
+            },
+            "num_parameters": 2359296,
+            "trainable": true,
+            "visualization": {
+                "color": "#E74C3C",
+                "size_hint": 1.5
+            }
+        },
+        {
+            "id": "layer_6",
+            "name": "Layer Norm 2",
+            "type": "LayerNorm",
+            "index": 6,
+            "input_shape": [
+                1,
+                128,
+                768
+            ],
+            "output_shape": [
+                1,
+                128,
+                768
+            ],
+            "parameters": {
+                "normalized_shape": [
+                    768
+                ]
+            },
+            "num_parameters": 1536,
+            "trainable": true,
+            "visualization": {
+                "color": "#27AE60",
+                "size_hint": 0.8
+            }
+        },
+        {
+            "id": "layer_7",
+            "name": "Classifier",
+            "type": "Linear",
+            "index": 7,
+            "input_shape": [
+                1,
+                768
+            ],
+            "output_shape": [
+                1,
+                2
+            ],
+            "parameters": {
+                "in_features": 768,
+                "out_features": 2
+            },
+            "num_parameters": 1538,
+            "trainable": true,
+            "visualization": {
+                "color": "#F39C12",
+                "size_hint": 1.0
+            }
+        }
+    ],
+    "connections": [
+        {
+            "id": "conn_0",
+            "source_layer": "layer_0",
+            "target_layer": "layer_1",
+            "connection_type": "sequential",
+            "visualization": {
+                "color": "#999999",
+                "width": 2.0,
+                "style": "solid"
+            }
+        },
+        {
+            "id": "conn_1",
+            "source_layer": "layer_1",
+            "target_layer": "layer_2",
+            "connection_type": "sequential",
+            "visualization": {
+                "color": "#999999",
+                "width": 2.0,
+                "style": "solid"
+            }
+        },
+        {
+            "id": "conn_2",
+            "source_layer": "layer_2",
+            "target_layer": "layer_3",
+            "connection_type": "sequential",
+            "visualization": {
+                "color": "#999999",
+                "width": 2.0,
+                "style": "solid"
+            }
+        },
+        {
+            "id": "conn_3",
+            "source_layer": "layer_1",
+            "target_layer": "layer_3",
+            "connection_type": "residual",
+            "visualization": {
+                "color": "#E67E22",
+                "width": 3.0,
+                "style": "dashed"
+            }
+        },
+        {
+            "id": "conn_4",
+            "source_layer": "layer_3",
+            "target_layer": "layer_4",
+            "connection_type": "sequential",
+            "visualization": {
+                "color": "#999999",
+                "width": 2.0,
+                "style": "solid"
+            }
+        },
+        {
+            "id": "conn_5",
+            "source_layer": "layer_4",
+            "target_layer": "layer_5",
+            "connection_type": "sequential",
+            "visualization": {
+                "color": "#999999",
+                "width": 2.0,
+                "style": "solid"
+            }
+        },
+        {
+            "id": "conn_6",
+            "source_layer": "layer_5",
+            "target_layer": "layer_6",
+            "connection_type": "sequential",
+            "visualization": {
+                "color": "#999999",
+                "width": 2.0,
+                "style": "solid"
+            }
+        },
+        {
+            "id": "conn_7",
+            "source_layer": "layer_3",
+            "target_layer": "layer_6",
+            "connection_type": "residual",
+            "visualization": {
+                "color": "#E67E22",
+                "width": 3.0,
+                "style": "dashed"
+            }
+        },
+        {
+            "id": "conn_8",
+            "source_layer": "layer_6",
+            "target_layer": "layer_7",
+            "connection_type": "sequential",
+            "visualization": {
+                "color": "#999999",
+                "width": 2.0,
+                "style": "solid"
+            }
+        }
+    ],
+    "visualization_hints": {
+        "suggested_layout": "transformer",
+        "block_spacing": 4.0,
+        "sublayer_spacing": 1.8,
+        "layer_spacing": 2.0,
+        "vertical_spacing": 1.5,
+        "camera_position": [
+            12,
+            8,
+            25
+        ],
+        "color_scheme": "layer_type",
+        "show_connections": true,
+        "show_parameters": true
+    },
+    "topology": {
+        "total_nodes": 8,
+        "total_edges": 9,
+        "input_layers": [
+            "layer_0"
+        ],
+        "output_layers": [
+            "layer_7"
+        ],
+        "max_depth": 8,
+        "branching_factor": 1.1,
+        "has_cycles": false
+    }
+}
