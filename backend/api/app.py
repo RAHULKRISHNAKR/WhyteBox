@@ -543,7 +543,54 @@ def _load_model_for_inference(model_path, framework):
     
     if framework == 'pytorch':
         import torch
-        model = torch.load(full_path, map_location='cpu', weights_only=False)
+        import torchvision.models as models
+        from collections import OrderedDict
+        
+        loaded = torch.load(full_path, map_location='cpu', weights_only=False)
+        
+        # Check if loaded object is a state_dict (OrderedDict) or a full model
+        if isinstance(loaded, OrderedDict) or (isinstance(loaded, dict) and 'state_dict' not in loaded):
+            # It's a state_dict, need to create model architecture first
+            # Try to infer model type from filename or use a default (VGG16)
+            model_name = Path(model_path).stem.lower()
+            
+            # Map common model names to torchvision models
+            model_map = {
+                'vgg16': models.vgg16,
+                'vgg19': models.vgg19,
+                'resnet18': models.resnet18,
+                'resnet34': models.resnet34,
+                'resnet50': models.resnet50,
+                'resnet101': models.resnet101,
+                'densenet121': models.densenet121,
+                'mobilenet_v2': models.mobilenet_v2,
+                'alexnet': models.alexnet,
+            }
+            
+            # Find matching model
+            model_fn = None
+            for name, fn in model_map.items():
+                if name in model_name:
+                    model_fn = fn
+                    logger.info(f"Detected model architecture: {name}")
+                    break
+            
+            if model_fn is None:
+                raise ValueError(
+                    f"Cannot load state_dict '{model_path}': model architecture unknown. "
+                    "The file contains only weights (state_dict), not a full model. "
+                    "Either save the full model with torch.save(model, 'path.pth') or "
+                    "name the file to match a known architecture (e.g., vgg16_weights.pth)."
+                )
+            
+            # Create model and load state_dict
+            model = model_fn(weights=None)
+            model.load_state_dict(loaded)
+            logger.info(f"Loaded state_dict into {model_fn.__name__} architecture")
+        else:
+            # It's a full model object
+            model = loaded
+        
         model.eval()  # Set to evaluation mode
     else:
         from tensorflow import keras
@@ -652,12 +699,9 @@ def explainability():
         if not os.path.exists(full_model_path):
             return jsonify({'error': f'Model file not found: {model_path}'}), 404
             
-        # Load model
+        # Load model using existing inference loader (handles state_dict vs full model)
         if framework == 'pytorch':
-            import torch
-            # PyTorch 2.6+ requires weights_only=False for models with class definitions
-            model = torch.load(full_model_path, map_location='cpu', weights_only=False)
-            model.eval()
+            model = _load_model_for_inference(model_path, framework)
         else:
             return jsonify({'error': f'Framework {framework} not yet supported for explainability'}), 400
             
