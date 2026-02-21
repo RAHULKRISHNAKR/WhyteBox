@@ -530,6 +530,10 @@
                     <button class="demo-model-btn" id="explainBtn" onclick="explainPrediction()" disabled>
                         🔍 Explain Prediction
                     </button>
+                    <button class="demo-model-btn" id="compareExplainBtn" onclick="compareExplainability()" disabled
+                        style="margin-top: 10px; background: linear-gradient(135deg, #f093fb, #f5576c); border: none;">
+                        ⚡ Compare XAI Methods
+                    </button>
                     <button class="demo-model-btn" id="clearExplainBtn" onclick="clearExplanation()" disabled
                         style="margin-top: 10px;">
                         🗑️ Clear Explanation
@@ -1352,88 +1356,104 @@
         // NOTE: window.handleImageUpload and window.runInference override patterns removed (were broken).
         // All explainability setup is now done inline in handleImageUpload() and runInference() above.
 
-        // Explain prediction
+        // Explain prediction — opens a popup modal with the heatmap overlaid on the image
         async function explainPrediction() {
-            if (!currentExplainImage) {
-                alert('Please upload an image first');
-                return;
-            }
+            if (!currentExplainImage) { alert('Please upload an image first'); return; }
+            if (!currentModel) { alert('Please load a model first'); return; }
 
-            if (!currentModel) {
-                alert('Please load a model first');
-                return;
-            }
-
+            const explainBtn = document.getElementById('explainBtn');
             try {
-                initializeExplainability();
-
-                const explainBtn = document.getElementById('explainBtn');
                 explainBtn.disabled = true;
                 explainBtn.textContent = '⏳ Generating...';
 
-                // Get selected method and options
                 const method = document.getElementById('explainMethodSelect').value;
                 const colormap = document.getElementById('colormapSelect').value;
                 const opacity = parseInt(document.getElementById('opacitySlider').value) / 100;
 
                 console.log(`🔍 Requesting ${method} explanation...`);
 
-                // Request explainability — use model NAME so backend loads pretrained weights
+                // Ensure controller is initialized
+                initializeExplainability();
+
                 const result = await explainabilityController.requestExplainability(
                     currentExplainImage,
-                    currentModel.name,           // Bug 5 fix: was referencing currentModel.modelPath (the old .pth path)
+                    currentModel.name,
                     currentModel.framework || 'pytorch',
                     method,
-                    {
-                        input_shape: '(224, 224)'
-                    }
+                    { input_shape: '(224, 224)' }
                 );
 
-                // Display heatmap overlay
-                const imageElement = document.getElementById('previewImg');
-                if (!imageElement) {
-                    throw new Error('Image preview not found');
+                if (!result || !result.heatmap) {
+                    throw new Error('Backend returned no heatmap data');
                 }
 
-                // Create explainability overlay if doesn't exist
-                const imagePreview = document.getElementById('imagePreview');
-                if (!imagePreview) {
-                    throw new Error('Image preview container not found');
-                }
-
-                // Make sure image preview is positioned relatively for overlay
-                imagePreview.style.position = 'relative';
-
-                if (!explainabilityOverlay) {
-                    explainabilityOverlay = new ExplainabilityOverlay(imagePreview);
-                }
-
-                // Render overlay
-                explainabilityOverlay.renderOverlay(imageElement, result.heatmap.data, {
-                    opacity: opacity,
-                    colormap: colormap
+                // Read original image as data-URL for the popup canvas
+                const imgSrc = await new Promise(res => {
+                    const fr = new FileReader();
+                    fr.onload = e => res(e.target.result);
+                    fr.readAsDataURL(currentExplainImage);
                 });
 
-                // Show explainability info
-                document.getElementById('explainMethod').textContent = method.toUpperCase();
-                document.getElementById('explainTargetClass').textContent =
-                    `${result.target_class} (${(result.predictions[0].confidence * 100).toFixed(2)}%)`;
-                document.getElementById('explainTargetLayer').textContent = result.target_layer || 'N/A';
-                document.getElementById('explainabilityInfo').style.display = 'block';
+                // Show single-result popup
+                openExplainPopup({
+                    method, colormap, opacity,
+                    heatmap: result.heatmap,
+                    imgSrc,
+                    targetClass: result.target_class,
+                    confidence: result.predictions?.[0]?.confidence ?? null,
+                    targetLayer: result.target_layer
+                });
 
-                // Enable clear button
-                document.getElementById('clearExplainBtn').disabled = false;
-
-                console.log('✅ Explainability overlay rendered');
+                console.log('✅ Explainability popup shown');
 
             } catch (error) {
                 console.error('❌ Explainability error:', error);
                 alert(`Failed to generate explanation: ${error.message}`);
             } finally {
-                const explainBtn = document.getElementById('explainBtn');
                 explainBtn.disabled = false;
                 explainBtn.textContent = '🔍 Explain Prediction';
             }
+        }
+
+        /**
+         * Open the single-result explainability popup.
+         */
+        function openExplainPopup({ method, colormap, opacity, heatmap, imgSrc, targetClass, confidence, targetLayer }) {
+            // Reuse compareModal shell with a single card
+            const modal = document.getElementById('compareModal');
+            const loading = document.getElementById('compareLoading');
+            const grid = document.getElementById('compareGrid');
+            const errDiv = document.getElementById('compareError');
+            const subtitle = document.getElementById('compareSubtitle');
+
+            const methodLabels = {
+                gradcam: { label: 'Grad-CAM', description: 'Gradient-weighted class activation map.' },
+                saliency: { label: 'Saliency Map', description: 'Raw input gradient magnitude.' },
+                guided_backprop: { label: 'Guided Backprop', description: 'Guided gradient: sharper feature attribution.' }
+            };
+            const info = methodLabels[method] || { label: method, description: '' };
+
+            subtitle.textContent = `${info.label} · Model: ${currentModel.name}`
+                + (confidence != null ? ` · Class ${targetClass} (${(confidence * 100).toFixed(1)}%)` : '');
+
+            loading.style.display = 'none';
+            errDiv.style.display = 'none';
+
+            // Build a single wide card
+            grid.innerHTML = '';
+            grid.style.gridTemplateColumns = '1fr';   // single column for single result
+            grid.style.maxWidth = '700px';
+            grid.style.margin = '0 auto';
+
+            const card = buildResultCard(method, {
+                label: info.label,
+                description: info.description + (targetLayer ? `  Target layer: ${targetLayer}` : ''),
+                heatmap, success: true
+            }, colormap, imgSrc);
+            grid.appendChild(card);
+            grid.style.display = 'grid';
+
+            modal.style.display = 'block';
         }
 
         // Clear explanation
@@ -1454,13 +1474,315 @@
             }
         }
 
+
         // Update colormap
         document.getElementById('colormapSelect').addEventListener('change', function () {
             if (explainabilityOverlay && explainabilityOverlay.currentHeatmap) {
                 explainabilityOverlay.setColormap(this.value);
             }
         });
+
+        // =============================================
+        // COMPARE XAI METHODS MODAL
+        // =============================================
+
+        function closeCompareModal() {
+            document.getElementById('compareModal').style.display = 'none';
+        }
+
+        // Close on Escape key
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') closeCompareModal();
+        });
+
+        // Enable compare button whenever explain button is enabled
+        const _origExplainEnable = Object.getOwnPropertyDescriptor(
+            HTMLButtonElement.prototype, 'disabled');
+
+        function _syncCompareBtn() {
+            const explainBtn = document.getElementById('explainBtn');
+            const compareBtn = document.getElementById('compareExplainBtn');
+            if (compareBtn) compareBtn.disabled = explainBtn.disabled;
+        }
+
+        // Poll every 200ms to sync disable state (lightweight, avoids MutationObserver complexity)
+        setInterval(_syncCompareBtn, 200);
+
+        /**
+         * Render a heatmap overlaid on the original image onto a <canvas>.
+         * @param {number[][]} heatmapData  - 2D array [rows][cols] in [0,1]
+         * @param {string|null} imageSrc    - data-URL of the original image (or null for heatmap-only)
+         * @param {HTMLCanvasElement} canvas
+         * @param {string} colormap         - 'jet' | 'viridis' | 'grayscale'
+         * @param {number} opacity          - heatmap opacity 0..1 (default 0.6)
+         */
+        function renderHeatmapOverImage(heatmapData, imageSrc, canvas, colormap = 'jet', opacity = 0.6) {
+            const rows = heatmapData.length;
+            const cols = heatmapData[0].length;
+
+            function jetColor(t) {
+                return [
+                    Math.max(0, Math.min(255, Math.round(255 * Math.min(Math.max(4 * t - 1.5, 0), 1, Math.max(-4 * t + 4.5, 0))))),
+                    Math.max(0, Math.min(255, Math.round(255 * Math.min(Math.max(4 * t - 0.5, 0), 1, Math.max(-4 * t + 3.5, 0))))),
+                    Math.max(0, Math.min(255, Math.round(255 * Math.min(Math.max(4 * t + 0.5, 0), 1, Math.max(-4 * t + 2.5, 0)))))
+                ];
+            }
+            function viridisColor(t) {
+                return [
+                    Math.min(255, Math.round(255 * (0.267 + 0.698 * t))),
+                    Math.min(255, Math.round(255 * (0.004 + 0.878 * t - 0.285 * t * t))),
+                    Math.min(255, Math.round(255 * (0.329 + 0.543 * t - 0.872 * t * t)))
+                ];
+            }
+            function grayscaleColor(t) { const v = Math.round(255 * t); return [v, v, v]; }
+
+            const colorFn = colormap === 'viridis' ? viridisColor
+                : colormap === 'grayscale' ? grayscaleColor
+                    : jetColor;
+
+            function drawHeatmap(ctx, w, h) {
+                // Build heatmap pixel buffer at native resolution
+                const hmCanvas = document.createElement('canvas');
+                hmCanvas.width = cols; hmCanvas.height = rows;
+                const hmCtx = hmCanvas.getContext('2d');
+                const imgData = hmCtx.createImageData(cols, rows);
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const idx = (r * cols + c) * 4;
+                        const val = Math.max(0, Math.min(1, heatmapData[r][c]));
+                        const [R, G, B] = colorFn(val);
+                        imgData.data[idx] = R; imgData.data[idx + 1] = G;
+                        imgData.data[idx + 2] = B; imgData.data[idx + 3] = 255;
+                    }
+                }
+                hmCtx.putImageData(imgData, 0, 0);
+                // Draw scaled heatmap on top of image
+                ctx.globalAlpha = opacity;
+                ctx.drawImage(hmCanvas, 0, 0, w, h);
+                ctx.globalAlpha = 1.0;
+            }
+
+            if (imageSrc) {
+                const img = new Image();
+                img.onload = () => {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    drawHeatmap(ctx, img.width, img.height);
+                };
+                img.src = imageSrc;
+            } else {
+                // Fallback: heatmap only
+                canvas.width = cols; canvas.height = rows;
+                const ctx = canvas.getContext('2d');
+                ctx.globalAlpha = 1.0;
+                drawHeatmap(ctx, cols, rows);
+            }
+        }
+
+        /**
+         * Build a result card DOM element for one XAI method.
+         * @param {string} key          - 'gradcam' | 'saliency' | 'guided_backprop'
+         * @param {object} result       - from /api/explainability/compare
+         * @param {string} colormap     - colormap name
+         * @param {string|null} imgSrc  - data-URL of the original image for overlay
+         */
+        function buildResultCard(key, result, colormap, imgSrc) {
+            const cardColors = {
+                gradcam: { accent: '#667eea' },
+                saliency: { accent: '#f093fb' },
+                guided_backprop: { accent: '#43e97b' }
+            };
+            const color = cardColors[key] || { accent: '#aaa' };
+
+            const card = document.createElement('div');
+            card.style.cssText = `
+                background: #16213e; border-radius: 12px; overflow: hidden;
+                border: 1px solid ${color.accent}40; display: flex; flex-direction: column;
+            `;
+
+            const header = document.createElement('div');
+            header.style.cssText = `
+                padding: 12px 16px 8px;
+                background: linear-gradient(135deg, ${color.accent}22, transparent);
+                border-bottom: 1px solid ${color.accent}30;
+            `;
+            header.innerHTML = `
+                <div style="font-weight:700;color:#fff;font-size:0.95rem;">${result.label}</div>
+                <div style="font-size:0.75rem;color:#aaa;margin-top:3px;">${result.description || ''}</div>
+            `;
+            card.appendChild(header);
+
+            if (!result.success) {
+                const errDiv = document.createElement('div');
+                errDiv.style.cssText = 'padding:24px;text-align:center;color:#f87171;flex:1;';
+                errDiv.innerHTML = `<div style="font-size:1.4rem;">⚠️</div><p style="margin-top:8px;font-size:0.82rem;">${result.error || 'Failed'}</p>`;
+                card.appendChild(errDiv);
+                return card;
+            }
+
+            const canvasWrap = document.createElement('div');
+            canvasWrap.style.cssText = 'padding:10px;flex:1;background:#0d1117;';
+            const canvas = document.createElement('canvas');
+            canvas.style.cssText = 'width:100%;height:auto;border-radius:5px;display:block;';
+            canvasWrap.appendChild(canvas);
+            card.appendChild(canvasWrap);
+
+            // Draw image + heatmap overlay
+            requestAnimationFrame(() => renderHeatmapOverImage(result.heatmap.data, imgSrc, canvas, colormap, 0.6));
+
+            const stats = document.createElement('div');
+            stats.style.cssText = 'padding:6px 14px 10px;display:flex;gap:10px;flex-wrap:wrap;font-size:0.72rem;color:#888;';
+            const hm = result.heatmap;
+            stats.innerHTML = `
+                <span>Min:<b style="color:#ccc"> ${hm.min.toFixed(3)}</b></span>
+                <span>Max:<b style="color:#ccc"> ${hm.max.toFixed(3)}</b></span>
+                <span>Mean:<b style="color:#ccc"> ${hm.mean.toFixed(3)}</b></span>
+            `;
+            card.appendChild(stats);
+            return card;
+        }
+
+        async function compareExplainability() {
+            if (!currentExplainImage) { alert('Please upload an image first.'); return; }
+            if (!currentModel) { alert('Please load a model first.'); return; }
+
+            const modal = document.getElementById('compareModal');
+            const loading = document.getElementById('compareLoading');
+            const grid = document.getElementById('compareGrid');
+
+            // Reset to 3-column grid (may have been set to 1-col by openExplainPopup)
+            grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+            grid.style.maxWidth = 'none';
+            grid.style.margin = '0';
+            const errorDiv = document.getElementById('compareError');
+            const progress = document.getElementById('compareProgress');
+            const subtitle = document.getElementById('compareSubtitle');
+
+            modal.style.display = 'block';
+            loading.style.display = 'block';
+            grid.style.display = 'none';
+            errorDiv.style.display = 'none';
+            progress.style.width = '0%';
+            subtitle.textContent = `Model: ${currentModel.name} · ${currentExplainImage.name || 'uploaded image'}`;
+
+            let pct = 0;
+            const progressInterval = setInterval(() => { pct = Math.min(pct + 3, 90); progress.style.width = pct + '%'; }, 300);
+
+            // Read image as data-URL so cards can draw image+overlay
+            const imgSrc = await new Promise(res => {
+                const fr = new FileReader();
+                fr.onload = e => res(e.target.result);
+                fr.readAsDataURL(currentExplainImage);
+            });
+
+            try {
+                const colormap = document.getElementById('colormapSelect').value;
+                const formData = new FormData();
+                formData.append('image', currentExplainImage);
+                formData.append('model_path', currentModel.name);
+                formData.append('framework', currentModel.framework || 'pytorch');
+                formData.append('input_shape', '(224, 224)');
+
+                const response = await fetch('http://localhost:5000/api/explainability/compare', {
+                    method: 'POST', body: formData
+                });
+                clearInterval(progressInterval);
+                progress.style.width = '100%';
+
+                if (!response.ok) { const e = await response.json(); throw new Error(e.error || `HTTP ${response.status}`); }
+                const data = await response.json();
+
+                grid.innerHTML = '';
+                ['gradcam', 'saliency', 'guided_backprop'].forEach(key => {
+                    if (data.results[key]) grid.appendChild(buildResultCard(key, data.results[key], colormap, imgSrc));
+                });
+
+                if (data.predictions?.length > 0) {
+                    const conf = (data.predictions[0].confidence * 100).toFixed(1);
+                    subtitle.textContent += ` · Top: class ${data.target_class} (${conf}%)`;
+                }
+
+                loading.style.display = 'none';
+                grid.style.display = 'grid';
+                console.log('✅ Compare XAI complete:', data);
+
+            } catch (err) {
+                clearInterval(progressInterval);
+                loading.style.display = 'none';
+                errorDiv.style.display = 'block';
+                document.getElementById('compareErrorMsg').textContent = err.message;
+                console.error('❌ Compare XAI failed:', err);
+            }
+        }
     </script>
+    <!-- =====================================================
+         COMPARE XAI MODAL
+         ===================================================== -->
+    <div id="compareModal" style="
+        display: none;
+        position: fixed; inset: 0; z-index: 9999;
+        background: rgba(0,0,0,0.88);
+        backdrop-filter: blur(6px);
+        overflow-y: auto;
+        padding: 24px;
+        box-sizing: border-box;
+    ">
+        <div style="
+            max-width: 1200px; margin: 0 auto;
+            background: #1a1a2e;
+            border-radius: 16px;
+            padding: 32px;
+            box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+        ">
+            <!-- Header -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                <div>
+                    <h2 style="margin:0; color:#fff; font-size:1.6rem;">⚡ XAI Method Comparison</h2>
+                    <p id="compareSubtitle" style="margin:6px 0 0; color:#aaa; font-size:0.9rem;"></p>
+                </div>
+                <button onclick="closeCompareModal()" style="
+                    background: rgba(255,255,255,0.1); border: none; color: #fff;
+                    width: 40px; height: 40px; border-radius: 50%; font-size: 1.4rem;
+                    cursor: pointer; display: flex; align-items: center; justify-content: center;
+                    transition: background 0.2s;
+                " onmouseover="this.style.background='rgba(255,255,255,0.2)'"
+                    onmouseout="this.style.background='rgba(255,255,255,0.1)'">✕</button>
+            </div>
+
+            <!-- Loading state -->
+            <div id="compareLoading" style="text-align:center; padding:60px 0;">
+                <div style="font-size:3rem; margin-bottom:16px;">🧠</div>
+                <p style="color:#aaa; font-size:1.1rem;">Running 3 XAI methods in parallel...</p>
+                <div style="
+                    width: 200px; height: 4px; background: #333;
+                    border-radius: 2px; margin: 16px auto; overflow: hidden;
+                ">
+                    <div id="compareProgress" style="
+                        height:100%; width:0%; background: linear-gradient(90deg,#667eea,#f093fb);
+                        border-radius:2px; transition: width 0.4s ease;
+                    "></div>
+                </div>
+            </div>
+
+            <!-- Results grid (hidden until loaded) -->
+            <div id="compareGrid" style="
+                display: none;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+            ">
+                <!-- Cards injected by JS -->
+            </div>
+
+            <!-- Error state -->
+            <div id="compareError" style="display:none; text-align:center; padding:40px; color:#f87171;">
+                <div style="font-size:2rem;">❌</div>
+                <p id="compareErrorMsg" style="margin-top:12px;"></p>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>

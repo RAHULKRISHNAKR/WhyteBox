@@ -261,3 +261,85 @@ def serialize_heatmap(heatmap: np.ndarray, original_image_shape: Tuple[int, int]
         'max': float(np.max(heatmap)),
         'mean': float(np.mean(heatmap))
     }
+
+
+class GuidedBackpropGenerator:
+    """
+    Guided Backpropagation
+    
+    Modifies the standard backpropagation to only allow positive gradients
+    to flow through ReLU units where the activation is also positive.
+    Produces sharper, more fine-grained attribution maps than vanilla saliency.
+    """
+
+    def __init__(self, model, framework='pytorch'):
+        self.model = model
+        self.framework = framework.lower()
+        self._hooks = []
+
+    def _register_guided_relu_hooks(self):
+        """Patch ReLU layers so only positive gradients through positive activations pass."""
+        def guided_relu_backward(module, grad_input, grad_output):
+            # Clone before clamping — grad_input[0] is a view of an autograd buffer;
+            # returning it modified in-place raises a RuntimeError in PyTorch.
+            return (torch.clamp(grad_input[0].clone(), min=0.0),)
+
+        for module in self.model.modules():
+            if isinstance(module, torch.nn.ReLU):
+                handle = module.register_full_backward_hook(guided_relu_backward)
+                self._hooks.append(handle)
+
+    def _remove_hooks(self):
+        for h in self._hooks:
+            h.remove()
+        self._hooks.clear()
+
+    def generate_guided_backprop_pytorch(
+        self,
+        input_tensor: torch.Tensor,
+        target_class: int
+    ) -> np.ndarray:
+        """
+        Generate guided-backprop attribution for PyTorch model.
+
+        Returns:
+            Attribution map [H, W] normalized to [0, 1]
+        """
+        self.model.eval()
+        self._register_guided_relu_hooks()
+
+        try:
+            inp = input_tensor.clone().requires_grad_(True)
+            output = self.model(inp)
+
+            # Handle tuple outputs (GoogLeNet, InceptionV3)
+            if isinstance(output, (tuple, list)):
+                output = output[0]
+
+            self.model.zero_grad()
+            output[0, target_class].backward()
+
+            # Gradient with respect to input image
+            attribution = inp.grad.data.abs()          # [1, C, H, W]
+            attribution, _ = torch.max(attribution, dim=1)  # max over channels
+            attribution = attribution.squeeze().cpu().numpy()
+            attribution = (attribution - attribution.min()) / (attribution.max() - attribution.min() + 1e-8)
+
+            return attribution
+
+        finally:
+            self._remove_hooks()
+
+    def generate(
+        self,
+        input_data: Union[torch.Tensor, np.ndarray],
+        target_class: int
+    ) -> np.ndarray:
+        """Generate guided backprop (framework-agnostic interface)."""
+        if self.framework == 'pytorch':
+            if isinstance(input_data, np.ndarray):
+                input_data = torch.from_numpy(input_data).float()
+            return self.generate_guided_backprop_pytorch(input_data, target_class)
+        else:
+            raise NotImplementedError(f"Framework {self.framework} not yet implemented")
+

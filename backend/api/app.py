@@ -951,6 +951,15 @@ def explainability():
                 target_class=target_class
             )
             target_layer_name = None  # Not applicable for saliency
+
+        elif method == 'guided_backprop':
+            from core.explainability import GuidedBackpropGenerator
+            generator = GuidedBackpropGenerator(model, framework=framework)
+            heatmap = generator.generate(
+                processed_image,
+                target_class=target_class
+            )
+            target_layer_name = None  # Not applicable for guided backprop
             
         # Serialize heatmap (original_image is PIL Image)
         original_w, original_h = original_image.size  # PIL uses (width, height)
@@ -972,6 +981,131 @@ def explainability():
         
     except Exception as e:
         logger.error(f"Error generating explainability: {str(e)}")
+        logger.error(traceback.format_exc())
+        return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
+
+
+@app.route('/api/explainability/compare', methods=['POST'])
+def explainability_compare():
+    """
+    Compare multiple explainability methods on the same image.
+    Runs Grad-CAM, Saliency, and Guided Backpropagation in one call.
+
+    Expected form data:
+    - image: Image file
+    - model_path: Path/name of model
+    - framework: 'pytorch'
+    - target_class (optional): int
+    - input_shape (optional): e.g. '(224, 224)'
+    """
+    try:
+        if 'image' not in request.files or 'model_path' not in request.form:
+            return jsonify({'error': 'image and model_path are required'}), 400
+
+        image_file = request.files['image']
+        model_path = request.form['model_path']
+        framework = request.form.get('framework', 'pytorch').lower()
+
+        if framework != 'pytorch':
+            return jsonify({'error': 'Only pytorch supported for compare'}), 400
+        if not PYTORCH_AVAILABLE:
+            return jsonify({'error': 'PyTorch not installed'}), 501
+
+        # Load model (cached)
+        model = _load_model_for_inference(model_path, framework)
+
+        # Preprocess image once
+        preprocessor = ImagePreprocessor()
+        input_shape_str = request.form.get('input_shape', '(224, 224)')
+        try:
+            input_shape = eval(input_shape_str)
+        except Exception:
+            input_shape = (224, 224)
+        if len(input_shape) == 2:
+            input_shape = (1, 3, input_shape[0], input_shape[1])
+
+        original_image = preprocessor.load_image(image_file)
+        image_file.seek(0)
+        processed_image = preprocessor.preprocess_pytorch(image_file, input_shape)
+        orig_w, orig_h = original_image.size  # PIL (width, height)
+
+        # Run inference to determine target class
+        with torch.no_grad():
+            out = model(processed_image)
+            if isinstance(out, (tuple, list)):
+                out = out[0]
+            probs = torch.nn.functional.softmax(out[0], dim=0)
+            top5_prob, top5_idx = torch.topk(probs, 5)
+
+        target_class_req = request.form.get('target_class')
+        target_class = int(target_class_req) if target_class_req else top5_idx[0].item()
+
+        predictions = [
+            {'class_index': int(idx), 'confidence': float(p)}
+            for p, idx in zip(top5_prob, top5_idx)
+        ]
+
+        from core.explainability import GuidedBackpropGenerator
+
+        results = {}
+
+        # --- 1. Grad-CAM ---
+        try:
+            gradcam_gen = GradCAMGenerator(model, framework='pytorch')
+            gc_map = gradcam_gen.generate(processed_image.clone(), target_class=target_class)
+            results['gradcam'] = {
+                'label': 'Grad-CAM',
+                'description': 'Highlights class-discriminative regions using gradient-weighted activation maps.',
+                'heatmap': serialize_heatmap(gc_map, (orig_h, orig_w)),
+                'target_layer': None,
+                'success': True
+            }
+        except Exception as e:
+            results['gradcam'] = {'success': False, 'error': str(e), 'label': 'Grad-CAM'}
+            logger.warning(f'Grad-CAM failed: {e}')
+
+        # --- 2. Saliency Map ---
+        try:
+            sal_gen = SaliencyMapGenerator(model, framework='pytorch')
+            sal_map = sal_gen.generate(processed_image.clone(), target_class=target_class)
+            results['saliency'] = {
+                'label': 'Saliency Map',
+                'description': 'Raw gradient magnitude: shows which pixels most influence the prediction.',
+                'heatmap': serialize_heatmap(sal_map, (orig_h, orig_w)),
+                'target_layer': None,
+                'success': True
+            }
+        except Exception as e:
+            results['saliency'] = {'success': False, 'error': str(e), 'label': 'Saliency Map'}
+            logger.warning(f'Saliency failed: {e}')
+
+        # --- 3. Guided Backpropagation ---
+        try:
+            gbp_gen = GuidedBackpropGenerator(model, framework='pytorch')
+            gbp_map = gbp_gen.generate(processed_image.clone(), target_class=target_class)
+            results['guided_backprop'] = {
+                'label': 'Guided Backprop',
+                'description': 'Sharpened gradient: only positive gradient through positive activations passes.',
+                'heatmap': serialize_heatmap(gbp_map, (orig_h, orig_w)),
+                'target_layer': None,
+                'success': True
+            }
+        except Exception as e:
+            results['guided_backprop'] = {'success': False, 'error': str(e), 'label': 'Guided Backprop'}
+            logger.warning(f'Guided Backprop failed: {e}')
+
+        logger.info(f'Compare explainability done for class {target_class}: '
+                    f"{[k for k, v in results.items() if v.get('success')]} succeeded")
+
+        return jsonify({
+            'success': True,
+            'target_class': target_class,
+            'predictions': predictions,
+            'results': results
+        })
+
+    except Exception as e:
+        logger.error(f'Error in compare explainability: {str(e)}')
         logger.error(traceback.format_exc())
         return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
 
