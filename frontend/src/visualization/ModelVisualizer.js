@@ -138,6 +138,26 @@ class ModelVisualizer {
         this.registry.register('Output', InputOutputVisualizer.visualizeOutput.bind(InputOutputVisualizer));
         this.registry.register('Output1d', InputOutputVisualizer.visualizeOutput1d.bind(InputOutputVisualizer));
 
+        // Register transformer visualizers (if available)
+        if (typeof EmbeddingVisualizer !== 'undefined') {
+            this.registry.register('Embedding', EmbeddingVisualizer.visualizeEmbedding.bind(EmbeddingVisualizer));
+            this.registry.register('PositionalEncoding', EmbeddingVisualizer.visualizePositionalEncoding.bind(EmbeddingVisualizer));
+        }
+
+        if (typeof AttentionLayerVisualizer !== 'undefined') {
+            this.registry.register('MultiHeadAttention', AttentionLayerVisualizer.visualizeMultiHeadAttention.bind(AttentionLayerVisualizer));
+            this.registry.register('MultiheadAttention', AttentionLayerVisualizer.visualizeMultiHeadAttention.bind(AttentionLayerVisualizer));
+            this.registry.register('SelfAttention', AttentionLayerVisualizer.visualizeSelfAttention.bind(AttentionLayerVisualizer));
+            this.registry.register('CrossAttention', AttentionLayerVisualizer.visualizeCrossAttention.bind(AttentionLayerVisualizer));
+        }
+
+        if (typeof TransformerBlockVisualizer !== 'undefined') {
+            this.registry.register('TransformerEncoderLayer', TransformerBlockVisualizer.visualizeEncoderBlock.bind(TransformerBlockVisualizer));
+            this.registry.register('TransformerDecoderLayer', TransformerBlockVisualizer.visualizeDecoderBlock.bind(TransformerBlockVisualizer));
+            this.registry.register('BertLayer', TransformerBlockVisualizer.visualizeEncoderBlock.bind(TransformerBlockVisualizer));
+            this.registry.register('GPT2Block', TransformerBlockVisualizer.visualizeDecoderBlock.bind(TransformerBlockVisualizer));
+        }
+
         // Set default visualizer
         this.registry.setDefaultVisualizer(DefaultVisualizer.visualizeDefault.bind(DefaultVisualizer));
 
@@ -156,12 +176,20 @@ class ModelVisualizer {
             return 'hierarchical';
         } else if (suggestedLayout === 'linear') {
             return 'linear';
+        } else if (suggestedLayout === 'transformer') {
+            return 'transformer';
         }
 
         // Auto-detect based on architecture
-        const archType = architecture.architecture_type;
+        const archType = (architecture.architecture_type || '').toLowerCase();
 
-        if (archType === 'ResNet' || archType === 'DenseNet' || architecture.has_skip_connections) {
+        // Check for transformer architectures
+        if (archType.includes('transformer') || archType.includes('bert') ||
+            archType.includes('gpt') || archType.includes('attention')) {
+            return 'transformer';
+        }
+
+        if (archType === 'resnet' || archType === 'densenet' || architecture.has_skip_connections) {
             return 'hierarchical';
         }
 
@@ -176,6 +204,8 @@ class ModelVisualizer {
     _calculateLayerPositions(layers, connections, topology, hints, layout) {
         if (layout === 'hierarchical') {
             return HierarchicalLayout.calculatePositions(layers, connections, topology, hints);
+        } else if (layout === 'transformer' && typeof TransformerLayout !== 'undefined') {
+            return TransformerLayout.calculatePositions(layers, hints);
         } else {
             return LinearLayout.calculatePositions(layers, hints);
         }
@@ -256,7 +286,7 @@ class ModelVisualizer {
                     if (meshData && layerData) {
                         // Toggle expansion
                         this.expansionController.toggleExpansion(layerId, meshData, layerData);
-                        
+
                         // IMPORTANT: If activations are available and layer was just expanded,
                         // trigger an event so the page can apply activations
                         // This is handled by checking in a short timeout if layer is now expanded
