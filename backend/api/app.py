@@ -281,61 +281,127 @@ def download_file(filename):
         return jsonify({'error': str(e)}), 500
 
 
-# Predefined torchvision models
+# Predefined torchvision CNN models
 AVAILABLE_MODELS = {
-    'vgg16': {'display_name': 'VGG16', 'input_shape': (1, 3, 224, 224)},
-    'vgg19': {'display_name': 'VGG19', 'input_shape': (1, 3, 224, 224)},
-    'resnet18': {'display_name': 'ResNet18', 'input_shape': (1, 3, 224, 224)},
-    'resnet34': {'display_name': 'ResNet34', 'input_shape': (1, 3, 224, 224)},
-    'resnet50': {'display_name': 'ResNet50', 'input_shape': (1, 3, 224, 224)},
-    'resnet101': {'display_name': 'ResNet101', 'input_shape': (1, 3, 224, 224)},
-    'densenet121': {'display_name': 'DenseNet121', 'input_shape': (1, 3, 224, 224)},
-    'densenet161': {'display_name': 'DenseNet161', 'input_shape': (1, 3, 224, 224)},
-    'mobilenet_v2': {'display_name': 'MobileNetV2', 'input_shape': (1, 3, 224, 224)},
-    'mobilenet_v3_small': {'display_name': 'MobileNetV3-Small', 'input_shape': (1, 3, 224, 224)},
-    'mobilenet_v3_large': {'display_name': 'MobileNetV3-Large', 'input_shape': (1, 3, 224, 224)},
-    'squeezenet1_0': {'display_name': 'SqueezeNet1_0', 'input_shape': (1, 3, 224, 224)},
-    'squeezenet1_1': {'display_name': 'SqueezeNet1_1', 'input_shape': (1, 3, 224, 224)},
-    'alexnet': {'display_name': 'AlexNet', 'input_shape': (1, 3, 224, 224)},
-    'inception_v3': {'display_name': 'InceptionV3', 'input_shape': (1, 3, 299, 299)},
-    'googlenet': {'display_name': 'GoogLeNet', 'input_shape': (1, 3, 224, 224)},
-    'shufflenet_v2_x1_0': {'display_name': 'ShuffleNetV2', 'input_shape': (1, 3, 224, 224)},
-    'efficientnet_b0': {'display_name': 'EfficientNet-B0', 'input_shape': (1, 3, 224, 224)},
-    'efficientnet_b1': {'display_name': 'EfficientNet-B1', 'input_shape': (1, 3, 240, 240)},
-    'regnet_y_400mf': {'display_name': 'RegNet-Y-400MF', 'input_shape': (1, 3, 224, 224)},
+    'vgg16': {'display_name': 'VGG16', 'input_shape': (1, 3, 224, 224), 'framework': 'pytorch'},
+    'vgg19': {'display_name': 'VGG19', 'input_shape': (1, 3, 224, 224), 'framework': 'pytorch'},
+    'resnet18': {'display_name': 'ResNet18', 'input_shape': (1, 3, 224, 224), 'framework': 'pytorch'},
+    'resnet34': {'display_name': 'ResNet34', 'input_shape': (1, 3, 224, 224), 'framework': 'pytorch'},
+    'resnet50': {'display_name': 'ResNet50', 'input_shape': (1, 3, 224, 224), 'framework': 'pytorch'},
+    'resnet101': {'display_name': 'ResNet101', 'input_shape': (1, 3, 224, 224), 'framework': 'pytorch'},
+    'densenet121': {'display_name': 'DenseNet121', 'input_shape': (1, 3, 224, 224), 'framework': 'pytorch'},
+    'densenet161': {'display_name': 'DenseNet161', 'input_shape': (1, 3, 224, 224), 'framework': 'pytorch'},
+    'mobilenet_v2': {'display_name': 'MobileNetV2', 'input_shape': (1, 3, 224, 224), 'framework': 'pytorch'},
+    'mobilenet_v3_small': {'display_name': 'MobileNetV3-Small', 'input_shape': (1, 3, 224, 224), 'framework': 'pytorch'},
+    'mobilenet_v3_large': {'display_name': 'MobileNetV3-Large', 'input_shape': (1, 3, 224, 224), 'framework': 'pytorch'},
+    'squeezenet1_0': {'display_name': 'SqueezeNet1_0', 'input_shape': (1, 3, 224, 224), 'framework': 'pytorch'},
+    'squeezenet1_1': {'display_name': 'SqueezeNet1_1', 'input_shape': (1, 3, 224, 224), 'framework': 'pytorch'},
+    'alexnet': {'display_name': 'AlexNet', 'input_shape': (1, 3, 224, 224), 'framework': 'pytorch'},
+    'inception_v3': {'display_name': 'InceptionV3', 'input_shape': (1, 3, 299, 299), 'framework': 'pytorch'},
+    'googlenet': {'display_name': 'GoogLeNet', 'input_shape': (1, 3, 224, 224), 'framework': 'pytorch'},
+    'shufflenet_v2_x1_0': {'display_name': 'ShuffleNetV2', 'input_shape': (1, 3, 224, 224), 'framework': 'pytorch'},
+    'efficientnet_b0': {'display_name': 'EfficientNet-B0', 'input_shape': (1, 3, 224, 224), 'framework': 'pytorch'},
+    'efficientnet_b1': {'display_name': 'EfficientNet-B1', 'input_shape': (1, 3, 240, 240), 'framework': 'pytorch'},
+    'regnet_y_400mf': {'display_name': 'RegNet-Y-400MF', 'input_shape': (1, 3, 224, 224), 'framework': 'pytorch'},
+}
+
+# HuggingFace Transformer models (architecture visualization only, no image inference)
+# 'hf_class' is the importable base model class name from transformers
+AVAILABLE_TRANSFORMER_MODELS = {
+    'bert-base-uncased': {
+        'display_name': 'BERT-Base',
+        'hf_name': 'bert-base-uncased',
+        'hf_class': 'BertModel',
+        'arch_type': 'encoder_only',
+        'framework': 'transformer'
+    },
+    'roberta-base': {
+        'display_name': 'RoBERTa-Base',
+        'hf_name': 'roberta-base',
+        'hf_class': 'RobertaModel',
+        'arch_type': 'encoder_only',
+        'framework': 'transformer'
+    },
+    'distilbert-base-uncased': {
+        'display_name': 'DistilBERT',
+        'hf_name': 'distilbert-base-uncased',
+        'hf_class': 'DistilBertModel',
+        'arch_type': 'encoder_only',
+        'framework': 'transformer'
+    },
+    'gpt2': {
+        'display_name': 'GPT-2',
+        'hf_name': 'gpt2',
+        'hf_class': 'GPT2Model',
+        'arch_type': 'decoder_only',
+        'framework': 'transformer'
+    },
+    'distilgpt2': {
+        'display_name': 'DistilGPT-2',
+        'hf_name': 'distilgpt2',
+        'hf_class': 'GPT2Model',
+        'arch_type': 'decoder_only',
+        'framework': 'transformer'
+    },
+    't5-small': {
+        'display_name': 'T5-Small',
+        'hf_name': 't5-small',
+        'hf_class': 'T5Model',
+        'arch_type': 'encoder_decoder',
+        'framework': 'transformer'
+    },
 }
 
 
 @app.route('/api/models/list', methods=['GET'])
 def list_models():
-    """List all predefined torchvision models with their visualization JSON status."""
+    """List all predefined CNN + Transformer models with their visualization JSON status."""
     try:
         output_folder = app.config['OUTPUT_FOLDER']
         
         available_models = []
+
+        # ---- CNN models (torchvision) ----
         for model_key, model_info in AVAILABLE_MODELS.items():
-            # Check if visualization JSON exists
             viz_path = output_folder / f"{model_key}_visualization.json"
             has_visualization = viz_path.exists()
             
-            model_data = {
+            available_models.append({
                 'name': model_key,
                 'display_name': model_info['display_name'],
-                # Legacy field (used by some frontend paths)
                 'has_visualization': has_visualization,
                 'visualization_file': f"{model_key}_visualization.json" if has_visualization else None,
                 'framework': 'pytorch',
+                'model_type': 'cnn',
                 'input_shape': list(model_info['input_shape']),
-                # Fields expected by the frontend model-list UI
-                'is_downloaded': True,       # torchvision models are always downloadable on-demand
+                'is_downloaded': True,
                 'is_ready': has_visualization,
-                'model_size_mb': 0,          # architecture-only (no pretrained weights stored on disk)
-                'notes': 'Architecture extracted on-demand. Real inference requires pretrained weights.'
-            }
-            
-            available_models.append(model_data)
+                'model_size_mb': 0,
+                'notes': 'CNN model. Supports live inference + Grad-CAM.'
+            })
+
+        # ---- Transformer models (HuggingFace) ----
+        for model_key, model_info in AVAILABLE_TRANSFORMER_MODELS.items():
+            viz_path = output_folder / f"{model_key.replace('/', '_')}_visualization.json"
+            has_visualization = viz_path.exists()
+
+            available_models.append({
+                'name': model_key,
+                'display_name': f"🤖 {model_info['display_name']}",
+                'has_visualization': has_visualization,
+                'visualization_file': f"{model_key.replace('/', '_')}_visualization.json" if has_visualization else None,
+                'framework': 'transformer',
+                'model_type': 'transformer',
+                'arch_type': model_info['arch_type'],
+                'input_shape': [1, 128],   # [batch, seq_len]
+                'is_downloaded': True,
+                'is_ready': has_visualization,
+                'model_size_mb': 0,
+                'supports_inference': False,
+                'notes': f"Transformer ({model_info['arch_type']}). Architecture viz only; no image inference."
+            })
         
-        logger.info(f"Listed {len(available_models)} models")
+        logger.info(f"Listed {len(available_models)} models ({len(AVAILABLE_MODELS)} CNN + {len(AVAILABLE_TRANSFORMER_MODELS)} Transformer)")
         
         return jsonify({
             'success': True,
@@ -351,66 +417,113 @@ def list_models():
 @app.route('/api/models/generate', methods=['POST'])
 def generate_model_visualization():
     """
-    Generate visualization JSON for a model using universal converter.
-    The converter downloads from torchvision internally if needed.
+    Generate visualization JSON for a CNN or Transformer model.
     
     JSON body:
-        - model_name: name of the model (e.g., 'vgg16', 'resnet50')
+        - model_name: name of the model (e.g., 'vgg16', 'bert-base-uncased')
+        - framework: 'pytorch' or 'transformer' (optional, auto-detected)
     """
     try:
         data = request.get_json()
         model_name = data.get('model_name')
+        requested_framework = data.get('framework', '').lower()
         
         if not model_name:
             return jsonify({'error': 'model_name is required'}), 400
         
-        # Check if this is a predefined model
-        if model_name not in AVAILABLE_MODELS:
+        # Auto-detect framework from model name if not provided
+        if model_name in AVAILABLE_TRANSFORMER_MODELS:
+            framework = 'transformer'
+        elif model_name in AVAILABLE_MODELS:
+            framework = 'pytorch'
+        else:
             return jsonify({'error': f'Model {model_name} not in predefined list'}), 400
-        
-        model_info = AVAILABLE_MODELS[model_name]
-        input_shape = model_info['input_shape']
-        
-        logger.info(f"Generating visualization for {model_name} using universal converter...")
-        
-        # Import torchvision and get model
-        import torch
-        import torchvision.models as models
-        
-        # Get the model function from torchvision
-        model_fn = getattr(models, model_name)
-        
-        # Create model WITHOUT pretrained weights (we only need architecture for visualization)
-        logger.info(f"Creating {model_name} architecture (no weight download needed)...")
-        model = model_fn(weights=None)  # No download! Just architecture
-        model.eval()
-        
-        # Extract model structure using PyTorchExtractor
-        extractor = PyTorchExtractor(
-            model,
-            input_shape=input_shape,
-            model_name=model_name,
-            extract_weights=False
-        )
-        
-        extracted_data = extractor.extract()
-        
-        # Convert to visualization format using UniversalConverter
-        converter = UniversalConverter(include_weights=False)
-        viz_data = converter.convert(extracted_data)
-        
-        # Save to output folder
-        output_file = app.config['OUTPUT_FOLDER'] / f"{model_name}_visualization.json"
-        converter.save_to_file(viz_data, str(output_file))
-        
-        logger.info(f"✓ Generated visualization: {output_file.name}")
-        
-        return jsonify({
-            'success': True,
-            'model_name': model_name,
-            'visualization_file': output_file.name,
-            'message': 'Visualization generated successfully'
-        })
+
+        if framework == 'transformer':
+            # ---- HuggingFace Transformer visualization ----
+            try:
+                from transformers import AutoModel
+            except ImportError:
+                return jsonify({'error': 'transformers package not installed. Run: pip install transformers'}), 501
+            
+            from extractors.transformer_extractor import TransformerExtractor
+            import json
+            
+            model_info = AVAILABLE_TRANSFORMER_MODELS[model_name]
+            hf_name = model_info['hf_name']
+            hf_class_name = model_info['hf_class']
+            
+            logger.info(f"Loading {hf_class_name} from HuggingFace: {hf_name}...")
+
+            # Import the exact base model class directly — avoids Auto class resolution
+            # issues (e.g. DistilBertModel not found when Auto resolves to task-specific class)
+            import importlib
+            transformers_mod = importlib.import_module('transformers')
+            model_cls = getattr(transformers_mod, hf_class_name, None)
+            if model_cls is None:
+                return jsonify({'error': f'transformers class {hf_class_name} not found. '
+                                         'Try: pip install --upgrade transformers'}), 500
+
+            hf_model = model_cls.from_pretrained(hf_name)
+            hf_model.eval()
+            
+            extractor = TransformerExtractor(
+                model=hf_model,
+                model_name=model_info['display_name'],
+                extract_weights=False
+            )
+            
+            extracted_data = extractor.extract()
+            
+            # Save directly (TransformerExtractor returns the viz-ready dict)
+            safe_name = model_name.replace('/', '_')
+            output_file = app.config['OUTPUT_FOLDER'] / f"{safe_name}_visualization.json"
+            with open(output_file, 'w') as f:
+                json.dump(extracted_data, f)
+            
+            logger.info(f"✓ Generated transformer visualization: {output_file.name}")
+            
+            return jsonify({
+                'success': True,
+                'model_name': model_name,
+                'visualization_file': output_file.name,
+                'message': 'Transformer visualization generated successfully'
+            })
+
+        else:
+            # ---- CNN / torchvision visualization ----
+            model_info = AVAILABLE_MODELS[model_name]
+            input_shape = model_info['input_shape']
+            
+            logger.info(f"Generating CNN visualization for {model_name}...")
+            
+            model_fn = getattr(tv_models, model_name)
+            model = model_fn(weights=None)
+            model.eval()
+            
+            extractor = PyTorchExtractor(
+                model,
+                input_shape=input_shape,
+                model_name=model_name,
+                extract_weights=False
+            )
+            
+            extracted_data = extractor.extract()
+            
+            converter = UniversalConverter(include_weights=False)
+            viz_data = converter.convert(extracted_data)
+            
+            output_file = app.config['OUTPUT_FOLDER'] / f"{model_name}_visualization.json"
+            converter.save_to_file(viz_data, str(output_file))
+            
+            logger.info(f"✓ Generated visualization: {output_file.name}")
+            
+            return jsonify({
+                'success': True,
+                'model_name': model_name,
+                'visualization_file': output_file.name,
+                'message': 'Visualization generated successfully'
+            })
         
     except Exception as e:
         logger.error(f"Error generating model visualization: {str(e)}")

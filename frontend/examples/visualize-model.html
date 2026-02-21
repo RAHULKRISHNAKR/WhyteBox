@@ -485,8 +485,13 @@
                         ▶️ Run Inference
                     </button>
                 </div>
+                <div id="inferenceNote"
+                    style="display:none; margin-top:8px; font-size:0.82em; color:#888; background:#f8f8f8; padding:6px 8px; border-radius:5px;">
+                    ℹ️ Transformer models support architecture visualization only. Image inference is not available.
+                </div>
                 <div id="imagePreview" style="display: none; margin-top: 10px;">
-                    <img id="previewImg" style="max-width: 100%; border-radius: 6px;">
+                    <img id="previewImg"
+                        style="max-width: 100%; max-height: 220px; width: 100%; object-fit: contain; display: block; border-radius: 6px; background: #f0f0f0;">
                 </div>
                 <div id="predictionResults" style="display: none; margin-top: 15px;">
                     <h4 style="margin-bottom: 10px; color: #667eea;">Predictions:</h4>
@@ -633,30 +638,52 @@
                 const data = await response.json();
 
                 const select = document.getElementById('modelSelect');
-                select.innerHTML = '<option value="">-- Select a CNN Model --</option>';
+                select.innerHTML = '<option value="">-- Select a Model --</option>';
 
-                data.models.forEach(model => {
+                // Separate CNN and Transformer models
+                const cnnModels = data.models.filter(m => m.model_type !== 'transformer');
+                const transformerModels = data.models.filter(m => m.model_type === 'transformer');
+
+                function makeOption(model) {
                     const option = document.createElement('option');
                     option.value = model.name;
 
                     let statusIcon = '';
                     if (!model.is_downloaded) {
-                        statusIcon = ' 📥'; // Needs download
+                        statusIcon = ' 📥';
                     } else if (!model.has_visualization) {
-                        statusIcon = ' ⚙️'; // Needs generation
+                        statusIcon = ' ⚙️';
                     } else {
-                        statusIcon = ' ✓'; // Ready
+                        statusIcon = ' ✓';
                     }
 
                     option.textContent = `${model.display_name}${statusIcon}`;
                     option.dataset.isDownloaded = model.is_downloaded;
                     option.dataset.hasVisualization = model.has_visualization;
                     option.dataset.framework = model.framework;
+                    option.dataset.modelType = model.model_type || 'cnn';
                     option.dataset.sizeMb = model.model_size_mb;
-                    select.appendChild(option);
-                });
+                    option.dataset.supportsInference = model.supports_inference !== false ? 'true' : 'false';
+                    return option;
+                }
 
-                console.log(`✓ Loaded ${data.models.length} CNN models`);
+                // ---- CNN models group ----
+                if (cnnModels.length > 0) {
+                    const cnnGroup = document.createElement('optgroup');
+                    cnnGroup.label = '🖼️ CNN Models (supports inference + XAI)';
+                    cnnModels.forEach(m => cnnGroup.appendChild(makeOption(m)));
+                    select.appendChild(cnnGroup);
+                }
+
+                // ---- Transformer models group ----
+                if (transformerModels.length > 0) {
+                    const txGroup = document.createElement('optgroup');
+                    txGroup.label = '🤖 Transformer Models (architecture visualization only)';
+                    transformerModels.forEach(m => txGroup.appendChild(makeOption(m)));
+                    select.appendChild(txGroup);
+                }
+
+                console.log(`✓ Loaded ${cnnModels.length} CNN + ${transformerModels.length} Transformer models`);
             } catch (error) {
                 console.error('Failed to load models:', error);
                 document.getElementById('modelSelect').innerHTML = '<option>⚠️ Backend not available</option>';
@@ -683,16 +710,31 @@
             const isDownloaded = option.dataset.isDownloaded === 'true';
             const hasViz = option.dataset.hasVisualization === 'true';
             const sizeMb = option.dataset.sizeMb;
+            const modelType = option.dataset.modelType || 'cnn';
+            const isTransformer = modelType === 'transformer';
 
-            if (!isDownloaded) {
-                statusDiv.textContent = `📥 Will download model (~${sizeMb > 0 ? sizeMb : '50-500'}MB) + generate visualization`;
-                statusDiv.style.color = '#f59e0b';
-            } else if (!hasViz) {
-                statusDiv.textContent = '⚙️ Will generate visualization (~10-30s)';
-                statusDiv.style.color = '#f59e0b';
+            // Show/hide inference panel based on model type
+            const inferenceNote = document.getElementById('inferenceNote');
+            if (isTransformer) {
+                statusDiv.textContent = isTransformer && !hasViz
+                    ? '⚙️ Will download & generate transformer architecture (~30-60s)'
+                    : '✓ Architecture-only visualization (no image inference)';
+                statusDiv.style.color = hasViz ? '#4ade80' : '#f59e0b';
+                if (inferenceNote) inferenceNote.style.display = 'block';
+                document.getElementById('runInferenceBtn').disabled = true;
+                document.getElementById('explainBtn').disabled = true;
             } else {
-                statusDiv.textContent = '✓ Ready to load';
-                statusDiv.style.color = '#4ade80';
+                if (!isDownloaded) {
+                    statusDiv.textContent = `📥 Will download model (~${sizeMb > 0 ? sizeMb : '50-500'}MB) + generate visualization`;
+                    statusDiv.style.color = '#f59e0b';
+                } else if (!hasViz) {
+                    statusDiv.textContent = '⚙️ Will generate visualization (~10-30s)';
+                    statusDiv.style.color = '#f59e0b';
+                } else {
+                    statusDiv.textContent = '✓ Ready to load';
+                    statusDiv.style.color = '#4ade80';
+                }
+                if (inferenceNote) inferenceNote.style.display = 'none';
             }
         }
 
