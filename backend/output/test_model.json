@@ -17,8 +17,8 @@
       1,
       10
     ],
-    "timestamp": "2025-10-15T14:08:42.527938",
-    "conversion_timestamp": "2025-10-15T14:08:42.527938"
+    "timestamp": "2026-02-21T19:43:16.220062",
+    "conversion_timestamp": "2026-02-21T19:43:16.220062"
   },
   "layers": [
     {
@@ -132,8 +132,8 @@
   "connections": [
     {
       "id": "conn_0",
-      "from_layer": "layer_0",
-      "to_layer": "layer_1",
+      "source_layer": "layer_0",
+      "target_layer": "layer_1",
       "connection_type": "sequential",
       "data_flow": "forward",
       "visualization": {
@@ -144,8 +144,8 @@
     },
     {
       "id": "conn_1",
-      "from_layer": "layer_1",
-      "to_layer": "layer_2",
+      "source_layer": "layer_1",
+      "target_layer": "layer_2",
       "connection_type": "sequential",
       "data_flow": "forward",
       "visualization": {

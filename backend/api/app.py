@@ -14,6 +14,14 @@ from pathlib import Path
 from datetime import datetime
 import traceback
 
+# Try to import torch at module level (available check)
+try:
+    import torch
+    import torchvision.models as tv_models
+    PYTORCH_AVAILABLE = True
+except ImportError:
+    PYTORCH_AVAILABLE = False
+
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -313,10 +321,16 @@ def list_models():
             model_data = {
                 'name': model_key,
                 'display_name': model_info['display_name'],
+                # Legacy field (used by some frontend paths)
                 'has_visualization': has_visualization,
                 'visualization_file': f"{model_key}_visualization.json" if has_visualization else None,
                 'framework': 'pytorch',
-                'input_shape': model_info['input_shape']
+                'input_shape': list(model_info['input_shape']),
+                # Fields expected by the frontend model-list UI
+                'is_downloaded': True,       # torchvision models are always downloadable on-demand
+                'is_ready': has_visualization,
+                'model_size_mb': 0,          # architecture-only (no pretrained weights stored on disk)
+                'notes': 'Architecture extracted on-demand. Real inference requires pretrained weights.'
             }
             
             available_models.append(model_data)
@@ -522,8 +536,39 @@ def run_inference():
         return jsonify({'error': str(e), 'traceback': traceback.format_exc()}), 500
 
 
+# Torchvision model name -> constructor mapping (for inference by model name)
+TORCHVISION_MODEL_MAP = {
+    'vgg16': lambda: tv_models.vgg16(weights='IMAGENET1K_V1') if PYTORCH_AVAILABLE else None,
+    'vgg19': lambda: tv_models.vgg19(weights='IMAGENET1K_V1') if PYTORCH_AVAILABLE else None,
+    'resnet18': lambda: tv_models.resnet18(weights='IMAGENET1K_V1') if PYTORCH_AVAILABLE else None,
+    'resnet34': lambda: tv_models.resnet34(weights='IMAGENET1K_V1') if PYTORCH_AVAILABLE else None,
+    'resnet50': lambda: tv_models.resnet50(weights='IMAGENET1K_V2') if PYTORCH_AVAILABLE else None,
+    'resnet101': lambda: tv_models.resnet101(weights='IMAGENET1K_V2') if PYTORCH_AVAILABLE else None,
+    'densenet121': lambda: tv_models.densenet121(weights='IMAGENET1K_V1') if PYTORCH_AVAILABLE else None,
+    'densenet161': lambda: tv_models.densenet161(weights='IMAGENET1K_V1') if PYTORCH_AVAILABLE else None,
+    'mobilenet_v2': lambda: tv_models.mobilenet_v2(weights='IMAGENET1K_V1') if PYTORCH_AVAILABLE else None,
+    'mobilenet_v3_small': lambda: tv_models.mobilenet_v3_small(weights='IMAGENET1K_V1') if PYTORCH_AVAILABLE else None,
+    'mobilenet_v3_large': lambda: tv_models.mobilenet_v3_large(weights='IMAGENET1K_V1') if PYTORCH_AVAILABLE else None,
+    'alexnet': lambda: tv_models.alexnet(weights='IMAGENET1K_V1') if PYTORCH_AVAILABLE else None,
+    'squeezenet1_0': lambda: tv_models.squeezenet1_0(weights='IMAGENET1K_V1') if PYTORCH_AVAILABLE else None,
+    'squeezenet1_1': lambda: tv_models.squeezenet1_1(weights='IMAGENET1K_V1') if PYTORCH_AVAILABLE else None,
+    'googlenet': lambda: tv_models.googlenet(weights='IMAGENET1K_V1') if PYTORCH_AVAILABLE else None,
+    'inception_v3': lambda: tv_models.inception_v3(weights='IMAGENET1K_V1') if PYTORCH_AVAILABLE else None,
+    'shufflenet_v2_x1_0': lambda: tv_models.shufflenet_v2_x1_0(weights='IMAGENET1K_V1') if PYTORCH_AVAILABLE else None,
+    'efficientnet_b0': lambda: tv_models.efficientnet_b0(weights='IMAGENET1K_V1') if PYTORCH_AVAILABLE else None,
+    'efficientnet_b1': lambda: tv_models.efficientnet_b1(weights='IMAGENET1K_V1') if PYTORCH_AVAILABLE else None,
+    'regnet_y_400mf': lambda: tv_models.regnet_y_400mf(weights='IMAGENET1K_V1') if PYTORCH_AVAILABLE else None,
+}
+
+
 def _load_model_for_inference(model_path, framework):
-    """Load model with caching."""
+    """Load model with caching.
+    
+    Accepts either:
+    - A torchvision model name (e.g. 'vgg16') → downloads pretrained weights on first call
+    - A relative filename in the UPLOAD_FOLDER (e.g. 'mymodel.pth')
+    - An absolute file path
+    """
     cache_key = f"{framework}_{model_path}"
     
     if cache_key in model_cache:
@@ -532,74 +577,75 @@ def _load_model_for_inference(model_path, framework):
     
     logger.info(f"Loading model: {model_path}")
     
-    # Check if path is relative (in output folder) or absolute
-    if not Path(model_path).is_absolute():
-        full_path = app.config['UPLOAD_FOLDER'] / model_path
-    else:
-        full_path = Path(model_path)
-    
-    if not full_path.exists():
-        raise FileNotFoundError(f"Model file not found: {model_path}")
-    
     if framework == 'pytorch':
-        import torch
-        import torchvision.models as models
+        if not PYTORCH_AVAILABLE:
+            raise RuntimeError('PyTorch is not installed')
+        
         from collections import OrderedDict
+        
+        # --- Case 1: Known torchvision model name ---
+        model_name_lower = model_path.lower().strip()
+        if model_name_lower in TORCHVISION_MODEL_MAP:
+            logger.info(f"Loading pretrained torchvision model: {model_name_lower}")
+            model = TORCHVISION_MODEL_MAP[model_name_lower]()
+            model.eval()
+            model_cache[cache_key] = model
+            logger.info(f"Pretrained {model_name_lower} loaded and cached")
+            return model
+        
+        # --- Case 2: File path (relative or absolute) ---
+        if not Path(model_path).is_absolute():
+            full_path = app.config['UPLOAD_FOLDER'] / model_path
+        else:
+            full_path = Path(model_path)
+        
+        if not full_path.exists():
+            raise FileNotFoundError(
+                f"Model file not found: {model_path}. "
+                "Either use a torchvision model name (e.g. 'vgg16') or upload a .pth file first."
+            )
         
         loaded = torch.load(full_path, map_location='cpu', weights_only=False)
         
-        # Check if loaded object is a state_dict (OrderedDict) or a full model
-        if isinstance(loaded, OrderedDict) or (isinstance(loaded, dict) and 'state_dict' not in loaded):
-            # It's a state_dict, need to create model architecture first
-            # Try to infer model type from filename or use a default (VGG16)
-            model_name = Path(model_path).stem.lower()
-            
-            # Map common model names to torchvision models
-            model_map = {
-                'vgg16': models.vgg16,
-                'vgg19': models.vgg19,
-                'resnet18': models.resnet18,
-                'resnet34': models.resnet34,
-                'resnet50': models.resnet50,
-                'resnet101': models.resnet101,
-                'densenet121': models.densenet121,
-                'mobilenet_v2': models.mobilenet_v2,
-                'alexnet': models.alexnet,
-            }
-            
-            # Find matching model
+        # Check if loaded object is a state_dict or a full model
+        if isinstance(loaded, (OrderedDict, dict)) and not hasattr(loaded, 'forward'):
+            # It's a state_dict — try to infer architecture from filename
+            name_stem = full_path.stem.lower()
             model_fn = None
-            for name, fn in model_map.items():
-                if name in model_name:
+            for known_name, fn in TORCHVISION_MODEL_MAP.items():
+                if known_name in name_stem:
                     model_fn = fn
-                    logger.info(f"Detected model architecture: {name}")
+                    logger.info(f"Detected architecture {known_name} from filename")
                     break
             
             if model_fn is None:
                 raise ValueError(
-                    f"Cannot load state_dict '{model_path}': model architecture unknown. "
-                    "The file contains only weights (state_dict), not a full model. "
-                    "Either save the full model with torch.save(model, 'path.pth') or "
-                    "name the file to match a known architecture (e.g., vgg16_weights.pth)."
+                    f"Cannot load state_dict from '{model_path}': architecture unknown. "
+                    "Name the file to match a known model (e.g. 'vgg16_custom.pth') or "
+                    "save the full model with torch.save(model, path)."
                 )
             
-            # Create model and load state_dict
-            model = model_fn(weights=None)
-            model.load_state_dict(loaded)
-            logger.info(f"Loaded state_dict into {model_fn.__name__} architecture")
+            model = model_fn()
+            # Remove classifier head mismatch gracefully
+            try:
+                model.load_state_dict(loaded)
+            except RuntimeError:
+                model.load_state_dict(loaded, strict=False)
+                logger.warning("Loaded state_dict with strict=False (some keys skipped)")
         else:
-            # It's a full model object
+            # Full model object already
             model = loaded
         
-        model.eval()  # Set to evaluation mode
+        model.eval()
     else:
         from tensorflow import keras
+        full_path = app.config['UPLOAD_FOLDER'] / model_path if not Path(model_path).is_absolute() else Path(model_path)
+        if not full_path.exists():
+            raise FileNotFoundError(f"Model file not found: {model_path}")
         model = keras.models.load_model(full_path)
     
-    # Cache the model
     model_cache[cache_key] = model
     logger.info(f"Model loaded and cached: {cache_key}")
-    
     return model
 
 
@@ -694,12 +740,16 @@ def explainability():
         
         logger.info(f"Generating {method} for {framework} model: {model_path}")
         
-        # Construct full model path
-        full_model_path = os.path.join(app.config['UPLOAD_FOLDER'], model_path)
-        if not os.path.exists(full_model_path):
-            return jsonify({'error': f'Model file not found: {model_path}'}), 404
+        # Only check for a file on disk when the model_path is NOT a known torchvision model name.
+        # Known names (e.g. 'vgg16', 'resnet18') are loaded directly by _load_model_for_inference
+        # via torchvision with pretrained weights — no .pth file needed.
+        is_torchvision_name = model_path.lower().strip() in TORCHVISION_MODEL_MAP
+        if not is_torchvision_name:
+            full_model_path = os.path.join(app.config['UPLOAD_FOLDER'], model_path)
+            if not os.path.exists(full_model_path):
+                return jsonify({'error': f'Model file not found: {model_path}'}), 404
             
-        # Load model using existing inference loader (handles state_dict vs full model)
+        # Load model using existing inference loader (handles torchvision names + file paths)
         if framework == 'pytorch':
             model = _load_model_for_inference(model_path, framework)
         else:
@@ -724,9 +774,15 @@ def explainability():
         # Preprocess for PyTorch (returns tensor)
         processed_image = preprocessor.preprocess_pytorch(image_file, input_shape)
         
+        if not PYTORCH_AVAILABLE:
+            return jsonify({'error': 'PyTorch not installed'}), 501
+        
         # Run inference to get predictions
         with torch.no_grad():
             output = model(processed_image)
+            # Handle GoogLeNet/InceptionV3 aux output tuple
+            if isinstance(output, (tuple, list)):
+                output = output[0]
             probabilities = torch.nn.functional.softmax(output[0], dim=0)
             top5_prob, top5_indices = torch.topk(probabilities, 5)
             

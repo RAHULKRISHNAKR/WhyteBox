@@ -752,12 +752,18 @@
                 visualizer = new ModelVisualizer();
                 await visualizer.visualizeModel(vizPath, 'renderCanvas');
 
-                // Store current model info for explainability
+                // Store current model info for explainability/inference — use model name (key) as model_path
+                // so the backend recognises it as a torchvision model and loads pretrained weights.
                 currentModel = {
-                    modelPath: modelName + '_pretrained.pth',
+                    modelPath: modelName,       // e.g. 'vgg16' — backend handles pretrained download
                     framework: framework,
                     name: modelName
                 };
+
+                // If user already has an image selected, enable the explain button now
+                if (selectedImageFile) {
+                    document.getElementById('explainBtn').disabled = false;
+                }
 
                 // Update model info display
                 updateModelInfo();
@@ -1078,6 +1084,8 @@
             if (!file) return;
 
             selectedImageFile = file;
+            // Also store for explainability (Bug 5 fix — was broken by window override pattern)
+            currentExplainImage = file;
 
             // Show preview
             const reader = new FileReader();
@@ -1087,6 +1095,14 @@
                 document.getElementById('runInferenceBtn').disabled = false;
             };
             reader.readAsDataURL(file);
+
+            // Show explainability panel (Bug 5 fix — was in the broken override)
+            document.getElementById('explainabilityPanel').style.display = 'block';
+
+            // Enable explain button now if we also already have a model (Bug 7 fix)
+            if (currentModel) {
+                document.getElementById('explainBtn').disabled = false;
+            }
         }
 
         // Run inference
@@ -1107,18 +1123,18 @@
             try {
                 initInference();
 
-                // Get model info
-                const metadata = visualizer.getMetadata();
+                // Get current model info - fall back gracefully
+                if (!currentModel) {
+                    alert('Please load a model first');
+                    loading.classList.remove('active');
+                    return;
+                }
 
-                // Model path - backend will look in models/ folder
-                const modelPath = 'vgg16_pretrained.pth';
-                const framework = 'pytorch';
-
-                // Run inference
+                // Run inference — send the model NAME as model_path; backend maps it to pretrained weights
                 const results = await inferenceController.runInference(
                     selectedImageFile,
-                    modelPath,
-                    framework,
+                    currentModel ? currentModel.name : 'vgg16',   // Bug 4 fix
+                    currentModel ? currentModel.framework : 'pytorch',
                     {
                         include_activations: true,
                         max_features: 64
@@ -1132,6 +1148,9 @@
                 if (results.activations) {
                     applyActivations(results.activations);
                 }
+
+                // Enable explain button after successful inference (Bug 6 fix — was in broken override)
+                document.getElementById('explainBtn').disabled = false;
 
                 console.log('Inference complete:', results);
 
@@ -1288,26 +1307,13 @@
             }
         }
 
-        // Handle image upload - enable explainability after inference
-        const originalHandleImageUpload = window.handleImageUpload;
-        window.handleImageUpload = function (event) {
-            if (originalHandleImageUpload) {
-                originalHandleImageUpload(event);
-            }
-
-            // Store reference to uploaded image
-            const file = event.target.files[0];
-            if (file) {
-                currentExplainImage = file;
-                // Show explainability panel
-                document.getElementById('explainabilityPanel').style.display = 'block';
-            }
-        };
+        // NOTE: window.handleImageUpload and window.runInference override patterns removed (were broken).
+        // All explainability setup is now done inline in handleImageUpload() and runInference() above.
 
         // Explain prediction
         async function explainPrediction() {
             if (!currentExplainImage) {
-                alert('Please upload an image and run inference first');
+                alert('Please upload an image first');
                 return;
             }
 
@@ -1330,10 +1336,10 @@
 
                 console.log(`🔍 Requesting ${method} explanation...`);
 
-                // Request explainability
+                // Request explainability — use model NAME so backend loads pretrained weights
                 const result = await explainabilityController.requestExplainability(
                     currentExplainImage,
-                    currentModel.modelPath,
+                    currentModel.name,           // Bug 5 fix: was referencing currentModel.modelPath (the old .pth path)
                     currentModel.framework || 'pytorch',
                     method,
                     {
@@ -1412,16 +1418,6 @@
                 explainabilityOverlay.setColormap(this.value);
             }
         });
-
-        // Enable explain button after inference
-        const originalRunInference = window.runInference;
-        window.runInference = async function () {
-            if (originalRunInference) {
-                await originalRunInference();
-            }
-            // Enable explain button after successful inference
-            document.getElementById('explainBtn').disabled = false;
-        };
     </script>
 </body>
 

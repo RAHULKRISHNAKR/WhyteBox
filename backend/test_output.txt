@@ -1,0 +1,34 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.10.8, pytest-7.4.2, pluggy-1.6.0
+rootdir: C:\Users\rahul\OneDrive\Documents\GitHub\WhyteBoxV1\backend
+plugins: anyio-4.9.0, hypothesis-6.140.2
+collected 4 items
+
+tests\test_simple.py ..E.                                                [100%]
+
+=================================== ERRORS ====================================
+______________________ ERROR at setup of test_validator _______________________
+file C:\Users\rahul\OneDrive\Documents\GitHub\WhyteBoxV1\backend\tests\test_simple.py, line 153
+  def test_validator(viz_data):
+E       fixture 'viz_data' not found
+>       available fixtures: anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, doctest_namespace, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, monkeypatch, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+C:\Users\rahul\OneDrive\Documents\GitHub\WhyteBoxV1\backend\tests\test_simple.py:153
+============================== warnings summary ===============================
+tests/test_simple.py::test_imports
+  C:\Users\rahul\AppData\Local\Programs\Python\Python310\lib\site-packages\_pytest\python.py:198: PytestReturnNotNoneWarning: Expected None, but tests/test_simple.py::test_imports returned True, which will be an error in a future version of pytest.  Did you mean to use `assert` instead of `return`?
+    warnings.warn(
+
+tests/test_simple.py::test_converter_with_mock_data
+  C:\Users\rahul\AppData\Local\Programs\Python\Python310\lib\site-packages\_pytest\python.py:198: PytestReturnNotNoneWarning: Expected None, but tests/test_simple.py::test_converter_with_mock_data returned (True, {'metadata': {'model_name': 'TestModel', 'framework': 'pytorch', 'framework_version': '2.0.0', 'converter_version': '1.0.0', 'total_layers': 3, 'total_parameters': 5000, 'trainable_parameters': 5000, 'input_shape': [1, 3, 224, 224], 'output_shape': [1, 10], 'timestamp': '2026-02-21T19:43:16.220062', 'conversion_timestamp': '2026-02-21T19:43:16.220062'}, 'layers': [{'id': 'layer_0', 'name': 'conv1', 'type': 'Conv2d', 'index': 0, 'input_shape': [1, 3, 224, 224], 'output_shape': [1, 64, 224, 224], 'parameters': {'in_channels': 3, 'out_channels': 64, 'kernel_size': [3, 3], 'stride': [1, 1], 'padding': [1, 1]}, 'activation': 'relu', 'trainable': True, 'parameter_count': 0, 'visualization': {'color': '#4A90E2', 'opacity': 1.0, 'size_hint': 3.0, 'display_name': 'conv1'}}, {'id': 'layer_1', 'name': 'pool1', 'type': 'MaxPool2d', 'index': 1, 'input_shape': [1, 64, 224, 224], 'output_shape': [1, 64, 112, 112], 'parameters': {'kernel_size': [2, 2], 'stride': [2, 2]}, 'activation': None, 'trainable': False, 'parameter_count': 0, 'visualization': {'color': '#F5A623', 'opacity': 1.0, 'size_hint': 3.0, 'display_name': 'pool1'}}, {'id': 'layer_2', 'name': 'fc', 'type': 'Linear', 'index': 2, 'input_shape': [1, 802816], 'output_shape': [1, 10], 'parameters': {'in_features': 802816, 'out_features': 10}, 'activation': 'softmax', 'trainable': True, 'parameter_count': 0, 'visualization': {'color': '#50C878', 'opacity': 1.0, 'size_hint': 0.5, 'display_name': 'fc'}}], 'connections': [{'id': 'conn_0', 'source_layer': 'layer_0', 'target_layer': 'layer_1', 'connection_type': 'sequential', 'data_flow': 'forward', 'visualization': {'color': '#4A90E2', 'width': 1.0, 'style': 'solid'}}, {'id': 'conn_1', 'source_layer': 'layer_1', 'target_layer': 'layer_2', 'connection_type': 'sequential', 'data_flow': 'forward', 'visualization': {'color': '#4A90E2', 'width': 1.0, 'style': 'solid'}}], 'architecture': {'layer_type_distribution': {'Conv2d': 1, 'MaxPool2d': 1, 'Linear': 1}, 'stages': [{'layers': ['layer_0', 'layer_1', 'layer_2'], 'type': 'Conv2d'}], 'depth': 3, 'has_skip_connections': False, 'architecture_type': 'Sequential'}, 'visualization_hints': {'recommended_layout': 'linear', 'color_scheme': 'gradient', 'camera_position': {'x': 4.5, 'y': 5.0, 'z': 6.0, 'target_x': 1.5, 'target_y': 0.0, 'target_z': 0.0}, 'layer_spacing': 2.0, 'vertical_spacing': 1.5, 'show_feature_maps': True, 'show_connections': True, 'interactive_layers': ['layer_0', 'layer_2'], 'highlight_layers': ['layer_0', 'layer_2']}, 'topology': {'is_sequential': True, 'has_branches': False, 'has_merges': False, 'max_branching_factor': 1, 'max_merge_factor': 1, 'adjacency': {'layer_0': {'incoming': [], 'outgoing': ['layer_1']}, 'layer_1': {'incoming': ['layer_0'], 'outgoing': ['layer_2']}, 'layer_2': {'incoming': ['layer_1'], 'outgoing': []}}}}), which will be an error in a future version of pytest.  Did you mean to use `assert` instead of `return`?
+    warnings.warn(
+
+tests/test_simple.py::test_file_structure
+  C:\Users\rahul\AppData\Local\Programs\Python\Python310\lib\site-packages\_pytest\python.py:198: PytestReturnNotNoneWarning: Expected None, but tests/test_simple.py::test_file_structure returned True, which will be an error in a future version of pytest.  Did you mean to use `assert` instead of `return`?
+    warnings.warn(
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+ERROR tests/test_simple.py::test_validator
+=================== 3 passed, 3 warnings, 1 error in 0.46s ====================

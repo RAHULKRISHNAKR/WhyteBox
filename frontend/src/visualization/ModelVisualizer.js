@@ -141,7 +141,9 @@ class ModelVisualizer {
         // Register transformer visualizers (if available)
         if (typeof EmbeddingVisualizer !== 'undefined') {
             this.registry.register('Embedding', EmbeddingVisualizer.visualizeEmbedding.bind(EmbeddingVisualizer));
+            // Both PositionalEncoding (old name) and PositionEmbedding (TransformerExtractor's emitted type)
             this.registry.register('PositionalEncoding', EmbeddingVisualizer.visualizePositionalEncoding.bind(EmbeddingVisualizer));
+            this.registry.register('PositionEmbedding', EmbeddingVisualizer.visualizePositionalEncoding.bind(EmbeddingVisualizer));
         }
 
         if (typeof AttentionLayerVisualizer !== 'undefined') {
