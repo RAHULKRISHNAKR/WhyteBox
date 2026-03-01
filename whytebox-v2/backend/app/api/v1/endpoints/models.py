@@ -11,10 +11,10 @@ import uuid
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, UploadFile, File, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 
-from ....services.model_service import model_registry, ArchitectureExtractor, PRETRAINED_MODELS
+from ....services.model_service import PRETRAINED_MODELS, ArchitectureExtractor, model_registry
 
 logger = logging.getLogger(__name__)
 
@@ -87,17 +87,19 @@ async def list_models() -> Dict[str, Any]:
 
     # Add custom uploaded models
     custom = [
-        _normalize_model_meta({
-            "id": mid,
-            "name": info["metadata"].get("name", mid),
-            "framework": info["metadata"].get("framework", "unknown"),
-            "description": info["metadata"].get("description", "Custom uploaded model"),
-            "total_params": info["metadata"].get("total_params", 0),
-            "input_size": info["metadata"].get("input_size", [224, 224, 3]),
-            "num_classes": info["metadata"].get("num_classes", 1000),
-            "pretrained": False,
-            "tags": ["custom"],
-        })
+        _normalize_model_meta(
+            {
+                "id": mid,
+                "name": info["metadata"].get("name", mid),
+                "framework": info["metadata"].get("framework", "unknown"),
+                "description": info["metadata"].get("description", "Custom uploaded model"),
+                "total_params": info["metadata"].get("total_params", 0),
+                "input_size": info["metadata"].get("input_size", [224, 224, 3]),
+                "num_classes": info["metadata"].get("num_classes", 1000),
+                "pretrained": False,
+                "tags": ["custom"],
+            }
+        )
         for mid, info in _custom_models.items()
     ]
 
@@ -196,6 +198,7 @@ async def get_model_stats(model_id: str) -> Dict[str, Any]:
 # Architecture Extraction
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 @router.get("/{model_id}/architecture")
 async def get_model_architecture(model_id: str) -> Dict[str, Any]:
     """
@@ -208,8 +211,9 @@ async def get_model_architecture(model_id: str) -> Dict[str, Any]:
         if model_id in PRETRAINED_MODELS:
             model, metadata = model_registry.load_pretrained(model_id)
         elif model_id in _custom_models:
-            from ....utils.model_loader import ModelLoader
             from ....schemas.model import Framework
+            from ....utils.model_loader import ModelLoader
+
             path = _custom_models[model_id]["path"]
             framework = _custom_models[model_id]["metadata"].get("framework", "pytorch")
             fw = Framework(framework)
@@ -229,10 +233,7 @@ async def get_model_architecture(model_id: str) -> Dict[str, Any]:
     except HTTPException:
         raise
     except ImportError as e:
-        raise HTTPException(
-            status_code=503,
-            detail=f"PyTorch/torchvision not installed: {str(e)}"
-        )
+        raise HTTPException(status_code=503, detail=f"PyTorch/torchvision not installed: {str(e)}")
     except Exception as e:
         logger.error(f"Architecture extraction failed for {model_id}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
@@ -247,8 +248,9 @@ async def get_model_layers(model_id: str) -> Dict[str, Any]:
         if model_id in PRETRAINED_MODELS:
             model, _ = model_registry.load_pretrained(model_id)
         elif model_id in _custom_models:
-            from ....utils.model_loader import ModelLoader
             from ....schemas.model import Framework
+            from ....utils.model_loader import ModelLoader
+
             path = _custom_models[model_id]["path"]
             fw = Framework(_custom_models[model_id]["metadata"].get("framework", "pytorch"))
             model, _ = ModelLoader.load_model(path, fw)
@@ -260,7 +262,8 @@ async def get_model_layers(model_id: str) -> Dict[str, Any]:
 
         # Filter for conv layers (good Grad-CAM targets)
         conv_layers = [
-            name for name, mod in model.named_modules()
+            name
+            for name, mod in model.named_modules()
             if name and type(mod).__name__ in ("Conv2d", "ConvTranspose2d")
         ]
 
@@ -290,6 +293,7 @@ async def get_model_layers(model_id: str) -> Dict[str, Any]:
 # Model Loading (explicit load into cache)
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 @router.post("/{model_id}/load")
 async def load_model(model_id: str) -> Dict[str, Any]:
     """
@@ -300,8 +304,9 @@ async def load_model(model_id: str) -> Dict[str, Any]:
         if model_id in PRETRAINED_MODELS:
             model, metadata = model_registry.load_pretrained(model_id)
         elif model_id in _custom_models:
-            from ....utils.model_loader import ModelLoader
             from ....schemas.model import Framework
+            from ....utils.model_loader import ModelLoader
+
             path = _custom_models[model_id]["path"]
             fw = Framework(_custom_models[model_id]["metadata"].get("framework", "pytorch"))
             model, metadata = ModelLoader.load_model(path, fw)
@@ -311,6 +316,7 @@ async def load_model(model_id: str) -> Dict[str, Any]:
         # Quick stats
         try:
             import torch
+
             total_params = sum(p.numel() for p in model.parameters())
         except Exception:
             total_params = 0
@@ -332,6 +338,7 @@ async def load_model(model_id: str) -> Dict[str, Any]:
 # ─────────────────────────────────────────────────────────────────────────────
 # Upload Custom Model
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 @router.post("/upload")
 async def upload_model(
@@ -405,6 +412,7 @@ async def upload_model(
 # Delete
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 @router.delete("/{model_id}")
 async def delete_model(model_id: str) -> Dict[str, Any]:
     """
@@ -438,9 +446,11 @@ async def delete_model(model_id: str) -> Dict[str, Any]:
 # Cache management
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 @router.get("/cache/info")
 async def get_cache_info() -> Dict[str, Any]:
     """Get model cache information."""
     return model_registry.get_cache_info()
+
 
 # Made with Bob

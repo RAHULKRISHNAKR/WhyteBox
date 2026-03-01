@@ -25,6 +25,7 @@ export interface Column<T> {
   label: string
   minWidth?: number
   align?: 'left' | 'right' | 'center'
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   format?: (value: any, row: T) => React.ReactNode
   sortable?: boolean
 }
@@ -40,6 +41,7 @@ interface DataTableProps<T> {
   getRowId?: (row: T, index: number) => string | number
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function DataTable<T extends Record<string, any>>({
   columns,
   data,

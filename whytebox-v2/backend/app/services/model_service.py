@@ -99,10 +99,26 @@ PRETRAINED_MODELS: Dict[str, Dict[str, Any]] = {
 
 # ImageNet class names (first 10 for demo, full list loaded lazily)
 IMAGENET_CLASSES_SAMPLE = [
-    "tench", "goldfish", "great white shark", "tiger shark", "hammerhead",
-    "electric ray", "stingray", "cock", "hen", "ostrich",
-    "brambling", "goldfinch", "house finch", "junco", "indigo bunting",
-    "robin", "bulbul", "jay", "magpie", "chickadee",
+    "tench",
+    "goldfish",
+    "great white shark",
+    "tiger shark",
+    "hammerhead",
+    "electric ray",
+    "stingray",
+    "cock",
+    "hen",
+    "ostrich",
+    "brambling",
+    "goldfinch",
+    "house finch",
+    "junco",
+    "indigo bunting",
+    "robin",
+    "bulbul",
+    "jay",
+    "magpie",
+    "chickadee",
 ]
 
 
@@ -148,10 +164,18 @@ class ModelRegistry:
             # Map model_id to torchvision loader
             loaders = {
                 "vgg16": lambda: tv_models.vgg16(weights=tv_models.VGG16_Weights.IMAGENET1K_V1),
-                "resnet50": lambda: tv_models.resnet50(weights=tv_models.ResNet50_Weights.IMAGENET1K_V2),
-                "mobilenet_v2": lambda: tv_models.mobilenet_v2(weights=tv_models.MobileNet_V2_Weights.IMAGENET1K_V2),
-                "efficientnet_b0": lambda: tv_models.efficientnet_b0(weights=tv_models.EfficientNet_B0_Weights.IMAGENET1K_V1),
-                "alexnet": lambda: tv_models.alexnet(weights=tv_models.AlexNet_Weights.IMAGENET1K_V1),
+                "resnet50": lambda: tv_models.resnet50(
+                    weights=tv_models.ResNet50_Weights.IMAGENET1K_V2
+                ),
+                "mobilenet_v2": lambda: tv_models.mobilenet_v2(
+                    weights=tv_models.MobileNet_V2_Weights.IMAGENET1K_V2
+                ),
+                "efficientnet_b0": lambda: tv_models.efficientnet_b0(
+                    weights=tv_models.EfficientNet_B0_Weights.IMAGENET1K_V1
+                ),
+                "alexnet": lambda: tv_models.alexnet(
+                    weights=tv_models.AlexNet_Weights.IMAGENET1K_V1
+                ),
             }
 
             if model_id not in loaders:
@@ -176,9 +200,7 @@ class ModelRegistry:
             return model, metadata
 
         except ImportError:
-            raise ImportError(
-                "torchvision not installed. Run: pip install torch torchvision"
-            )
+            raise ImportError("torchvision not installed. Run: pip install torch torchvision")
 
     def _evict_if_needed(self):
         """Evict oldest cached model if at capacity."""
@@ -273,9 +295,7 @@ class ArchitectureExtractor:
 
                 module_type = type(module).__name__
                 params = sum(p.numel() for p in module.parameters())
-                trainable = sum(
-                    p.numel() for p in module.parameters() if p.requires_grad
-                )
+                trainable = sum(p.numel() for p in module.parameters() if p.requires_grad)
 
                 total_params += params
                 trainable_params += trainable
@@ -292,7 +312,7 @@ class ArchitectureExtractor:
                     "parameters": params,
                     "trainable": trainable > 0,
                     "config": cls._get_layer_config(module),
-                    "input_shape": None,   # populated by shape inference
+                    "input_shape": None,  # populated by shape inference
                     "output_shape": None,  # populated by shape inference
                 }
 
@@ -301,11 +321,13 @@ class ArchitectureExtractor:
             # Build sequential connections
             connections = []
             for i in range(len(layers) - 1):
-                connections.append({
-                    "from": layers[i]["id"],
-                    "to": layers[i + 1]["id"],
-                    "weight": 1.0,
-                })
+                connections.append(
+                    {
+                        "from": layers[i]["id"],
+                        "to": layers[i + 1]["id"],
+                        "weight": 1.0,
+                    }
+                )
 
             # Try shape inference with a dummy forward pass
             try:
@@ -345,9 +367,17 @@ class ArchitectureExtractor:
             config = {
                 "in_channels": module.in_channels,
                 "out_channels": module.out_channels,
-                "kernel_size": list(module.kernel_size) if hasattr(module.kernel_size, '__iter__') else module.kernel_size,
-                "stride": list(module.stride) if hasattr(module.stride, '__iter__') else module.stride,
-                "padding": list(module.padding) if hasattr(module.padding, '__iter__') else module.padding,
+                "kernel_size": (
+                    list(module.kernel_size)
+                    if hasattr(module.kernel_size, "__iter__")
+                    else module.kernel_size
+                ),
+                "stride": (
+                    list(module.stride) if hasattr(module.stride, "__iter__") else module.stride
+                ),
+                "padding": (
+                    list(module.padding) if hasattr(module.padding, "__iter__") else module.padding
+                ),
                 "groups": module.groups,
                 "bias": module.bias is not None,
             }
@@ -392,19 +422,16 @@ class ArchitectureExtractor:
         def make_hook(layer_id: str):
             def hook(module, inp, out):
                 in_shape = list(inp[0].shape[1:]) if inp else None  # remove batch dim
-                out_shape = list(out.shape[1:]) if hasattr(out, 'shape') else None
+                out_shape = list(out.shape[1:]) if hasattr(out, "shape") else None
                 shape_map[layer_id] = {
                     "input_shape": in_shape,
                     "output_shape": out_shape,
                 }
+
             return hook
 
         # Register hooks on all leaf modules
-        module_dict = {
-            name: mod
-            for name, mod in model.named_modules()
-            if not list(mod.children())
-        }
+        module_dict = {name: mod for name, mod in model.named_modules() if not list(mod.children())}
 
         for layer in layers:
             lid = layer["id"]
@@ -444,22 +471,26 @@ class ArchitectureExtractor:
             cat = layer["category"]
             if cat != current_cat:
                 if current_block:
-                    blocks.append({
-                        "category": current_cat,
-                        "layer_indices": current_block,
-                        "count": len(current_block),
-                    })
+                    blocks.append(
+                        {
+                            "category": current_cat,
+                            "layer_indices": current_block,
+                            "count": len(current_block),
+                        }
+                    )
                 current_block = [i]
                 current_cat = cat
             else:
                 current_block.append(i)
 
         if current_block:
-            blocks.append({
-                "category": current_cat,
-                "layer_indices": current_block,
-                "count": len(current_block),
-            })
+            blocks.append(
+                {
+                    "category": current_cat,
+                    "layer_indices": current_block,
+                    "count": len(current_block),
+                }
+            )
 
         return {
             "total_depth": len(layers),

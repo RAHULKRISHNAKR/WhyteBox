@@ -4,7 +4,7 @@ import { TutorialPage } from '../pages/TutorialPage';
 test.describe('Tutorial Taking', () => {
   let tutorialPage: TutorialPage;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page: _page }) => {
     tutorialPage = new TutorialPage(page);
     await tutorialPage.goto();
     
@@ -14,7 +14,7 @@ test.describe('Tutorial Taking', () => {
     await tutorialPage.waitForTutorialToLoad();
   });
 
-  test('should start tutorial and display first step', async ({ page }) => {
+  test('should start tutorial and display first step', async ({ page: _page }) => {
     // Verify tutorial started
     await expect(page).toHaveURL(/\/tutorials\/.+\/take/);
     
@@ -32,7 +32,7 @@ test.describe('Tutorial Taking', () => {
     expect(parseInt(progress)).toBeGreaterThanOrEqual(0);
   });
 
-  test('should navigate through tutorial steps', async ({ page }) => {
+  test('should navigate through tutorial steps', async ({ page: _page }) => {
     // Get first step title
     const firstStepTitle = await tutorialPage.getStepTitle();
     
@@ -51,7 +51,7 @@ test.describe('Tutorial Taking', () => {
     expect(backToFirstTitle).toBe(firstStepTitle);
   });
 
-  test('should complete tutorial steps', async ({ page }) => {
+  test('should complete tutorial steps', async ({ page: _page }) => {
     // Get initial progress
     const initialProgress = await tutorialPage.getProgress();
     
@@ -67,7 +67,7 @@ test.describe('Tutorial Taking', () => {
     await expect(page.locator('[data-testid="step-complete-indicator"]')).toBeVisible();
   });
 
-  test('should pause and resume tutorial', async ({ page }) => {
+  test('should pause and resume tutorial', async ({ page: _page }) => {
     // Pause tutorial
     await tutorialPage.pauseTutorial();
     
@@ -83,7 +83,7 @@ test.describe('Tutorial Taking', () => {
     await expect(tutorialPage.stepContent).toBeVisible();
   });
 
-  test('should exit tutorial with confirmation', async ({ page }) => {
+  test('should exit tutorial with confirmation', async ({ page: _page }) => {
     // Click exit button
     await tutorialPage.exitButton.click();
     
@@ -97,7 +97,7 @@ test.describe('Tutorial Taking', () => {
     await expect(page).toHaveURL(/\/tutorials$/);
   });
 
-  test('should save progress when exiting', async ({ page }) => {
+  test('should save progress when exiting', async ({ page: _page }) => {
     // Complete first step
     await tutorialPage.completeStep();
     await tutorialPage.nextStep();
@@ -119,7 +119,7 @@ test.describe('Tutorial Taking', () => {
     expect(resumedStepTitle).toBe(currentStepTitle);
   });
 
-  test('should display step content correctly', async ({ page }) => {
+  test('should display step content correctly', async ({ page: _page }) => {
     // Verify step has title
     const stepTitle = await tutorialPage.getStepTitle();
     expect(stepTitle.length).toBeGreaterThan(0);
@@ -141,7 +141,7 @@ test.describe('Tutorial Taking', () => {
     }
   });
 
-  test('should handle interactive step elements', async ({ page }) => {
+  test('should handle interactive step elements', async ({ page: _page }) => {
     // Check for interactive elements
     const interactiveButton = page.locator('[data-testid="interactive-action"]');
     
@@ -154,7 +154,7 @@ test.describe('Tutorial Taking', () => {
     }
   });
 
-  test('should show hints when available', async ({ page }) => {
+  test('should show hints when available', async ({ page: _page }) => {
     // Check if hints are available
     const hintButton = page.locator('[data-testid="show-hint"]');
     
@@ -171,7 +171,7 @@ test.describe('Tutorial Taking', () => {
     }
   });
 
-  test('should track time spent on tutorial', async ({ page }) => {
+  test('should track time spent on tutorial', async ({ page: _page }) => {
     // Verify timer is displayed
     const timerElement = page.locator('[data-testid="tutorial-timer"]');
     
@@ -187,7 +187,7 @@ test.describe('Tutorial Taking', () => {
     }
   });
 
-  test('should disable previous button on first step', async ({ page }) => {
+  test('should disable previous button on first step', async ({ page: _page }) => {
     // Verify on first step
     const progress = await tutorialPage.getProgress();
     
@@ -197,7 +197,7 @@ test.describe('Tutorial Taking', () => {
     }
   });
 
-  test('should show completion message on last step', async ({ page }) => {
+  test('should show completion message on last step', async ({ page: _page }) => {
     // Navigate to last step (simplified - in real test would complete all steps)
     // For now, just verify the completion logic exists
     const completionButton = page.locator('[data-testid="complete-tutorial"]');
@@ -212,7 +212,7 @@ test.describe('Tutorial Taking', () => {
     }
   });
 
-  test('should handle keyboard navigation', async ({ page }) => {
+  test('should handle keyboard navigation', async ({ page: _page }) => {
     // Test arrow key navigation
     await page.keyboard.press('ArrowRight');
     await page.waitForTimeout(500);
@@ -228,7 +228,7 @@ test.describe('Tutorial Taking', () => {
     expect(stepAfterLeft).not.toBe(stepAfterRight);
   });
 
-  test('should display progress percentage', async ({ page }) => {
+  test('should display progress percentage', async ({ page: _page }) => {
     // Get progress percentage
     const progressText = page.locator('[data-testid="progress-text"]');
     
@@ -238,7 +238,7 @@ test.describe('Tutorial Taking', () => {
     }
   });
 
-  test('should show step number indicator', async ({ page }) => {
+  test('should show step number indicator', async ({ page: _page }) => {
     // Verify step indicator
     const stepIndicator = page.locator('[data-testid="step-indicator"]');
     await expect(stepIndicator).toBeVisible();

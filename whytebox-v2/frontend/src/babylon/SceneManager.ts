@@ -128,7 +128,7 @@ export class SceneManager {
   /**
    * Create connections between layers
    */
-  private createConnections(layers: Layer[], config: VisualizationConfig): void {
+  private createConnections(layers: Layer[], _config: VisualizationConfig): void {
     for (let i = 0; i < layers.length - 1; i++) {
       const currentMesh = this.layerMeshes.get(layers[i].id);
       const nextMesh = this.layerMeshes.get(layers[i + 1].id);
@@ -172,7 +172,7 @@ export class SceneManager {
   /**
    * Get color for layer type
    */
-  private getLayerColor(layerType: string, colorScheme: string): Color3 {
+  private getLayerColor(layerType: string, _colorScheme: string): Color3 {
     const colorMap: Record<string, Color3> = {
       conv: new Color3(0.2, 0.6, 0.9),
       pool: new Color3(0.9, 0.5, 0.2),
@@ -189,7 +189,8 @@ export class SceneManager {
   /**
    * Create action manager for layer interactions
    */
-  private createLayerActions(layer: Layer): any {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private createLayerActions(_layer: Layer): any {
     // This will be implemented with proper action manager
     // For now, return null
     return null;
@@ -245,7 +246,7 @@ export class SceneManager {
   /**
    * Update visualization config
    */
-  updateConfig(config: Partial<VisualizationConfig>): void {
+  updateConfig(_config: Partial<VisualizationConfig>): void {
     // This will be implemented to update visualization settings
   }
 

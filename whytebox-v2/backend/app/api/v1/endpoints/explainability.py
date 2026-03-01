@@ -12,10 +12,10 @@ from io import BytesIO
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from PIL import Image
 
-from ....services.model_service import model_registry, PRETRAINED_MODELS
+from ....services.model_service import PRETRAINED_MODELS, model_registry
 from ....utils.preprocessing import ImagePreprocessor, NormalizationMethod
 from ....utils.visualization import ExplainabilityVisualizer
 
@@ -28,6 +28,7 @@ router = APIRouter()
 # Helpers
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 def _load_model_by_id(model_id: str):
     """Load a model by ID."""
     if model_id in PRETRAINED_MODELS:
@@ -35,9 +36,11 @@ def _load_model_by_id(model_id: str):
         return model, metadata, "pytorch"
 
     from ....api.v1.endpoints.models import _custom_models
+
     if model_id in _custom_models:
-        from ....utils.model_loader import ModelLoader
         from ....schemas.model import Framework
+        from ....utils.model_loader import ModelLoader
+
         path = _custom_models[model_id]["path"]
         framework = _custom_models[model_id]["metadata"].get("framework", "pytorch")
         fw = Framework(framework)
@@ -91,6 +94,7 @@ def _get_default_target_layer(model_id: str, model: Any) -> str:
 # ─────────────────────────────────────────────────────────────────────────────
 # Grad-CAM
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 @router.post("/gradcam")
 async def explain_gradcam(
@@ -157,8 +161,7 @@ async def explain_gradcam(
 
         if target_module is None:
             raise HTTPException(
-                status_code=400,
-                detail=f"Layer '{target_layer}' not found in model"
+                status_code=400, detail=f"Layer '{target_layer}' not found in model"
             )
 
         fwd_handle = target_module.register_forward_hook(forward_hook)
@@ -190,10 +193,10 @@ async def explain_gradcam(
             raise HTTPException(status_code=500, detail="Failed to capture Grad-CAM data")
 
         # Compute CAM
-        grads = gradients_store["value"][0]      # (C, H, W)
-        acts = activations_store["value"][0]     # (C, H, W)
+        grads = gradients_store["value"][0]  # (C, H, W)
+        acts = activations_store["value"][0]  # (C, H, W)
 
-        weights = grads.mean(dim=(1, 2))         # (C,)
+        weights = grads.mean(dim=(1, 2))  # (C,)
         cam = torch.zeros(acts.shape[1:])
         for i, wt in enumerate(weights):
             cam += wt * acts[i]
@@ -208,10 +211,9 @@ async def explain_gradcam(
 
         # Resize to original image size
         from PIL import Image as PILImage
+
         cam_pil = PILImage.fromarray((cam * 255).astype(np.uint8))
-        cam_resized = cam_pil.resize(
-            (pil_image.width, pil_image.height), PILImage.BILINEAR
-        )
+        cam_resized = cam_pil.resize((pil_image.width, pil_image.height), PILImage.BILINEAR)
         cam_np = np.array(cam_resized).astype(np.float32) / 255.0
 
         # Create colored heatmap
@@ -225,8 +227,11 @@ async def explain_gradcam(
         # Get class name
         try:
             from torchvision.models import ResNet50_Weights
+
             classes = ResNet50_Weights.IMAGENET1K_V2.meta["categories"]
-            class_name = classes[target_class] if target_class < len(classes) else f"class_{target_class}"
+            class_name = (
+                classes[target_class] if target_class < len(classes) else f"class_{target_class}"
+            )
         except Exception:
             class_name = f"class_{target_class}"
 
@@ -256,6 +261,7 @@ async def explain_gradcam(
 # ─────────────────────────────────────────────────────────────────────────────
 # Saliency Maps
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 @router.post("/saliency")
 async def explain_saliency(
@@ -317,7 +323,9 @@ async def explain_saliency(
             noise_std = noise_level * (processed.max() - processed.min())
 
             for _ in range(num_samples):
-                noisy = processed + np.random.normal(0, noise_std, processed.shape).astype(np.float32)
+                noisy = processed + np.random.normal(0, noise_std, processed.shape).astype(
+                    np.float32
+                )
                 sal, tc, conf = _compute_saliency(noisy)
                 saliency_sum += sal
                 tc_final = tc
@@ -345,6 +353,7 @@ async def explain_saliency(
 
         try:
             from torchvision.models import ResNet50_Weights
+
             classes = ResNet50_Weights.IMAGENET1K_V2.meta["categories"]
             class_name = classes[tc_final] if tc_final < len(classes) else f"class_{tc_final}"
         except Exception:
@@ -380,6 +389,7 @@ async def explain_saliency(
 # ─────────────────────────────────────────────────────────────────────────────
 # Integrated Gradients
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 @router.post("/integrated-gradients")
 async def explain_integrated_gradients(
@@ -420,6 +430,7 @@ async def explain_integrated_gradients(
             baseline = np.zeros_like(processed)
         elif baseline_type == "blur":
             from scipy.ndimage import gaussian_filter
+
             baseline = gaussian_filter(processed, sigma=10)
         elif baseline_type == "noise":
             baseline = np.random.normal(0, 0.1, processed.shape).astype(np.float32)
@@ -461,7 +472,9 @@ async def explain_integrated_gradients(
 
         # Normalize
         if attribution.max() > attribution.min():
-            attribution_norm = (attribution - attribution.min()) / (attribution.max() - attribution.min())
+            attribution_norm = (attribution - attribution.min()) / (
+                attribution.max() - attribution.min()
+            )
         else:
             attribution_norm = np.zeros_like(attribution)
 
@@ -477,6 +490,7 @@ async def explain_integrated_gradients(
 
         try:
             from torchvision.models import ResNet50_Weights
+
             classes = ResNet50_Weights.IMAGENET1K_V2.meta["categories"]
             class_name = classes[tc] if tc < len(classes) else f"class_{tc}"
         except Exception:
@@ -511,6 +525,7 @@ async def explain_integrated_gradients(
 # ─────────────────────────────────────────────────────────────────────────────
 # Compare Methods
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 @router.post("/compare")
 async def compare_methods(
@@ -549,6 +564,7 @@ async def compare_methods(
 
         try:
             from torchvision.models import ResNet50_Weights
+
             classes = ResNet50_Weights.IMAGENET1K_V2.meta["categories"]
             class_name = classes[tc] if tc < len(classes) else f"class_{tc}"
         except Exception:
@@ -572,8 +588,11 @@ async def compare_methods(
 
             acts_s, grads_s = {}, {}
 
-            def fwd(m, i, o): acts_s["v"] = o
-            def bwd(m, gi, go): grads_s["v"] = go[0]
+            def fwd(m, i, o):
+                acts_s["v"] = o
+
+            def bwd(m, gi, go):
+                grads_s["v"] = go[0]
 
             tmod = dict(model.named_modules()).get(tl)
             if tmod:
@@ -584,7 +603,8 @@ async def compare_methods(
                     o2 = model(inp)
                     model.zero_grad()
                     o2[0, tc].backward()
-                fh.remove(); bh.remove()
+                fh.remove()
+                bh.remove()
 
                 if "v" in acts_s and "v" in grads_s:
                     wts = grads_s["v"][0].mean(dim=(1, 2))
@@ -593,8 +613,15 @@ async def compare_methods(
                     if cam.max() > cam.min():
                         cam = (cam - cam.min()) / (cam.max() - cam.min())
                     cam_pil = Image.fromarray((cam * 255).astype(np.uint8))
-                    cam_r = np.array(cam_pil.resize((pil_image.width, pil_image.height), Image.BILINEAR)).astype(np.float32) / 255.0
-                    overlay = ExplainabilityVisualizer.create_heatmap_overlay(original_array, cam_r, colormap=colormap)
+                    cam_r = (
+                        np.array(
+                            cam_pil.resize((pil_image.width, pil_image.height), Image.BILINEAR)
+                        ).astype(np.float32)
+                        / 255.0
+                    )
+                    overlay = ExplainabilityVisualizer.create_heatmap_overlay(
+                        original_array, cam_r, colormap=colormap
+                    )
                     results["methods"]["gradcam"] = {
                         "name": "Grad-CAM",
                         "overlay": _array_to_base64(overlay),
@@ -616,8 +643,15 @@ async def compare_methods(
             if sal.max() > sal.min():
                 sal = (sal - sal.min()) / (sal.max() - sal.min())
             sal_pil = Image.fromarray((sal * 255).astype(np.uint8))
-            sal_r = np.array(sal_pil.resize((pil_image.width, pil_image.height), Image.BILINEAR)).astype(np.float32) / 255.0
-            overlay = ExplainabilityVisualizer.create_heatmap_overlay(original_array, sal_r, colormap="hot")
+            sal_r = (
+                np.array(
+                    sal_pil.resize((pil_image.width, pil_image.height), Image.BILINEAR)
+                ).astype(np.float32)
+                / 255.0
+            )
+            overlay = ExplainabilityVisualizer.create_heatmap_overlay(
+                original_array, sal_r, colormap="hot"
+            )
             results["methods"]["saliency"] = {
                 "name": "Saliency Map",
                 "overlay": _array_to_base64(overlay),
@@ -646,8 +680,15 @@ async def compare_methods(
             if ig.max() > ig.min():
                 ig = (ig - ig.min()) / (ig.max() - ig.min())
             ig_pil = Image.fromarray((ig * 255).astype(np.uint8))
-            ig_r = np.array(ig_pil.resize((pil_image.width, pil_image.height), Image.BILINEAR)).astype(np.float32) / 255.0
-            overlay = ExplainabilityVisualizer.create_heatmap_overlay(original_array, ig_r, colormap="RdBu_r")
+            ig_r = (
+                np.array(ig_pil.resize((pil_image.width, pil_image.height), Image.BILINEAR)).astype(
+                    np.float32
+                )
+                / 255.0
+            )
+            overlay = ExplainabilityVisualizer.create_heatmap_overlay(
+                original_array, ig_r, colormap="RdBu_r"
+            )
             results["methods"]["integrated_gradients"] = {
                 "name": "Integrated Gradients",
                 "overlay": _array_to_base64(overlay),
@@ -672,6 +713,7 @@ async def compare_methods(
 # Available Layers
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 @router.get("/layers")
 async def get_available_layers(
     model_id: str,
@@ -684,7 +726,8 @@ async def get_available_layers(
         if framework == "pytorch":
             all_layers = [name for name, _ in model.named_modules() if name]
             conv_layers = [
-                name for name, mod in model.named_modules()
+                name
+                for name, mod in model.named_modules()
                 if name and type(mod).__name__ in ("Conv2d", "ConvTranspose2d")
             ]
             default = _get_default_target_layer(model_id, model)
@@ -707,5 +750,6 @@ async def get_available_layers(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 # Made with Bob

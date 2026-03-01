@@ -8,28 +8,23 @@ Author: WhyteBox Team
 Date: 2026-02-26
 """
 
-from fastapi import APIRouter, Depends, HTTPException
-from typing import Dict, Any
+from typing import Any, Dict
 
-from app.core.monitoring import (
-    get_metrics,
-    get_monitor,
-    get_health_checker,
-    MetricsCollector,
-    HealthChecker
-)
-from app.core.cache import get_cache, CacheManager
+from app.core.cache import CacheManager, get_cache
+from app.core.monitoring import (HealthChecker, MetricsCollector, get_health_checker, get_metrics,
+                                 get_monitor)
+from fastapi import APIRouter, Depends, HTTPException
 
 router = APIRouter()
 
 
 @router.get("/health", tags=["monitoring"])
 async def health_check(
-    health_checker: HealthChecker = Depends(get_health_checker)
+    health_checker: HealthChecker = Depends(get_health_checker),
 ) -> Dict[str, Any]:
     """
     Comprehensive health check endpoint.
-    
+
     Returns:
         Health status with system metrics and issues
     """
@@ -38,11 +33,11 @@ async def health_check(
 
 @router.get("/health/simple", tags=["monitoring"])
 async def simple_health_check(
-    health_checker: HealthChecker = Depends(get_health_checker)
+    health_checker: HealthChecker = Depends(get_health_checker),
 ) -> Dict[str, str]:
     """
     Simple health check for load balancers.
-    
+
     Returns:
         {"status": "healthy"} or raises 503
     """
@@ -53,12 +48,10 @@ async def simple_health_check(
 
 
 @router.get("/metrics", tags=["monitoring"])
-async def get_metrics_summary(
-    metrics: MetricsCollector = Depends(get_metrics)
-) -> Dict[str, Any]:
+async def get_metrics_summary(metrics: MetricsCollector = Depends(get_metrics)) -> Dict[str, Any]:
     """
     Get comprehensive metrics summary.
-    
+
     Returns:
         Complete metrics including requests, models, cache, and system stats
     """
@@ -67,15 +60,14 @@ async def get_metrics_summary(
 
 @router.get("/metrics/requests", tags=["monitoring"])
 async def get_request_metrics(
-    minutes: int = 5,
-    metrics: MetricsCollector = Depends(get_metrics)
+    minutes: int = 5, metrics: MetricsCollector = Depends(get_metrics)
 ) -> Dict[str, Any]:
     """
     Get request metrics for the last N minutes.
-    
+
     Args:
         minutes: Time window in minutes (default: 5)
-        
+
     Returns:
         Request statistics including latency percentiles and error rates
     """
@@ -83,57 +75,45 @@ async def get_request_metrics(
 
 
 @router.get("/metrics/endpoints", tags=["monitoring"])
-async def get_endpoint_metrics(
-    metrics: MetricsCollector = Depends(get_metrics)
-) -> Dict[str, Any]:
+async def get_endpoint_metrics(metrics: MetricsCollector = Depends(get_metrics)) -> Dict[str, Any]:
     """
     Get per-endpoint statistics.
-    
+
     Returns:
         Statistics for each API endpoint
     """
-    return {
-        "endpoints": metrics.get_endpoint_stats()
-    }
+    return {"endpoints": metrics.get_endpoint_stats()}
 
 
 @router.get("/metrics/models", tags=["monitoring"])
-async def get_model_metrics(
-    metrics: MetricsCollector = Depends(get_metrics)
-) -> Dict[str, Any]:
+async def get_model_metrics(metrics: MetricsCollector = Depends(get_metrics)) -> Dict[str, Any]:
     """
     Get model inference statistics.
-    
+
     Returns:
         Statistics for each model including inference times
     """
-    return {
-        "models": metrics.get_model_stats()
-    }
+    return {"models": metrics.get_model_stats()}
 
 
 @router.get("/metrics/explainability", tags=["monitoring"])
 async def get_explainability_metrics(
-    metrics: MetricsCollector = Depends(get_metrics)
+    metrics: MetricsCollector = Depends(get_metrics),
 ) -> Dict[str, Any]:
     """
     Get explainability method statistics.
-    
+
     Returns:
         Statistics for each explainability method
     """
-    return {
-        "methods": metrics.get_explainability_stats()
-    }
+    return {"methods": metrics.get_explainability_stats()}
 
 
 @router.get("/metrics/cache", tags=["monitoring"])
-async def get_cache_metrics(
-    cache: CacheManager = Depends(get_cache)
-) -> Dict[str, Any]:
+async def get_cache_metrics(cache: CacheManager = Depends(get_cache)) -> Dict[str, Any]:
     """
     Get cache statistics.
-    
+
     Returns:
         Cache hit rate, total requests, and operation counts
     """
@@ -141,12 +121,10 @@ async def get_cache_metrics(
 
 
 @router.get("/metrics/system", tags=["monitoring"])
-async def get_system_metrics(
-    metrics: MetricsCollector = Depends(get_metrics)
-) -> Dict[str, Any]:
+async def get_system_metrics(metrics: MetricsCollector = Depends(get_metrics)) -> Dict[str, Any]:
     """
     Get system resource metrics.
-    
+
     Returns:
         CPU, memory, and disk usage statistics
     """
@@ -154,12 +132,10 @@ async def get_system_metrics(
 
 
 @router.post("/metrics/reset", tags=["monitoring"])
-async def reset_metrics(
-    metrics: MetricsCollector = Depends(get_metrics)
-) -> Dict[str, str]:
+async def reset_metrics(metrics: MetricsCollector = Depends(get_metrics)) -> Dict[str, str]:
     """
     Reset all metrics counters.
-    
+
     Returns:
         Success message
     """
@@ -168,12 +144,10 @@ async def reset_metrics(
 
 
 @router.get("/cache/info", tags=["monitoring"])
-async def get_cache_info(
-    cache: CacheManager = Depends(get_cache)
-) -> Dict[str, Any]:
+async def get_cache_info(cache: CacheManager = Depends(get_cache)) -> Dict[str, Any]:
     """
     Get Redis server information.
-    
+
     Returns:
         Redis version, memory usage, and keyspace info
     """
@@ -181,12 +155,10 @@ async def get_cache_info(
 
 
 @router.post("/cache/clear", tags=["monitoring"])
-async def clear_cache(
-    cache: CacheManager = Depends(get_cache)
-) -> Dict[str, str]:
+async def clear_cache(cache: CacheManager = Depends(get_cache)) -> Dict[str, str]:
     """
     Clear all cache entries. Use with caution!
-    
+
     Returns:
         Success message
     """
@@ -199,35 +171,30 @@ async def clear_cache(
 
 @router.delete("/cache/pattern/{pattern}", tags=["monitoring"])
 async def delete_cache_pattern(
-    pattern: str,
-    cache: CacheManager = Depends(get_cache)
+    pattern: str, cache: CacheManager = Depends(get_cache)
 ) -> Dict[str, Any]:
     """
     Delete cache entries matching pattern.
-    
+
     Args:
         pattern: Redis key pattern (e.g., "model:*")
-        
+
     Returns:
         Number of keys deleted
     """
     deleted = await cache.delete_pattern(pattern)
-    return {
-        "pattern": pattern,
-        "deleted_count": deleted
-    }
+    return {"pattern": pattern, "deleted_count": deleted}
 
 
 @router.get("/uptime", tags=["monitoring"])
-async def get_uptime(
-    metrics: MetricsCollector = Depends(get_metrics)
-) -> Dict[str, Any]:
+async def get_uptime(metrics: MetricsCollector = Depends(get_metrics)) -> Dict[str, Any]:
     """
     Get service uptime information.
-    
+
     Returns:
         Start time and uptime duration
     """
     return metrics.get_uptime()
+
 
 # Made with Bob

@@ -6,46 +6,48 @@ methods and frameworks.
 """
 
 import time
-from typing import Any, Dict, List, Optional, Union
-import numpy as np
 from pathlib import Path
+from typing import Any, Dict, List, Optional, Union
 
-from ..explainability import GradCAM, SaliencyMap, IntegratedGradients, BaseExplainer, ExplainabilityResult
-from ..utils.model_loader import ModelLoader
+import numpy as np
+
+from ..explainability import (BaseExplainer, ExplainabilityResult, GradCAM, IntegratedGradients,
+                              SaliencyMap)
 from ..schemas.model import Framework
+from ..utils.model_loader import ModelLoader
 
 
 class ExplainabilityService:
     """
     Service for managing explainability methods.
-    
+
     Handles model loading and explanation generation across multiple
     explainability techniques.
     """
-    
+
     def __init__(self):
         """Initialize explainability service."""
         self.model_cache: Dict[str, Dict[str, Any]] = {}
         self.loader = ModelLoader()
-    
+
     def load_model(
         self,
         model_path: str,
         framework: Framework,
         device: str = "cpu",
         class_names: Optional[List[str]] = None,
-        cache_key: Optional[str] = None
+        cache_key: Optional[str] = None,
     ) -> Any:
         """
         Load a model for explainability.
-        
+
         Args:
             model_path: Path to model file
             framework: Model framework
             device: Device to run on
             class_names: Optional list of class names
             cache_key: Optional cache key
-            
+
         Returns:
             Loaded model
         """
@@ -54,7 +56,7 @@ class ExplainabilityService:
             cached = self.model_cache[cache_key]
             if cached["device"] == device:
                 return cached["model"]
-        
+
         # Load model
         if framework == Framework.PYTORCH:
             model = self.loader.load_pytorch_model(model_path, device)
@@ -64,7 +66,7 @@ class ExplainabilityService:
             model = self.loader.load_keras_model(model_path)
         else:
             raise ValueError(f"Unsupported framework: {framework}")
-        
+
         # Cache model
         if cache_key:
             self.model_cache[cache_key] = {
@@ -74,9 +76,9 @@ class ExplainabilityService:
                 "class_names": class_names,
                 "loaded_at": time.time(),
             }
-        
+
         return model
-    
+
     async def explain_gradcam(
         self,
         model_path: str,
@@ -90,7 +92,7 @@ class ExplainabilityService:
     ) -> ExplainabilityResult:
         """
         Generate Grad-CAM explanation.
-        
+
         Args:
             model_path: Path to model file
             framework: Model framework
@@ -100,15 +102,13 @@ class ExplainabilityService:
             device: Device to run on
             class_names: Optional list of class names
             cache_key: Optional cache key
-            
+
         Returns:
             ExplainabilityResult object
         """
         # Load model
-        model = self.load_model(
-            model_path, framework, device, class_names, cache_key
-        )
-        
+        model = self.load_model(model_path, framework, device, class_names, cache_key)
+
         # Create explainer
         explainer = GradCAM(
             model=model,
@@ -117,12 +117,12 @@ class ExplainabilityService:
             class_names=class_names,
             framework=framework.value,
         )
-        
+
         # Generate explanation
         result = explainer.explain(input_data, target_class)
-        
+
         return result
-    
+
     async def explain_saliency(
         self,
         model_path: str,
@@ -139,7 +139,7 @@ class ExplainabilityService:
     ) -> ExplainabilityResult:
         """
         Generate Saliency Map explanation.
-        
+
         Args:
             model_path: Path to model file
             framework: Model framework
@@ -152,15 +152,13 @@ class ExplainabilityService:
             device: Device to run on
             class_names: Optional list of class names
             cache_key: Optional cache key
-            
+
         Returns:
             ExplainabilityResult object
         """
         # Load model
-        model = self.load_model(
-            model_path, framework, device, class_names, cache_key
-        )
-        
+        model = self.load_model(model_path, framework, device, class_names, cache_key)
+
         # Create explainer
         explainer = SaliencyMap(
             model=model,
@@ -168,7 +166,7 @@ class ExplainabilityService:
             class_names=class_names,
             framework=framework.value,
         )
-        
+
         # Generate explanation
         if smooth:
             result = explainer.explain_smooth(
@@ -180,9 +178,9 @@ class ExplainabilityService:
             )
         else:
             result = explainer.explain(input_data, target_class, absolute)
-        
+
         return result
-    
+
     async def explain_integrated_gradients(
         self,
         model_path: str,
@@ -197,7 +195,7 @@ class ExplainabilityService:
     ) -> ExplainabilityResult:
         """
         Generate Integrated Gradients explanation.
-        
+
         Args:
             model_path: Path to model file
             framework: Model framework
@@ -208,15 +206,13 @@ class ExplainabilityService:
             device: Device to run on
             class_names: Optional list of class names
             cache_key: Optional cache key
-            
+
         Returns:
             ExplainabilityResult object
         """
         # Load model
-        model = self.load_model(
-            model_path, framework, device, class_names, cache_key
-        )
-        
+        model = self.load_model(model_path, framework, device, class_names, cache_key)
+
         # Create explainer
         explainer = IntegratedGradients(
             model=model,
@@ -224,12 +220,12 @@ class ExplainabilityService:
             class_names=class_names,
             framework=framework.value,
         )
-        
+
         # Generate explanation
         result = explainer.explain(input_data, target_class, baseline, num_steps)
-        
+
         return result
-    
+
     async def compare_methods(
         self,
         model_path: str,
@@ -243,7 +239,7 @@ class ExplainabilityService:
     ) -> Dict[str, ExplainabilityResult]:
         """
         Compare multiple explainability methods.
-        
+
         Args:
             model_path: Path to model file
             framework: Model framework
@@ -253,74 +249,96 @@ class ExplainabilityService:
             device: Device to run on
             class_names: Optional list of class names
             cache_key: Optional cache key
-            
+
         Returns:
             Dictionary of method names to results
         """
         results = {}
-        
+
         # Grad-CAM
         try:
             results["gradcam"] = await self.explain_gradcam(
-                model_path, framework, input_data, target_layer,
-                target_class, device, class_names, cache_key
+                model_path,
+                framework,
+                input_data,
+                target_layer,
+                target_class,
+                device,
+                class_names,
+                cache_key,
             )
         except Exception as e:
             print(f"Grad-CAM failed: {e}")
-        
+
         # Saliency Map
         try:
             results["saliency"] = await self.explain_saliency(
-                model_path, framework, input_data, target_class,
-                absolute=True, device=device, class_names=class_names,
-                cache_key=cache_key
+                model_path,
+                framework,
+                input_data,
+                target_class,
+                absolute=True,
+                device=device,
+                class_names=class_names,
+                cache_key=cache_key,
             )
         except Exception as e:
             print(f"Saliency Map failed: {e}")
-        
+
         # SmoothGrad
         try:
             results["smoothgrad"] = await self.explain_saliency(
-                model_path, framework, input_data, target_class,
-                absolute=True, smooth=True, device=device,
-                class_names=class_names, cache_key=cache_key
+                model_path,
+                framework,
+                input_data,
+                target_class,
+                absolute=True,
+                smooth=True,
+                device=device,
+                class_names=class_names,
+                cache_key=cache_key,
             )
         except Exception as e:
             print(f"SmoothGrad failed: {e}")
-        
+
         # Integrated Gradients
         try:
             results["integrated_gradients"] = await self.explain_integrated_gradients(
-                model_path, framework, input_data, target_class,
-                device=device, class_names=class_names, cache_key=cache_key
+                model_path,
+                framework,
+                input_data,
+                target_class,
+                device=device,
+                class_names=class_names,
+                cache_key=cache_key,
             )
         except Exception as e:
             print(f"Integrated Gradients failed: {e}")
-        
+
         return results
-    
+
     def get_available_layers(
         self,
         model_path: str,
         framework: Framework,
         device: str = "cpu",
-        cache_key: Optional[str] = None
+        cache_key: Optional[str] = None,
     ) -> List[str]:
         """
         Get list of available layers for Grad-CAM.
-        
+
         Args:
             model_path: Path to model file
             framework: Model framework
             device: Device to run on
             cache_key: Optional cache key
-            
+
         Returns:
             List of layer names
         """
         # Load model
         model = self.load_model(model_path, framework, device, cache_key=cache_key)
-        
+
         # Get layers
         if framework == Framework.PYTORCH:
             return [name for name, _ in model.named_modules()]
@@ -328,11 +346,11 @@ class ExplainabilityService:
             return [layer.name for layer in model.layers]
         else:
             return []
-    
+
     def clear_cache(self, cache_key: Optional[str] = None) -> None:
         """
         Clear model cache.
-        
+
         Args:
             cache_key: Optional specific cache key to clear
         """
@@ -341,11 +359,11 @@ class ExplainabilityService:
                 del self.model_cache[cache_key]
         else:
             self.model_cache.clear()
-    
+
     def get_cache_info(self) -> Dict[str, Any]:
         """
         Get cache information.
-        
+
         Returns:
             Dictionary containing cache info
         """
@@ -360,7 +378,7 @@ class ExplainabilityService:
                     "age_seconds": time.time() - info["loaded_at"],
                 }
                 for key, info in self.model_cache.items()
-            ]
+            ],
         }
 
 

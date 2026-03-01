@@ -4,12 +4,12 @@ import { TutorialPage } from '../pages/TutorialPage';
 test.describe('Tutorial Browsing', () => {
   let tutorialPage: TutorialPage;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page: _page }) => {
     tutorialPage = new TutorialPage(page);
     await tutorialPage.goto();
   });
 
-  test('should display tutorial catalog', async ({ page }) => {
+  test('should display tutorial catalog', async ({ page: _page }) => {
     // Verify page loaded
     await expect(page).toHaveTitle(/Tutorials/i);
     
@@ -25,7 +25,7 @@ test.describe('Tutorial Browsing', () => {
     await expect(tutorialPage.categoryFilter).toBeVisible();
   });
 
-  test('should search tutorials by keyword', async ({ page }) => {
+  test('should search tutorials by keyword', async ({ page: _page }) => {
     // Search for specific tutorial
     await tutorialPage.searchTutorial('machine learning');
     
@@ -38,7 +38,7 @@ test.describe('Tutorial Browsing', () => {
     await expect(firstCard).toContainText(/machine learning/i);
   });
 
-  test('should filter tutorials by difficulty', async ({ page }) => {
+  test('should filter tutorials by difficulty', async ({ page: _page }) => {
     // Get initial count
     const initialCount = await tutorialPage.getTutorialCount();
     
@@ -56,7 +56,7 @@ test.describe('Tutorial Browsing', () => {
     }
   });
 
-  test('should filter tutorials by category', async ({ page }) => {
+  test('should filter tutorials by category', async ({ page: _page }) => {
     // Filter by category
     await tutorialPage.filterByCategory('Neural Networks');
     
@@ -69,7 +69,7 @@ test.describe('Tutorial Browsing', () => {
     await expect(firstCard).toContainText(/Neural Networks/i);
   });
 
-  test('should combine search and filters', async ({ page }) => {
+  test('should combine search and filters', async ({ page: _page }) => {
     // Apply search
     await tutorialPage.searchTutorial('neural');
     
@@ -86,7 +86,7 @@ test.describe('Tutorial Browsing', () => {
     await expect(firstCard).toContainText(/beginner/i);
   });
 
-  test('should display tutorial details on card click', async ({ page }) => {
+  test('should display tutorial details on card click', async ({ page: _page }) => {
     // Click first tutorial card
     const firstCard = tutorialPage.tutorialCards.first();
     await firstCard.click();
@@ -104,7 +104,7 @@ test.describe('Tutorial Browsing', () => {
     await expect(tutorialPage.startButton).toBeVisible();
   });
 
-  test('should show empty state when no results', async ({ page }) => {
+  test('should show empty state when no results', async ({ page: _page }) => {
     // Search for non-existent tutorial
     await tutorialPage.searchTutorial('xyznonexistent123');
     
@@ -117,7 +117,7 @@ test.describe('Tutorial Browsing', () => {
     await expect(page.locator('[data-testid="empty-state"]')).toContainText(/no tutorials found/i);
   });
 
-  test('should display tutorial metadata', async ({ page }) => {
+  test('should display tutorial metadata', async ({ page: _page }) => {
     // Get first tutorial card
     const firstCard = tutorialPage.tutorialCards.first();
     
@@ -133,7 +133,7 @@ test.describe('Tutorial Browsing', () => {
     }
   });
 
-  test('should navigate back to catalog from detail page', async ({ page }) => {
+  test('should navigate back to catalog from detail page', async ({ page: _page }) => {
     // Click first tutorial
     await tutorialPage.tutorialCards.first().click();
     await expect(page).toHaveURL(/\/tutorials\/.+/);
@@ -146,7 +146,7 @@ test.describe('Tutorial Browsing', () => {
     await expect(tutorialPage.tutorialCards.first()).toBeVisible();
   });
 
-  test('should persist filter selections', async ({ page }) => {
+  test('should persist filter selections', async ({ page: _page }) => {
     // Apply filters
     await tutorialPage.filterByDifficulty('intermediate');
     await tutorialPage.filterByCategory('Deep Learning');

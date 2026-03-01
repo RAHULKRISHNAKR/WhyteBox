@@ -253,6 +253,21 @@ Access at: http://YOUR_SERVER_IP
 **Cause**: `ALLOWED_ORIGINS` doesn't include your Vercel URL.  
 **Fix**: Update `ALLOWED_ORIGINS` in Render environment variables.
 
+### "unrecognized arguments: --keepalive" on Render deploy
+**Cause**: Render stores the start command in the dashboard when the service was first created. The `render.yaml` `startCommand` does **not** auto-update existing services — it only applies at Blueprint creation time.
+
+**Fix in Render dashboard:**
+1. Go to Render → `whytebox-backend` → **Settings**
+2. Find **Start Command** field
+3. Change `--keepalive 5` → `--keep-alive 5` (add hyphen)
+4. Full correct command:
+   ```
+   gunicorn app.main:app --worker-class uvicorn.workers.UvicornWorker --workers 1 --bind 0.0.0.0:$PORT --timeout 120 --keep-alive 5 --access-logfile - --error-logfile - --log-level info
+   ```
+5. Click **Save Changes** → Render redeploys automatically
+
+---
+
 ### "Root directory does not exist" on Render build
 **Cause**: Render is looking for `whytebox-v2/backend` but the repo root **is** `whytebox-v2/`, so `backend/` is already at the top level.
 **This was a bug in the original `render.yaml` — it has been fixed to `rootDir: backend`.**

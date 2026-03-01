@@ -4,7 +4,7 @@ import { QuizPage } from '../pages/QuizPage';
 test.describe('Quiz Taking', () => {
   let quizPage: QuizPage;
 
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async ({ page: _page }) => {
     quizPage = new QuizPage(page);
     await quizPage.goto();
     
@@ -14,7 +14,7 @@ test.describe('Quiz Taking', () => {
     await quizPage.waitForQuizToLoad();
   });
 
-  test('should start quiz and display first question', async ({ page }) => {
+  test('should start quiz and display first question', async ({ page: _page }) => {
     // Verify quiz started
     await expect(page).toHaveURL(/\/quizzes\/.+\/take/);
     
@@ -33,7 +33,7 @@ test.describe('Quiz Taking', () => {
     await expect(quizPage.progressIndicator).toBeVisible();
   });
 
-  test('should select and submit answer', async ({ page }) => {
+  test('should select and submit answer', async ({ page: _page }) => {
     // Select an answer
     await quizPage.selectAnswer(0);
     
@@ -48,7 +48,7 @@ test.describe('Quiz Taking', () => {
     await expect(page.locator('[data-testid="answer-feedback"]')).toBeVisible();
   });
 
-  test('should navigate between questions', async ({ page }) => {
+  test('should navigate between questions', async ({ page: _page }) => {
     // Get first question text
     const firstQuestion = await quizPage.getQuestionText();
     
@@ -69,7 +69,7 @@ test.describe('Quiz Taking', () => {
     expect(backToFirst).toBe(firstQuestion);
   });
 
-  test('should track quiz progress', async ({ page }) => {
+  test('should track quiz progress', async ({ page: _page }) => {
     // Get initial progress
     const initialProgress = await quizPage.getProgress();
     
@@ -83,7 +83,7 @@ test.describe('Quiz Taking', () => {
     expect(newProgress).not.toBe(initialProgress);
   });
 
-  test('should display timer if quiz is timed', async ({ page }) => {
+  test('should display timer if quiz is timed', async ({ page: _page }) => {
     // Check if timer is visible
     if (await quizPage.timerDisplay.isVisible()) {
       const initialTime = await quizPage.getTimeRemaining();
@@ -97,7 +97,7 @@ test.describe('Quiz Taking', () => {
     }
   });
 
-  test('should pause and resume quiz', async ({ page }) => {
+  test('should pause and resume quiz', async ({ page: _page }) => {
     // Pause quiz
     await quizPage.pauseQuiz();
     
@@ -113,7 +113,7 @@ test.describe('Quiz Taking', () => {
     await expect(quizPage.questionText).toBeVisible();
   });
 
-  test('should exit quiz with confirmation', async ({ page }) => {
+  test('should exit quiz with confirmation', async ({ page: _page }) => {
     // Click exit button
     await quizPage.exitButton.click();
     
@@ -127,7 +127,7 @@ test.describe('Quiz Taking', () => {
     await expect(page).toHaveURL(/\/quizzes$/);
   });
 
-  test('should handle multiple choice questions', async ({ page }) => {
+  test('should handle multiple choice questions', async ({ page: _page }) => {
     // Check if current question allows multiple answers
     const multipleChoice = page.locator('[data-testid="multiple-choice-indicator"]');
     
@@ -144,7 +144,7 @@ test.describe('Quiz Taking', () => {
     }
   });
 
-  test('should show explanation after answering', async ({ page }) => {
+  test('should show explanation after answering', async ({ page: _page }) => {
     // Answer question
     await quizPage.selectAnswer(0);
     await quizPage.submitAnswer();
@@ -157,7 +157,7 @@ test.describe('Quiz Taking', () => {
     }
   });
 
-  test('should prevent changing answer after submission', async ({ page }) => {
+  test('should prevent changing answer after submission', async ({ page: _page }) => {
     // Submit answer
     await quizPage.selectAnswer(0);
     await quizPage.submitAnswer();
@@ -169,7 +169,7 @@ test.describe('Quiz Taking', () => {
     await expect(secondOption).toBeDisabled();
   });
 
-  test('should show correct/incorrect feedback', async ({ page }) => {
+  test('should show correct/incorrect feedback', async ({ page: _page }) => {
     // Answer question
     await quizPage.selectAnswer(0);
     await quizPage.submitAnswer();
@@ -183,7 +183,7 @@ test.describe('Quiz Taking', () => {
     expect(feedbackClass).toMatch(/correct|incorrect/);
   });
 
-  test('should submit quiz and show results', async ({ page }) => {
+  test('should submit quiz and show results', async ({ page: _page }) => {
     // Answer all questions (simplified - answer first 3)
     for (let i = 0; i < 3; i++) {
       await quizPage.selectAnswer(0);
@@ -209,7 +209,7 @@ test.describe('Quiz Taking', () => {
     }
   });
 
-  test('should display question number indicator', async ({ page }) => {
+  test('should display question number indicator', async ({ page: _page }) => {
     // Verify question indicator
     const indicator = page.locator('[data-testid="question-indicator"]');
     await expect(indicator).toBeVisible();
@@ -219,7 +219,7 @@ test.describe('Quiz Taking', () => {
     expect(indicatorText).toMatch(/question \d+ of \d+/i);
   });
 
-  test('should handle keyboard navigation', async ({ page }) => {
+  test('should handle keyboard navigation', async ({ page: _page }) => {
     // Test number key selection
     await page.keyboard.press('1');
     
@@ -234,7 +234,7 @@ test.describe('Quiz Taking', () => {
     await expect(page.locator('[data-testid="answer-feedback"]')).toBeVisible();
   });
 
-  test('should show review mode before final submission', async ({ page }) => {
+  test('should show review mode before final submission', async ({ page: _page }) => {
     // Answer some questions
     await quizPage.selectAnswer(0);
     await quizPage.submitAnswer();

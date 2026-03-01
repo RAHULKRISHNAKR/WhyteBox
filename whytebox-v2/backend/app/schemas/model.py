@@ -1,6 +1,7 @@
 """
 Pydantic schemas for model validation and serialization.
 """
+
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -67,9 +68,7 @@ class ModelMetadata(BaseModel):
     paper: Optional[str] = Field(None, description="Research paper URL")
     license: Optional[str] = Field(None, description="License type")
     tags: List[str] = Field(default_factory=list, description="Model tags")
-    preprocessing: Optional[Dict[str, Any]] = Field(
-        None, description="Preprocessing configuration"
-    )
+    preprocessing: Optional[Dict[str, Any]] = Field(None, description="Preprocessing configuration")
     classes: Optional[List[str]] = Field(None, description="Output class names")
     custom: Optional[Dict[str, Any]] = Field(None, description="Custom metadata")
 
@@ -299,5 +298,6 @@ class ModelSearchQuery(BaseModel):
         if v not in ["asc", "desc"]:
             raise ValueError("sort_order must be 'asc' or 'desc'")
         return v
+
 
 # Made with Bob

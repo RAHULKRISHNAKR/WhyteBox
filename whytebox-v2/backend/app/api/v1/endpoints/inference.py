@@ -11,10 +11,10 @@ from io import BytesIO
 from typing import Any, Dict, List, Optional
 
 import numpy as np
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 from PIL import Image
 
-from ....services.model_service import model_registry, PRETRAINED_MODELS
+from ....services.model_service import PRETRAINED_MODELS, model_registry
 from ....utils.preprocessing import ImagePreprocessor, NormalizationMethod
 
 logger = logging.getLogger(__name__)
@@ -32,6 +32,7 @@ def _get_imagenet_classes() -> List[str]:
         try:
             # Try to load from torchvision
             from torchvision.models import ResNet50_Weights
+
             _imagenet_classes = ResNet50_Weights.IMAGENET1K_V2.meta["categories"]
         except Exception:
             # Fallback to a short list
@@ -47,10 +48,12 @@ def _load_model_by_id(model_id: str):
 
     # Check custom models (stored in models endpoint module)
     from ....api.v1.endpoints import models as models_endpoint
+
     custom_store = models_endpoint._custom_models
     if model_id in custom_store:
-        from ....utils.model_loader import ModelLoader
         from ....schemas.model import Framework
+        from ....utils.model_loader import ModelLoader
+
         path = custom_store[model_id]["path"]
         framework = custom_store[model_id]["metadata"].get("framework", "pytorch")
         fw = Framework(framework)
@@ -66,7 +69,11 @@ def _preprocess_image(
     normalization: str = "imagenet",
 ) -> np.ndarray:
     """Preprocess image for model inference."""
-    norm_method = NormalizationMethod.IMAGENET if normalization == "imagenet" else NormalizationMethod.ZERO_ONE
+    norm_method = (
+        NormalizationMethod.IMAGENET
+        if normalization == "imagenet"
+        else NormalizationMethod.ZERO_ONE
+    )
 
     processed = ImagePreprocessor.preprocess_for_model(
         image_array,
@@ -135,6 +142,7 @@ def _run_pytorch_inference(
 # Single Image Inference
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 @router.post("/predict")
 async def predict(
     model_id: str = Form(...),
@@ -179,13 +187,21 @@ async def predict(
         else:
             raise HTTPException(
                 status_code=400,
-                detail=f"Framework '{framework}' inference not yet supported via this endpoint"
+                detail=f"Framework '{framework}' inference not yet supported via this endpoint",
             )
 
         predictions = result["predictions"]
-        top_prediction = predictions[0] if predictions else {
-            "rank": 1, "class_index": 0, "class_name": "unknown", "confidence": 0.0, "confidence_pct": 0.0
-        }
+        top_prediction = (
+            predictions[0]
+            if predictions
+            else {
+                "rank": 1,
+                "class_index": 0,
+                "class_name": "unknown",
+                "confidence": 0.0,
+                "confidence_pct": 0.0,
+            }
+        )
 
         return {
             "success": True,
@@ -209,6 +225,7 @@ async def predict(
 # ─────────────────────────────────────────────────────────────────────────────
 # Batch Inference
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 @router.post("/predict-batch")
 async def predict_batch(
@@ -234,10 +251,12 @@ async def predict_batch(
 
             if framework == "pytorch":
                 result = _run_pytorch_inference(model, processed, top_k)
-                results.append({
-                    "filename": img_file.filename,
-                    **result,
-                })
+                results.append(
+                    {
+                        "filename": img_file.filename,
+                        **result,
+                    }
+                )
 
         return {
             "success": True,
@@ -256,6 +275,7 @@ async def predict_batch(
 # ─────────────────────────────────────────────────────────────────────────────
 # Activation Extraction (for visualization)
 # ─────────────────────────────────────────────────────────────────────────────
+
 
 @router.post("/activations")
 async def get_activations(
@@ -397,6 +417,7 @@ async def get_activations(
 # Model Info
 # ─────────────────────────────────────────────────────────────────────────────
 
+
 @router.get("/model-info")
 async def get_model_info(
     model_id: str,
@@ -408,6 +429,7 @@ async def get_model_info(
 
         if framework == "pytorch":
             import torch
+
             total_params = sum(p.numel() for p in model.parameters())
             trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
             num_layers = sum(1 for _ in model.named_modules() if not list(_[1].children()))
@@ -454,5 +476,6 @@ async def clear_cache(model_id: Optional[str] = None) -> Dict[str, Any]:
         model_registry._load_order.clear()
 
     return {"success": True, "message": "Cache cleared"}
+
 
 # Made with Bob

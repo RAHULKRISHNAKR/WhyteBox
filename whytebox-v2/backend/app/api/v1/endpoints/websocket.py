@@ -8,20 +8,15 @@ Author: WhyteBox Team
 Date: 2026-02-26
 """
 
-import uuid
 import asyncio
 import logging
+import uuid
 from typing import Optional
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, Query
+from app.core.websocket import (ConnectionManager, MessageType, WebSocketMessage,
+                                get_connection_manager)
+from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
-
-from app.core.websocket import (
-    get_connection_manager,
-    ConnectionManager,
-    MessageType,
-    WebSocketMessage
-)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -32,15 +27,15 @@ async def websocket_endpoint(
     websocket: WebSocket,
     connection_id: Optional[str] = Query(None),
     user_id: Optional[str] = Query(None),
-    manager: ConnectionManager = Depends(get_connection_manager)
+    manager: ConnectionManager = Depends(get_connection_manager),
 ):
     """
     Main WebSocket endpoint for real-time communication.
-    
+
     Query Parameters:
         connection_id: Optional custom connection ID
         user_id: Optional user identifier
-    
+
     Message Format:
         {
             "type": "message_type",
@@ -48,7 +43,7 @@ async def websocket_endpoint(
             "timestamp": "2026-02-26T09:00:00",
             "task_id": "optional_task_id"
         }
-    
+
     Supported Commands:
         - ping: Health check
         - subscribe_task: Subscribe to task updates
@@ -59,38 +54,34 @@ async def websocket_endpoint(
     # Generate connection ID if not provided
     if not connection_id:
         connection_id = str(uuid.uuid4())
-    
+
     # Connect
     await manager.connect(
-        websocket,
-        connection_id,
-        metadata={"user_id": user_id} if user_id else {}
+        websocket, connection_id, metadata={"user_id": user_id} if user_id else {}
     )
-    
+
     try:
         while True:
             # Receive message
             data = await websocket.receive_text()
             manager.stats["messages_received"] += 1
-            
+
             try:
                 # Parse message
                 import json
+
                 message_data = json.loads(data)
                 message_type = message_data.get("type")
                 message_payload = message_data.get("data", {})
-                
+
                 # Handle different message types
                 if message_type == "ping":
                     # Respond to ping
                     await manager.send_personal_message(
                         connection_id,
-                        WebSocketMessage(
-                            type=MessageType.PONG,
-                            data={"message": "pong"}
-                        )
+                        WebSocketMessage(type=MessageType.PONG, data={"message": "pong"}),
                     )
-                
+
                 elif message_type == "subscribe_task":
                     # Subscribe to task updates
                     task_id = message_payload.get("task_id")
@@ -100,12 +91,10 @@ async def websocket_endpoint(
                             connection_id,
                             WebSocketMessage(
                                 type=MessageType.INFO,
-                                data={
-                                    "message": f"Subscribed to task {task_id}"
-                                }
-                            )
+                                data={"message": f"Subscribed to task {task_id}"},
+                            ),
                         )
-                
+
                 elif message_type == "unsubscribe_task":
                     # Unsubscribe from task updates
                     task_id = message_payload.get("task_id")
@@ -115,12 +104,10 @@ async def websocket_endpoint(
                             connection_id,
                             WebSocketMessage(
                                 type=MessageType.INFO,
-                                data={
-                                    "message": f"Unsubscribed from task {task_id}"
-                                }
-                            )
+                                data={"message": f"Unsubscribed from task {task_id}"},
+                            ),
                         )
-                
+
                 elif message_type == "join_room":
                     # Join a room
                     room_id = message_payload.get("room_id")
@@ -129,13 +116,10 @@ async def websocket_endpoint(
                         await manager.send_personal_message(
                             connection_id,
                             WebSocketMessage(
-                                type=MessageType.INFO,
-                                data={
-                                    "message": f"Joined room {room_id}"
-                                }
-                            )
+                                type=MessageType.INFO, data={"message": f"Joined room {room_id}"}
+                            ),
                         )
-                
+
                 elif message_type == "leave_room":
                     # Leave a room
                     room_id = message_payload.get("room_id")
@@ -144,32 +128,26 @@ async def websocket_endpoint(
                         await manager.send_personal_message(
                             connection_id,
                             WebSocketMessage(
-                                type=MessageType.INFO,
-                                data={
-                                    "message": f"Left room {room_id}"
-                                }
-                            )
+                                type=MessageType.INFO, data={"message": f"Left room {room_id}"}
+                            ),
                         )
-                
+
                 else:
                     # Unknown message type
                     await manager.send_personal_message(
                         connection_id,
                         WebSocketMessage(
                             type=MessageType.WARNING,
-                            data={
-                                "message": f"Unknown message type: {message_type}"
-                            }
-                        )
+                            data={"message": f"Unknown message type: {message_type}"},
+                        ),
                     )
-            
+
             except json.JSONDecodeError:
                 await manager.send_personal_message(
                     connection_id,
                     WebSocketMessage(
-                        type=MessageType.ERROR,
-                        data={"message": "Invalid JSON format"}
-                    )
+                        type=MessageType.ERROR, data={"message": "Invalid JSON format"}
+                    ),
                 )
             except Exception as e:
                 logger.error(f"Error processing message: {e}")
@@ -177,10 +155,10 @@ async def websocket_endpoint(
                     connection_id,
                     WebSocketMessage(
                         type=MessageType.ERROR,
-                        data={"message": f"Error processing message: {str(e)}"}
-                    )
+                        data={"message": f"Error processing message: {str(e)}"},
+                    ),
                 )
-    
+
     except WebSocketDisconnect:
         manager.disconnect(connection_id)
         logger.info(f"Client {connection_id} disconnected")
@@ -190,12 +168,10 @@ async def websocket_endpoint(
 
 
 @router.get("/ws/stats", tags=["websocket"])
-async def get_websocket_stats(
-    manager: ConnectionManager = Depends(get_connection_manager)
-):
+async def get_websocket_stats(manager: ConnectionManager = Depends(get_connection_manager)):
     """
     Get WebSocket connection statistics.
-    
+
     Returns:
         Connection counts, message counts, and error counts
     """
@@ -203,48 +179,39 @@ async def get_websocket_stats(
 
 
 @router.get("/ws/connections", tags=["websocket"])
-async def get_active_connections(
-    manager: ConnectionManager = Depends(get_connection_manager)
-):
+async def get_active_connections(manager: ConnectionManager = Depends(get_connection_manager)):
     """
     Get list of active WebSocket connections.
-    
+
     Returns:
         List of connection IDs and their metadata
     """
     return {
         "active_connections": list(manager.active_connections.keys()),
         "count": manager.get_connection_count(),
-        "metadata": manager.connection_metadata
+        "metadata": manager.connection_metadata,
     }
 
 
 @router.get("/ws/rooms", tags=["websocket"])
-async def get_active_rooms(
-    manager: ConnectionManager = Depends(get_connection_manager)
-):
+async def get_active_rooms(manager: ConnectionManager = Depends(get_connection_manager)):
     """
     Get list of active rooms and their members.
-    
+
     Returns:
         Dictionary of room IDs and member lists
     """
     return {
-        "rooms": {
-            room_id: manager.get_room_members(room_id)
-            for room_id in manager.rooms.keys()
-        },
-        "count": manager.get_room_count()
+        "rooms": {room_id: manager.get_room_members(room_id) for room_id in manager.rooms.keys()},
+        "count": manager.get_room_count(),
     }
 
 
 @router.get("/ws/tasks", tags=["websocket"])
-async def get_active_tasks(
-    manager: ConnectionManager = Depends(get_connection_manager)
-):
+async def get_active_tasks(manager: ConnectionManager = Depends(get_connection_manager)):
     """
     Get list of active tasks and their subscribers.
-    
+
     Returns:
         Dictionary of task IDs and subscriber lists
     """
@@ -253,7 +220,7 @@ async def get_active_tasks(
             task_id: manager.get_task_subscribers(task_id)
             for task_id in manager.task_subscribers.keys()
         },
-        "count": len(manager.task_subscribers)
+        "count": len(manager.task_subscribers),
     }
 
 
@@ -262,16 +229,16 @@ async def broadcast_message(
     message_type: str,
     message: str,
     data: Optional[dict] = None,
-    manager: ConnectionManager = Depends(get_connection_manager)
+    manager: ConnectionManager = Depends(get_connection_manager),
 ):
     """
     Broadcast a message to all connected clients.
-    
+
     Args:
         message_type: Type of message (info, warning, error, notification)
         message: Message text
         data: Optional additional data
-    
+
     Returns:
         Success status
     """
@@ -279,21 +246,12 @@ async def broadcast_message(
         msg_type = MessageType(message_type)
     except ValueError:
         msg_type = MessageType.NOTIFICATION
-    
+
     await manager.broadcast(
-        WebSocketMessage(
-            type=msg_type,
-            data={
-                "message": message,
-                **(data or {})
-            }
-        )
+        WebSocketMessage(type=msg_type, data={"message": message, **(data or {})})
     )
-    
-    return {
-        "status": "success",
-        "recipients": manager.get_connection_count()
-    }
+
+    return {"status": "success", "recipients": manager.get_connection_count()}
 
 
 @router.post("/ws/room/{room_id}/broadcast", tags=["websocket"])
@@ -302,17 +260,17 @@ async def broadcast_to_room(
     message_type: str,
     message: str,
     data: Optional[dict] = None,
-    manager: ConnectionManager = Depends(get_connection_manager)
+    manager: ConnectionManager = Depends(get_connection_manager),
 ):
     """
     Broadcast a message to all clients in a room.
-    
+
     Args:
         room_id: Room identifier
         message_type: Type of message
         message: Message text
         data: Optional additional data
-    
+
     Returns:
         Success status and recipient count
     """
@@ -320,32 +278,21 @@ async def broadcast_to_room(
         msg_type = MessageType(message_type)
     except ValueError:
         msg_type = MessageType.NOTIFICATION
-    
+
     await manager.broadcast_to_room(
-        room_id,
-        WebSocketMessage(
-            type=msg_type,
-            data={
-                "message": message,
-                **(data or {})
-            }
-        )
+        room_id, WebSocketMessage(type=msg_type, data={"message": message, **(data or {})})
     )
-    
+
     recipients = len(manager.get_room_members(room_id))
-    
-    return {
-        "status": "success",
-        "room_id": room_id,
-        "recipients": recipients
-    }
+
+    return {"status": "success", "room_id": room_id, "recipients": recipients}
 
 
 @router.get("/ws/test", response_class=HTMLResponse, tags=["websocket"])
 async def websocket_test_page():
     """
     Simple HTML page for testing WebSocket connection.
-    
+
     Returns:
         HTML page with WebSocket test client
     """
@@ -514,5 +461,6 @@ async def websocket_test_page():
     </html>
     """
     return HTMLResponse(content=html)
+
 
 # Made with Bob

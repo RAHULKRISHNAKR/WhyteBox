@@ -1,14 +1,14 @@
 """
 Repository for model data access operations.
 """
-from typing import List, Optional
 
-from sqlalchemy import and_, desc, func, or_
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.future import select
+from typing import List, Optional
 
 from app.models.model import Model
 from app.schemas.model import ModelSearchQuery, ModelStatus
+from sqlalchemy import and_, desc, func, or_
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 
 class ModelRepository:
@@ -61,10 +61,12 @@ class ModelRepository:
         result = await self.db.execute(query)
         return list(result.scalars().all())
 
-    async def search(self, search_query: ModelSearchQuery, user_id: Optional[str] = None) -> tuple[List[Model], int]:
+    async def search(
+        self, search_query: ModelSearchQuery, user_id: Optional[str] = None
+    ) -> tuple[List[Model], int]:
         """
         Search models with advanced filtering.
-        
+
         Returns:
             Tuple of (models, total_count)
         """
@@ -154,9 +156,7 @@ class ModelRepository:
         await self.db.delete(model)
         await self.db.commit()
 
-    async def get_by_user(
-        self, user_id: str, skip: int = 0, limit: int = 10
-    ) -> List[Model]:
+    async def get_by_user(self, user_id: str, skip: int = 0, limit: int = 10) -> List[Model]:
         """Get all models for a specific user."""
         query = (
             select(Model)
@@ -170,9 +170,7 @@ class ModelRepository:
 
     async def count_by_user(self, user_id: str) -> int:
         """Count total models for a user."""
-        result = await self.db.execute(
-            select(func.count(Model.id)).where(Model.user_id == user_id)
-        )
+        result = await self.db.execute(select(func.count(Model.id)).where(Model.user_id == user_id))
         return result.scalar_one()
 
     async def get_public_models(self, skip: int = 0, limit: int = 10) -> List[Model]:
@@ -188,9 +186,7 @@ class ModelRepository:
         result = await self.db.execute(query)
         return list(result.scalars().all())
 
-    async def get_pretrained_models(
-        self, skip: int = 0, limit: int = 10
-    ) -> List[Model]:
+    async def get_pretrained_models(self, skip: int = 0, limit: int = 10) -> List[Model]:
         """Get all pretrained models."""
         query = (
             select(Model)
@@ -250,9 +246,7 @@ class ModelRepository:
 
     async def exists(self, model_id: str) -> bool:
         """Check if a model exists."""
-        result = await self.db.execute(
-            select(func.count(Model.id)).where(Model.id == model_id)
-        )
+        result = await self.db.execute(select(func.count(Model.id)).where(Model.id == model_id))
         count = result.scalar_one()
         return count > 0
 
@@ -278,5 +272,6 @@ class ModelRepository:
             "avg_accuracy": float(row.avg_accuracy) if row.avg_accuracy else None,
             "total_inferences": row.total_inferences or 0,
         }
+
 
 # Made with Bob

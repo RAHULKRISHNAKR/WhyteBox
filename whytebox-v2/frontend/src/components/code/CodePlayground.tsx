@@ -23,7 +23,6 @@ import {
   Refresh,
   Save,
   Share,
-  Info,
 } from '@mui/icons-material';
 import { CodeEditor } from './CodeEditor';
 import { CodeOutput } from './CodeOutput';

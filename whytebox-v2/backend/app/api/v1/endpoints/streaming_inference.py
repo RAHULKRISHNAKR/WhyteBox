@@ -31,7 +31,7 @@ import numpy as np
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from PIL import Image
 
-from ....services.model_service import model_registry, PRETRAINED_MODELS
+from ....services.model_service import PRETRAINED_MODELS, model_registry
 from ....utils.preprocessing import ImagePreprocessor, NormalizationMethod
 
 logger = logging.getLogger(__name__)
@@ -60,6 +60,7 @@ def _downsample_activation(act_2d: np.ndarray, max_size: int = MAX_ACT_SIZE) -> 
     h, w = act_2d.shape
     if h > max_size or w > max_size:
         from PIL import Image as PILImage
+
         pil = PILImage.fromarray((act_2d * 255).clip(0, 255).astype(np.uint8))
         pil = pil.resize((min(w, max_size), min(h, max_size)), PILImage.BILINEAR)
         act_2d = np.array(pil).astype(np.float32) / 255.0
@@ -83,7 +84,9 @@ async def streaming_inference(websocket: WebSocket):
             try:
                 msg = json.loads(raw)
             except json.JSONDecodeError:
-                await websocket.send_json({"type": "inference_error", "data": {"message": "Invalid JSON"}})
+                await websocket.send_json(
+                    {"type": "inference_error", "data": {"message": "Invalid JSON"}}
+                )
                 continue
 
             msg_type = msg.get("type")
@@ -93,10 +96,12 @@ async def streaming_inference(websocket: WebSocket):
                 continue
 
             if msg_type != "start_inference":
-                await websocket.send_json({
-                    "type": "inference_error",
-                    "data": {"message": f"Unknown message type: {msg_type}"}
-                })
+                await websocket.send_json(
+                    {
+                        "type": "inference_error",
+                        "data": {"message": f"Unknown message type: {msg_type}"},
+                    }
+                )
                 continue
 
             # ── Start inference ──────────────────────────────────────────────
@@ -106,10 +111,12 @@ async def streaming_inference(websocket: WebSocket):
             top_k: int = int(data.get("top_k", 5))
 
             if not model_id or not image_b64:
-                await websocket.send_json({
-                    "type": "inference_error",
-                    "data": {"message": "model_id and image_b64 are required"}
-                })
+                await websocket.send_json(
+                    {
+                        "type": "inference_error",
+                        "data": {"message": "model_id and image_b64 are required"},
+                    }
+                )
                 continue
 
             await _run_streaming_inference(websocket, model_id, image_b64, top_k)
@@ -119,10 +126,7 @@ async def streaming_inference(websocket: WebSocket):
     except Exception as e:
         logger.error(f"Streaming inference error: {e}", exc_info=True)
         try:
-            await websocket.send_json({
-                "type": "inference_error",
-                "data": {"message": str(e)}
-            })
+            await websocket.send_json({"type": "inference_error", "data": {"message": str(e)}})
         except Exception:
             pass
 
@@ -142,10 +146,9 @@ async def _run_streaming_inference(
 
         # Load model
         if model_id not in PRETRAINED_MODELS:
-            await websocket.send_json({
-                "type": "inference_error",
-                "data": {"message": f"Model '{model_id}' not found"}
-            })
+            await websocket.send_json(
+                {"type": "inference_error", "data": {"message": f"Model '{model_id}' not found"}}
+            )
             return
 
         model, metadata = model_registry.load_pretrained(model_id)
@@ -160,21 +163,29 @@ async def _run_streaming_inference(
             (name, mod)
             for name, mod in model.named_modules()
             if not list(mod.children())
-            and type(mod).__name__ in (
-                "Conv2d", "Linear", "BatchNorm2d", "ReLU",
-                "MaxPool2d", "AvgPool2d", "AdaptiveAvgPool2d",
+            and type(mod).__name__
+            in (
+                "Conv2d",
+                "Linear",
+                "BatchNorm2d",
+                "ReLU",
+                "MaxPool2d",
+                "AvgPool2d",
+                "AdaptiveAvgPool2d",
             )
         ]
 
         # Notify start
-        await websocket.send_json({
-            "type": "inference_start",
-            "data": {
-                "model_id": model_id,
-                "model_name": metadata.get("name", model_id),
-                "num_layers": len(leaf_modules),
+        await websocket.send_json(
+            {
+                "type": "inference_start",
+                "data": {
+                    "model_id": model_id,
+                    "model_name": metadata.get("name", model_id),
+                    "num_layers": len(leaf_modules),
+                },
             }
-        })
+        )
 
         # ── Register hooks for all target layers ─────────────────────────────
         activation_store: Dict[str, Any] = {}
@@ -183,6 +194,7 @@ async def _run_streaming_inference(
         def make_hook(layer_name: str):
             def hook(module, inp, out):
                 activation_store[layer_name] = out.detach().cpu().numpy()
+
             return hook
 
         for name, mod in leaf_modules:
@@ -220,12 +232,12 @@ async def _run_streaming_inference(
             elif act.ndim == 2:
                 # (1, N) → reshape to 2D
                 n = act.shape[1]
-                side = max(1, int(n ** 0.5))
-                act_2d = act[0, :side * side].reshape(side, side)
+                side = max(1, int(n**0.5))
+                act_2d = act[0, : side * side].reshape(side, side)
             else:
-                act_2d = act.reshape(-1)[:MAX_ACT_SIZE * MAX_ACT_SIZE]
+                act_2d = act.reshape(-1)[: MAX_ACT_SIZE * MAX_ACT_SIZE]
                 side = max(1, int(len(act_2d) ** 0.5))
-                act_2d = act_2d[:side * side].reshape(side, side)
+                act_2d = act_2d[: side * side].reshape(side, side)
 
             # Normalize to [0, 1]
             a_min, a_max = act_2d.min(), act_2d.max()
@@ -236,20 +248,22 @@ async def _run_streaming_inference(
 
             activation_map = _downsample_activation(act_2d_norm)
 
-            await websocket.send_json({
-                "type": "layer_activation",
-                "data": {
-                    "layer_index": layer_idx,
-                    "layer_name": name,
-                    "layer_type": layer_type,
-                    "activation_mean": round(act_mean, 4),
-                    "activation_max": round(act_max, 4),
-                    "activation_std": round(act_std, 4),
-                    "sparsity": round(sparsity, 4),
-                    "activation_map": activation_map,
-                    "total_layers": len(leaf_modules),
+            await websocket.send_json(
+                {
+                    "type": "layer_activation",
+                    "data": {
+                        "layer_index": layer_idx,
+                        "layer_name": name,
+                        "layer_type": layer_type,
+                        "activation_mean": round(act_mean, 4),
+                        "activation_max": round(act_max, 4),
+                        "activation_std": round(act_std, 4),
+                        "sparsity": round(sparsity, 4),
+                        "activation_map": activation_map,
+                        "total_layers": len(leaf_modules),
+                    },
                 }
-            })
+            )
 
             # Small yield to allow WebSocket flush
             await asyncio.sleep(0)
@@ -261,6 +275,7 @@ async def _run_streaming_inference(
 
         try:
             from torchvision.models import ResNet50_Weights
+
             classes = ResNet50_Weights.IMAGENET1K_V2.meta["categories"]
         except Exception:
             classes = [f"class_{i}" for i in range(1000)]
@@ -276,27 +291,26 @@ async def _run_streaming_inference(
             for i, idx in enumerate(top_indices)
         ]
 
-        await websocket.send_json({
-            "type": "inference_complete",
-            "data": {
-                "model_id": model_id,
-                "predictions": predictions,
-                "top_prediction": predictions[0] if predictions else None,
-                "inference_time_ms": round(inference_time_ms, 2),
-                "total_layers_processed": len(activation_store),
+        await websocket.send_json(
+            {
+                "type": "inference_complete",
+                "data": {
+                    "model_id": model_id,
+                    "predictions": predictions,
+                    "top_prediction": predictions[0] if predictions else None,
+                    "inference_time_ms": round(inference_time_ms, 2),
+                    "total_layers_processed": len(activation_store),
+                },
             }
-        })
+        )
 
     except ImportError as e:
-        await websocket.send_json({
-            "type": "inference_error",
-            "data": {"message": f"PyTorch not installed: {e}"}
-        })
+        await websocket.send_json(
+            {"type": "inference_error", "data": {"message": f"PyTorch not installed: {e}"}}
+        )
     except Exception as e:
         logger.error(f"Streaming inference failed: {e}", exc_info=True)
-        await websocket.send_json({
-            "type": "inference_error",
-            "data": {"message": str(e)}
-        })
+        await websocket.send_json({"type": "inference_error", "data": {"message": str(e)}})
+
 
 # Made with Bob

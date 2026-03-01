@@ -1,6 +1,7 @@
 """
 Framework-agnostic model loader utilities.
 """
+
 import hashlib
 import logging
 from pathlib import Path
@@ -18,10 +19,10 @@ class ModelLoader:
     def detect_framework(file_path: str) -> Optional[Framework]:
         """
         Detect the framework from file extension.
-        
+
         Args:
             file_path: Path to the model file
-            
+
         Returns:
             Detected framework or None
         """
@@ -42,10 +43,10 @@ class ModelLoader:
     def compute_file_hash(file_path: str) -> str:
         """
         Compute SHA-256 hash of a file.
-        
+
         Args:
             file_path: Path to the file
-            
+
         Returns:
             SHA-256 hash as hex string
         """
@@ -60,10 +61,10 @@ class ModelLoader:
     def get_file_size(file_path: str) -> int:
         """
         Get file size in bytes.
-        
+
         Args:
             file_path: Path to the file
-            
+
         Returns:
             File size in bytes
         """
@@ -73,11 +74,11 @@ class ModelLoader:
     def load_pytorch_model(file_path: str, device: str = "cpu") -> Tuple[Any, Dict]:
         """
         Load a PyTorch model.
-        
+
         Args:
             file_path: Path to the model file
             device: Device to load model on
-            
+
         Returns:
             Tuple of (model, metadata)
         """
@@ -89,7 +90,7 @@ class ModelLoader:
         try:
             # Load model
             model = torch.load(file_path, map_location=device)
-            
+
             # Extract metadata
             metadata = {
                 "framework": "pytorch",
@@ -116,19 +117,17 @@ class ModelLoader:
     def load_tensorflow_model(file_path: str) -> Tuple[Any, Dict]:
         """
         Load a TensorFlow model.
-        
+
         Args:
             file_path: Path to the model file or directory
-            
+
         Returns:
             Tuple of (model, metadata)
         """
         try:
             import tensorflow as tf
         except ImportError:
-            raise ImportError(
-                "TensorFlow is not installed. Install with: pip install tensorflow"
-            )
+            raise ImportError("TensorFlow is not installed. Install with: pip install tensorflow")
 
         try:
             # Load model
@@ -151,10 +150,10 @@ class ModelLoader:
     def load_keras_model(file_path: str) -> Tuple[Any, Dict]:
         """
         Load a Keras model.
-        
+
         Args:
             file_path: Path to the model file
-            
+
         Returns:
             Tuple of (model, metadata)
         """
@@ -186,10 +185,10 @@ class ModelLoader:
     def load_onnx_model(file_path: str) -> Tuple[Any, Dict]:
         """
         Load an ONNX model.
-        
+
         Args:
             file_path: Path to the model file
-            
+
         Returns:
             Tuple of (model, metadata)
         """
@@ -197,14 +196,12 @@ class ModelLoader:
             import onnx
             import onnxruntime as ort
         except ImportError:
-            raise ImportError(
-                "ONNX is not installed. Install with: pip install onnx onnxruntime"
-            )
+            raise ImportError("ONNX is not installed. Install with: pip install onnx onnxruntime")
 
         try:
             # Load ONNX model
             onnx_model = onnx.load(file_path)
-            
+
             # Create inference session
             session = ort.InferenceSession(file_path)
 
@@ -239,10 +236,10 @@ class ModelLoader:
     def extract_pytorch_architecture(model: Any) -> Optional[Dict]:
         """
         Extract architecture information from PyTorch model.
-        
+
         Args:
             model: PyTorch model
-            
+
         Returns:
             Architecture dictionary or None
         """
@@ -270,13 +267,15 @@ class ModelLoader:
                     # Get module type
                     module_type = type(module).__name__
 
-                    layers.append({
-                        "id": name or f"layer_{len(layers)}",
-                        "name": module_type,
-                        "type": module_type.lower(),
-                        "params": params,
-                        "trainable": trainable > 0,
-                    })
+                    layers.append(
+                        {
+                            "id": name or f"layer_{len(layers)}",
+                            "name": module_type,
+                            "type": module_type.lower(),
+                            "params": params,
+                            "trainable": trainable > 0,
+                        }
+                    )
 
             return {
                 "layers": layers,
@@ -293,10 +292,10 @@ class ModelLoader:
     def extract_tensorflow_architecture(model: Any) -> Optional[Dict]:
         """
         Extract architecture information from TensorFlow/Keras model.
-        
+
         Args:
             model: TensorFlow/Keras model
-            
+
         Returns:
             Architecture dictionary or None
         """
@@ -305,16 +304,22 @@ class ModelLoader:
 
             for layer in model.layers:
                 layer_config = layer.get_config()
-                
-                layers.append({
-                    "id": layer.name,
-                    "name": layer.__class__.__name__,
-                    "type": layer.__class__.__name__.lower(),
-                    "input_shape": list(layer.input_shape) if hasattr(layer, "input_shape") else None,
-                    "output_shape": list(layer.output_shape) if hasattr(layer, "output_shape") else None,
-                    "params": layer.count_params(),
-                    "config": layer_config,
-                })
+
+                layers.append(
+                    {
+                        "id": layer.name,
+                        "name": layer.__class__.__name__,
+                        "type": layer.__class__.__name__.lower(),
+                        "input_shape": (
+                            list(layer.input_shape) if hasattr(layer, "input_shape") else None
+                        ),
+                        "output_shape": (
+                            list(layer.output_shape) if hasattr(layer, "output_shape") else None
+                        ),
+                        "params": layer.count_params(),
+                        "config": layer_config,
+                    }
+                )
 
             # Get total parameters
             total_params = model.count_params()
@@ -339,12 +344,12 @@ class ModelLoader:
     ) -> Tuple[Any, Dict]:
         """
         Load a model from any supported framework.
-        
+
         Args:
             file_path: Path to the model file
             framework: Framework to use (auto-detected if None)
             device: Device to load model on (for PyTorch)
-            
+
         Returns:
             Tuple of (model, metadata)
         """
@@ -370,11 +375,11 @@ class ModelLoader:
     def extract_architecture(model: Any, framework: Framework) -> Optional[Dict]:
         """
         Extract architecture from a loaded model.
-        
+
         Args:
             model: Loaded model
             framework: Model framework
-            
+
         Returns:
             Architecture dictionary or None
         """
@@ -385,5 +390,6 @@ class ModelLoader:
         else:
             logger.warning(f"Architecture extraction not supported for {framework}")
             return None
+
 
 # Made with Bob

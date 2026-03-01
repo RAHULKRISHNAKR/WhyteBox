@@ -10,8 +10,8 @@ This package provides various explainability techniques including:
 
 from .base_explainer import BaseExplainer, ExplainabilityResult
 from .gradcam import GradCAM
-from .saliency import SaliencyMap
 from .integrated_gradients import IntegratedGradients
+from .saliency import SaliencyMap
 
 __all__ = [
     "BaseExplainer",

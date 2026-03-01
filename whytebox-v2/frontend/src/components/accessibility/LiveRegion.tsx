@@ -87,6 +87,7 @@ interface UseAnnouncerOptions {
   clearDelay?: number;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAnnouncer = (options: UseAnnouncerOptions = {}) => {
   const { politeness = 'polite', clearDelay = 5000 } = options;
   const [message, setMessage] = React.useState('');

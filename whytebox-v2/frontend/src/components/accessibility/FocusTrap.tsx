@@ -114,6 +114,7 @@ export const FocusTrap: React.FC<FocusTrapProps> = ({
 /**
  * Hook for managing focus trap
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export const useFocusTrap = (active: boolean = true) => {
   const containerRef = useRef<HTMLDivElement>(null);
 

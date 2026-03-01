@@ -525,13 +525,15 @@ function enableHoverEffect(mesh: Mesh, scene: Scene): void {
   if (!mesh.actionManager) mesh.actionManager = new ActionManager(scene)
   mesh.actionManager.registerAction(
     new ExecuteCodeAction(ActionManager.OnPointerOverTrigger, () => {
-      ;(mesh.material as StandardMaterial).emissiveColor = hoverEmissive
+      const mat1 = mesh.material as StandardMaterial
+      mat1.emissiveColor = hoverEmissive
       scene.hoverCursor = 'pointer'
     })
   )
   mesh.actionManager.registerAction(
     new ExecuteCodeAction(ActionManager.OnPointerOutTrigger, () => {
-      ;(mesh.material as StandardMaterial).emissiveColor = origEmissive.clone()
+      const mat2 = mesh.material as StandardMaterial
+      mat2.emissiveColor = origEmissive.clone()
       scene.hoverCursor = 'default'
     })
   )
@@ -687,7 +689,8 @@ function startExpansionAnimation(scene: Scene, state: ExpansionState): void {
         // Dispose feature maps and restore original mesh
         state.fmEntries.forEach((fm) => fm.mesh.dispose())
         if (state.originalMesh.material) {
-          ;(state.originalMesh.material as StandardMaterial).alpha = state.originalAlpha
+          const restoreMat = state.originalMesh.material as StandardMaterial
+          restoreMat.alpha = state.originalAlpha
         }
         expansionMap.delete(state.originalMesh.metadata?.layerId)
         scene.unregisterBeforeRender(observer)
@@ -761,7 +764,8 @@ function toggleExpansion(
 
     // Fade original mesh
     if (primaryMesh.material) {
-      ;(primaryMesh.material as StandardMaterial).alpha = 0.18
+      const fadeMat = primaryMesh.material as StandardMaterial
+      fadeMat.alpha = 0.18
     }
 
     startExpansionAnimation(scene, state)

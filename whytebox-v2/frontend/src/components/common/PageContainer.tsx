@@ -4,7 +4,7 @@
  * Wrapper for page content with optional breadcrumbs and title
  */
 
-import { Box, Container, Typography, Paper } from '@mui/material'
+import { Box, Container, Typography } from '@mui/material'
 import Breadcrumbs from './Breadcrumbs'
 
 interface PageContainerProps {

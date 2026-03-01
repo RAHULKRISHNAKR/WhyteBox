@@ -11,7 +11,6 @@ import {
   Refresh,
   ContentCopy,
   Check,
-  Settings,
   Fullscreen,
   FullscreenExit,
 } from '@mui/icons-material';

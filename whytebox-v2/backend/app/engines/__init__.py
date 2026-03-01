@@ -6,9 +6,9 @@ across PyTorch, TensorFlow, and ONNX models.
 """
 
 from .base_engine import BaseInferenceEngine, InferenceResult
+from .onnx_engine import ONNXInferenceEngine
 from .pytorch_engine import PyTorchInferenceEngine
 from .tensorflow_engine import TensorFlowInferenceEngine
-from .onnx_engine import ONNXInferenceEngine
 
 __all__ = [
     "BaseInferenceEngine",

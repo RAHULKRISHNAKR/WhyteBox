@@ -13,20 +13,18 @@ Date: 2026-02-26
 """
 
 import logging
+
+from app.core.config import settings
 from celery import Celery
 from celery.schedules import crontab
 from kombu import Exchange, Queue
-
-from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
 
 # Create Celery app
 celery_app = Celery(
-    "whytebox",
-    broker=settings.CELERY_BROKER_URL,
-    backend=settings.CELERY_RESULT_BACKEND
+    "whytebox", broker=settings.CELERY_BROKER_URL, backend=settings.CELERY_RESULT_BACKEND
 )
 
 
@@ -38,27 +36,22 @@ celery_app.conf.update(
     result_serializer="json",
     timezone="UTC",
     enable_utc=True,
-    
     # Task execution
     task_track_started=True,
     task_time_limit=3600,  # 1 hour hard limit
     task_soft_time_limit=3300,  # 55 minutes soft limit
     task_acks_late=True,  # Acknowledge after task completion
     task_reject_on_worker_lost=True,
-    
     # Result backend
     result_expires=86400,  # 24 hours
     result_persistent=True,
-    
     # Worker settings
     worker_prefetch_multiplier=1,  # One task at a time
     worker_max_tasks_per_child=1000,  # Restart worker after 1000 tasks
     worker_disable_rate_limits=False,
-    
     # Retry settings
     task_default_retry_delay=60,  # 1 minute
     task_max_retries=3,
-    
     # Monitoring
     worker_send_task_events=True,
     task_send_sent_event=True,
@@ -80,31 +73,31 @@ celery_app.conf.task_queues = (
         "default",
         Exchange("default"),
         routing_key="default",
-        queue_arguments={"x-max-priority": 10}
+        queue_arguments={"x-max-priority": 10},
     ),
     Queue(
         "inference",
         Exchange("inference"),
         routing_key="inference",
-        queue_arguments={"x-max-priority": 10}
+        queue_arguments={"x-max-priority": 10},
     ),
     Queue(
         "conversion",
         Exchange("conversion"),
         routing_key="conversion",
-        queue_arguments={"x-max-priority": 5}
+        queue_arguments={"x-max-priority": 5},
     ),
     Queue(
         "explainability",
         Exchange("explainability"),
         routing_key="explainability",
-        queue_arguments={"x-max-priority": 5}
+        queue_arguments={"x-max-priority": 5},
     ),
     Queue(
         "maintenance",
         Exchange("maintenance"),
         routing_key="maintenance",
-        queue_arguments={"x-max-priority": 1}
+        queue_arguments={"x-max-priority": 1},
     ),
 )
 
@@ -161,11 +154,7 @@ def error_handler(self, uuid):
     result = celery_app.AsyncResult(uuid)
     logger.error(
         f"Task {uuid} failed: {result.info}",
-        extra={
-            "task_id": uuid,
-            "task_name": result.name,
-            "error": str(result.info)
-        }
+        extra={"task_id": uuid, "task_name": result.name, "error": str(result.info)},
     )
 
 
@@ -186,10 +175,11 @@ def setup_task_routes(sender, **kwargs):
 def register_tasks():
     """Import all task modules to register them with Celery"""
     try:
-        from app.tasks import inference  # noqa
         from app.tasks import conversion  # noqa
         from app.tasks import explainability  # noqa
+        from app.tasks import inference  # noqa
         from app.tasks import maintenance  # noqa
+
         logger.info("All Celery tasks registered")
     except ImportError as e:
         logger.warning(f"Failed to import some task modules: {e}")
