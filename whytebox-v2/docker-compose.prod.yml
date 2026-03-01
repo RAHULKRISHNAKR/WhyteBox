@@ -1,0 +1,203 @@
+# WhyteBox Production Docker Compose
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Required environment variables (set in .env.prod — never commit this file):
+#   POSTGRES_PASSWORD, SECRET_KEY, ALLOWED_ORIGINS
+#   VITE_API_URL (build-time arg for the frontend image)
+#
+# Optional: set PYTORCH_DEVICE=cuda and add GPU runtime to the backend service.
+
+version: '3.8'
+
+services:
+  # ── PostgreSQL ──────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: whytebox-postgres-prod
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-whytebox}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-whytebox}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-whytebox}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - whytebox-internal
+    # No external port exposure in production — only accessible within the network
+
+  # ── Redis ───────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: whytebox-redis-prod
+    restart: unless-stopped
+    command: >
+      redis-server
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1000
+      --requirepass ${REDIS_PASSWORD:-}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - whytebox-internal
+
+  # ── Backend API ─────────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.backend.prod
+    image: whytebox-backend:${VERSION:-latest}
+    container_name: whytebox-backend-prod
+    restart: unless-stopped
+    environment:
+      # Database
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-whytebox}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-whytebox}
+      DATABASE_POOL_SIZE: ${DATABASE_POOL_SIZE:-10}
+      DATABASE_MAX_OVERFLOW: ${DATABASE_MAX_OVERFLOW:-5}
+      # Redis
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/1
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-}@redis:6379/2
+      # Security
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      # App
+      ENVIRONMENT: production
+      DEBUG: "false"
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      LOG_FORMAT: json
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      # ML
+      PYTORCH_DEVICE: ${PYTORCH_DEVICE:-cpu}
+      MODEL_CACHE_SIZE: ${MODEL_CACHE_SIZE:-5}
+      MODEL_CACHE_TTL: ${MODEL_CACHE_TTL:-7200}
+      UPLOAD_DIR: /app/uploads
+      MAX_UPLOAD_SIZE: ${MAX_UPLOAD_SIZE:-524288000}
+    volumes:
+      - model_cache:/app/models
+      - upload_data:/app/uploads
+      - log_data:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - whytebox-internal
+    # No external port — Nginx proxies to this service
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    # Uncomment for GPU support:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]
+
+  # ── Celery Worker (async tasks: model conversion, etc.) ─────────────────────
+  celery_worker:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.backend.prod
+    image: whytebox-backend:${VERSION:-latest}
+    container_name: whytebox-celery-prod
+    restart: unless-stopped
+    command: >
+      celery -A app.core.celery_app worker
+      --loglevel=info
+      --concurrency=2
+      --queues=default,ml_tasks
+    environment:
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-whytebox}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-whytebox}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      CELERY_BROKER_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/1
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-}@redis:6379/2
+      SECRET_KEY: ${SECRET_KEY}
+      ENVIRONMENT: production
+      DEBUG: "false"
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      PYTORCH_DEVICE: ${PYTORCH_DEVICE:-cpu}
+      MODEL_CACHE_SIZE: ${MODEL_CACHE_SIZE:-5}
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - model_cache:/app/models
+      - upload_data:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - whytebox-internal
+
+  # ── Frontend + Nginx ─────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.frontend.prod
+      args:
+        # API URL seen by the browser — must be the public-facing URL
+        VITE_API_URL: ${VITE_API_URL:-http://localhost/api/v1}
+    image: whytebox-frontend:${VERSION:-latest}
+    container_name: whytebox-frontend-prod
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      # Uncomment for HTTPS:
+      # - "${HTTPS_PORT:-443}:443"
+      # volumes:
+      #   - ./infrastructure/nginx/ssl:/etc/nginx/ssl:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - whytebox-internal
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+# ── Volumes ──────────────────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  model_cache:
+    driver: local
+  upload_data:
+    driver: local
+  log_data:
+    driver: local
+
+# ── Networks ─────────────────────────────────────────────────────────────────
+networks:
+  whytebox-internal:
+    driver: bridge
+    internal: false   # set true if you add an external load balancer
+
+# Made with Bob

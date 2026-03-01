@@ -14,6 +14,14 @@ from pathlib import Path
 from datetime import datetime
 import traceback
 
+# Import WebSocket handler
+try:
+    from websocket_handler import init_socketio
+    WEBSOCKET_AVAILABLE = True
+except ImportError:
+    WEBSOCKET_AVAILABLE = False
+    logging.warning("WebSocket support not available. Install flask-socketio for real-time updates.")
+
 # Try to import torch at module level (available check)
 try:
     import torch
@@ -44,7 +52,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / 'core'))
 sys.path.insert(0, str(Path(__file__).parent.parent / 'utils'))
 from activation_extractor import ActivationExtractor
 from image_preprocessor import ImagePreprocessor, decode_predictions
-from explainability import GradCAMGenerator, SaliencyMapGenerator, serialize_heatmap
+from explainability import GradCAMGenerator, SaliencyMapGenerator, IntegratedGradientsGenerator, serialize_heatmap
 
 # Setup logging
 logging.basicConfig(
@@ -69,6 +77,18 @@ app.config['OUTPUT_FOLDER'].mkdir(parents=True, exist_ok=True)
 
 # Model cache for inference (avoid reloading)
 model_cache = {}
+
+# Initialize WebSocket support
+socketio = None
+if WEBSOCKET_AVAILABLE:
+    try:
+        socketio = init_socketio(app)
+        logger.info("✅ WebSocket support enabled")
+    except Exception as e:
+        logger.warning(f"⚠️ WebSocket initialization failed: {e}")
+        WEBSOCKET_AVAILABLE = False
+else:
+    logger.info("ℹ️ WebSocket support disabled (flask-socketio not installed)")
 
 
 def allowed_file(filename):
@@ -844,8 +864,8 @@ def explainability():
             return jsonify({'error': 'No framework specified'}), 400
             
         method = request.form.get('method', 'gradcam').lower()
-        if method not in ['gradcam', 'saliency']:
-            return jsonify({'error': f'Invalid method: {method}. Must be gradcam or saliency'}), 400
+        if method not in ['gradcam', 'saliency', 'integrated_gradients']:
+            return jsonify({'error': f'Invalid method: {method}. Must be gradcam, saliency, or integrated_gradients'}), 400
            
         framework = request.form['framework'].lower()
         model_path = request.form['model_path']
@@ -951,6 +971,16 @@ def explainability():
                 target_class=target_class
             )
             target_layer_name = None  # Not applicable for saliency
+            
+        elif method == 'integrated_gradients':
+            generator = IntegratedGradientsGenerator(model, framework=framework)
+            steps = int(request.form.get('steps', 50))
+            heatmap = generator.generate(
+                processed_image,
+                target_class=target_class,
+                steps=steps
+            )
+            target_layer_name = None  # Not applicable for integrated gradients
 
         elif method == 'guided_backprop':
             from core.explainability import GuidedBackpropGenerator
@@ -989,7 +1019,7 @@ def explainability():
 def explainability_compare():
     """
     Compare multiple explainability methods on the same image.
-    Runs Grad-CAM, Saliency, and Guided Backpropagation in one call.
+    Runs Grad-CAM, Saliency, Guided Backpropagation, and Integrated Gradients in one call.
 
     Expected form data:
     - image: Image file
@@ -1094,6 +1124,21 @@ def explainability_compare():
             results['guided_backprop'] = {'success': False, 'error': str(e), 'label': 'Guided Backprop'}
             logger.warning(f'Guided Backprop failed: {e}')
 
+        # --- 4. Integrated Gradients ---
+        try:
+            ig_gen = IntegratedGradientsGenerator(model, framework='pytorch')
+            ig_map = ig_gen.generate(processed_image.clone(), target_class=target_class, steps=50)
+            results['integrated_gradients'] = {
+                'label': 'Integrated Gradients',
+                'description': 'Path-integrated gradients from baseline to input, satisfying sensitivity axioms.',
+                'heatmap': serialize_heatmap(ig_map, (orig_h, orig_w)),
+                'target_layer': None,
+                'success': True
+            }
+        except Exception as e:
+            results['integrated_gradients'] = {'success': False, 'error': str(e), 'label': 'Integrated Gradients'}
+            logger.warning(f'Integrated Gradients failed: {e}')
+
         logger.info(f'Compare explainability done for class {target_class}: '
                     f"{[k for k, v in results.items() if v.get('success')]} succeeded")
 
@@ -1129,12 +1174,24 @@ if __name__ == '__main__':
     logger.info("="*70)
     logger.info(f"Upload folder: {app.config['UPLOAD_FOLDER']}")
     logger.info(f"Output folder: {app.config['OUTPUT_FOLDER']}")
-    logger.info("Starting server on http://localhost:5000")
+    logger.info(f"WebSocket support: {'Enabled' if WEBSOCKET_AVAILABLE else 'Disabled'}")
+    logger.info("Starting server on http://localhost:5001")
     logger.info("="*70)
     
-    app.run(
-        host='0.0.0.0',
-        port=5000,
-        debug=False,  # Disable debug mode to prevent auto-reload issues
-        use_reloader=False  # Explicitly disable auto-reloader
-    )
+    # Use socketio.run() if WebSocket is available, otherwise use app.run()
+    if WEBSOCKET_AVAILABLE and socketio:
+        socketio.run(
+            app,
+            host='0.0.0.0',
+            port=5001,
+            debug=False,
+            use_reloader=False,
+            allow_unsafe_werkzeug=True  # Allow for development
+        )
+    else:
+        app.run(
+            host='0.0.0.0',
+            port=5001,
+            debug=False,
+            use_reloader=False
+        )

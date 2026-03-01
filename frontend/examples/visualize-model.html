@@ -638,7 +638,7 @@
         // Load available models from backend on page load
         async function loadAvailableModels() {
             try {
-                const response = await fetch('http://localhost:5000/api/models/list');
+                const response = await fetch('http://localhost:5001/api/models/list');
                 const data = await response.json();
 
                 const select = document.getElementById('modelSelect');
@@ -762,7 +762,7 @@
                     statusDiv.textContent = '🔄 Generating visualization...';
                     statusDiv.style.color = '#667eea';
 
-                    const genResponse = await fetch('http://localhost:5000/api/models/generate', {
+                    const genResponse = await fetch('http://localhost:5001/api/models/generate', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -787,7 +787,7 @@
                 }
 
                 // Load the visualization JSON from backend API
-                const vizPath = `http://localhost:5000/api/download/${modelName}_visualization.json`;
+                const vizPath = `http://localhost:5001/api/download/${modelName}_visualization.json`;
 
                 // Dispose of previous visualizer
                 if (visualizer) {
@@ -1120,7 +1120,7 @@
         // Initialize inference controller  
         function initInference() {
             if (!inferenceController) {
-                inferenceController = new InferenceController('http://localhost:5000');
+                inferenceController = new InferenceController('http://localhost:5001');
             }
         }
 
@@ -1349,7 +1349,7 @@
         // Initialize explainability controller
         function initializeExplainability() {
             if (!explainabilityController) {
-                explainabilityController = new ExplainabilityController('http://localhost:5000');
+                explainabilityController = new ExplainabilityController('http://localhost:5001');
             }
         }
 
@@ -1685,7 +1685,7 @@
                 formData.append('framework', currentModel.framework || 'pytorch');
                 formData.append('input_shape', '(224, 224)');
 
-                const response = await fetch('http://localhost:5000/api/explainability/compare', {
+                const response = await fetch('http://localhost:5001/api/explainability/compare', {
                     method: 'POST', body: formData
                 });
                 clearInterval(progressInterval);

@@ -4,7 +4,7 @@
  */
 
 class ExplainabilityController {
-    constructor(apiBaseUrl = 'http://localhost:5000') {
+    constructor(apiBaseUrl = 'http://localhost:5001') {
         this.apiBaseUrl = apiBaseUrl;
         this.currentResults = null;
         this.state = 'idle'; // idle, loading, displaying

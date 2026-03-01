@@ -1,0 +1,250 @@
+name: WhyteBox CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test-backend:
+    name: Test Backend
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ['3.9', '3.10', '3.11']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Cache pip packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov pytest-mock
+    
+    - name: Run tests with coverage
+      run: |
+        cd backend
+        pytest tests/ -v --cov=. --cov-report=xml --cov-report=html
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./backend/coverage.xml
+        flags: backend
+        name: backend-${{ matrix.os }}-py${{ matrix.python-version }}
+    
+    - name: Archive coverage report
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report-${{ matrix.os }}-py${{ matrix.python-version }}
+        path: backend/htmlcov/
+
+  lint-backend:
+    name: Lint Backend
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install linting tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 black isort mypy
+    
+    - name: Run flake8
+      run: |
+        cd backend
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    
+    - name: Check code formatting with black
+      run: |
+        cd backend
+        black --check --diff .
+    
+    - name: Check import sorting with isort
+      run: |
+        cd backend
+        isort --check-only --diff .
+    
+    - name: Type check with mypy
+      run: |
+        cd backend
+        mypy . --ignore-missing-imports || true
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install security tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety
+    
+    - name: Run bandit security scan
+      run: |
+        cd backend
+        bandit -r . -f json -o bandit-report.json || true
+    
+    - name: Check dependencies for vulnerabilities
+      run: |
+        cd backend
+        safety check --json || true
+    
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: backend/bandit-report.json
+
+  test-frontend:
+    name: Test Frontend
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Validate HTML
+      run: |
+        npm install -g html-validate
+        html-validate frontend/examples/*.html || true
+    
+    - name: Check JavaScript syntax
+      run: |
+        npm install -g eslint
+        cd frontend
+        eslint src/**/*.js --no-eslintrc --env browser,es6 || true
+
+  build-docs:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Check markdown links
+      uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        use-quiet-mode: 'yes'
+        config-file: '.github/markdown-link-check-config.json'
+    
+    - name: Validate documentation structure
+      run: |
+        # Check that key documentation files exist
+        test -f README.md
+        test -f INSTALLATION.md
+        test -f PROJECT_ANALYSIS.md
+        test -f AGENTS.md
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        cd backend
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-mock
+    
+    - name: Start backend server
+      run: |
+        cd backend/api
+        python app.py &
+        sleep 10
+    
+    - name: Run integration tests
+      run: |
+        cd backend
+        pytest tests/ -v -m integration
+    
+    - name: Stop backend server
+      run: |
+        pkill -f "python app.py" || true
+
+  deploy-preview:
+    name: Deploy Preview
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend, lint-backend]
+    if: github.event_name == 'pull_request'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Comment PR with preview info
+      uses: actions/github-script@v6
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '✅ All checks passed! Preview deployment would be available here in production.'
+          })
+
+  notify:
+    name: Notify Status
+    runs-on: ubuntu-latest
+    needs: [test-backend, lint-backend, security-scan, test-frontend]
+    if: always()
+    
+    steps:
+    - name: Check job status
+      run: |
+        echo "Test Backend: ${{ needs.test-backend.result }}"
+        echo "Lint Backend: ${{ needs.lint-backend.result }}"
+        echo "Security Scan: ${{ needs.security-scan.result }}"
+        echo "Test Frontend: ${{ needs.test-frontend.result }}"
+
+# Made with Bob

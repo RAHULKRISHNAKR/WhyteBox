@@ -1,0 +1,29 @@
+# Minimal requirements for local development
+# Install these first for quick setup
+
+# Web Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+pydantic==2.5.3
+pydantic-settings==2.1.0
+
+# Database (SQLite support)
+sqlalchemy==2.0.25
+aiosqlite==0.22.1
+greenlet==3.2.5
+
+# Utilities
+python-dotenv==1.0.0
+python-json-logger==2.0.7
+
+# Development
+black==23.12.1
+pytest==7.4.4
+pytest-asyncio==0.23.3
+httpx==0.26.0
+
+# Optional: Install ML frameworks separately (large downloads)
+# torch==2.1.2
+# torchvision==0.16.2
+# tensorflow==2.15.0

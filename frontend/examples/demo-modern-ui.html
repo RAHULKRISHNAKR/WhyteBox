@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhyteBox Modern UI Demo</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#667eea',
+                        secondary: '#764ba2',
+                        accent: '#48c6ef',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .toast-enter {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen">
+    
+    <!-- Toast Container -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+    
+    <!-- Header -->
+    <header class="glass-effect text-white shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold drop-shadow-lg">🧠 WhyteBox</h1>
+                    <p class="text-sm opacity-90">Modern UI Demo - Tailwind CSS</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- WebSocket Status -->
+                    <div id="wsStatus" class="flex items-center space-x-2 px-3 py-1 rounded-full bg-white/10">
+                        <div id="wsIndicator" class="w-2 h-2 rounded-full bg-gray-400"></div>
+                        <span id="wsText" class="text-xs">Disconnected</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        
+        <!-- Demo Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            
+            <!-- Card 1: Toast Notifications -->
+            <div class="bg-white rounded-2xl shadow-2xl p-6 hover:shadow-3xl transition transform hover:-translate-y-1">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">🎉 Toast Notifications</h2>
+                <p class="text-gray-600 mb-4">Click buttons to see different toast types</p>
+                <div class="space-y-2">
+                    <button onclick="showToast('Operation successful!', 'success')" 
+                            class="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">
+                        Success Toast
+                    </button>
+                    <button onclick="showToast('Something went wrong', 'error')" 
+                            class="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">
+                        Error Toast
+                    </button>
+                    <button onclick="showToast('Please check your input', 'warning')" 
+                            class="w-full px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition">
+                        Warning Toast
+                    </button>
+                    <button onclick="showToast('Processing your request', 'info')" 
+                            class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition">
+                        Info Toast
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Card 2: Progress Indicators -->
+            <div class="bg-white rounded-2xl shadow-2xl p-6 hover:shadow-3xl transition transform hover:-translate-y-1">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">⏳ Progress Indicators</h2>
+                <p class="text-gray-600 mb-4">Simulate loading with progress bars</p>
+                <button onclick="simulateProgress()" 
+                        class="w-full px-4 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-lg font-medium hover:shadow-lg transition mb-4">
+                    Start Progress Demo
+                </button>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm text-gray-600">
+                        <span id="progressText">Ready</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="progressBar" class="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-300" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card 3: WebSocket Connection -->
+            <div class="bg-white rounded-2xl shadow-2xl p-6 hover:shadow-3xl transition transform hover:-translate-y-1">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">🔌 WebSocket Demo</h2>
+                <p class="text-gray-600 mb-4">Test real-time connection</p>
+                <div class="space-y-2">
+                    <button onclick="connectWebSocket()" id="wsConnectBtn"
+                            class="w-full px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition">
+                        Connect WebSocket
+                    </button>
+                    <button onclick="disconnectWebSocket()" id="wsDisconnectBtn"
+                            class="w-full px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition hidden">
+                        Disconnect WebSocket
+                    </button>
+                    <button onclick="sendPing()" id="wsPingBtn"
+                            class="w-full px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition hidden">
+                        Send Ping
+                    </button>
+                </div>
+                <div id="wsMessages" class="mt-4 p-3 bg-gray-50 rounded-lg text-xs font-mono max-h-32 overflow-y-auto hidden">
+                    <!-- Messages will appear here -->
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- Feature Showcase -->
+        <div class="bg-white rounded-2xl shadow-2xl p-8">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">✨ Modern UI Features</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                
+                <!-- Feature 1 -->
+                <div class="text-center p-4 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl">
+                    <div class="text-4xl mb-2">🎨</div>
+                    <h3 class="font-semibold text-gray-800 mb-1">Tailwind CSS</h3>
+                    <p class="text-sm text-gray-600">Modern utility-first styling</p>
+                </div>
+                
+                <!-- Feature 2 -->
+                <div class="text-center p-4 bg-gradient-to-br from-green-100 to-teal-100 rounded-xl">
+                    <div class="text-4xl mb-2">🔔</div>
+                    <h3 class="font-semibold text-gray-800 mb-1">Toast System</h3>
+                    <p class="text-sm text-gray-600">Beautiful notifications</p>
+                </div>
+                
+                <!-- Feature 3 -->
+                <div class="text-center p-4 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-xl">
+                    <div class="text-4xl mb-2">📊</div>
+                    <h3 class="font-semibold text-gray-800 mb-1">Progress Bars</h3>
+                    <p class="text-sm text-gray-600">Real-time feedback</p>
+                </div>
+                
+                <!-- Feature 4 -->
+                <div class="text-center p-4 bg-gradient-to-br from-purple-100 to-pink-100 rounded-xl">
+                    <div class="text-4xl mb-2">⚡</div>
+                    <h3 class="font-semibold text-gray-800 mb-1">WebSocket</h3>
+                    <p class="text-sm text-gray-600">Live updates</p>
+                </div>
+                
+            </div>
+            
+            <!-- Stats -->
+            <div class="mt-8 grid grid-cols-3 gap-4 text-center">
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <div class="text-3xl font-bold text-primary">100%</div>
+                    <div class="text-sm text-gray-600">Responsive</div>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <div class="text-3xl font-bold text-secondary">0</div>
+                    <div class="text-sm text-gray-600">Build Steps</div>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <div class="text-3xl font-bold text-accent">Fast</div>
+                    <div class="text-sm text-gray-600">Performance</div>
+                </div>
+            </div>
+        </div>
+        
+    </main>
+    
+    <!-- Footer -->
+    <footer class="text-center text-white py-6 mt-8">
+        <p class="opacity-75">WhyteBox Modern UI Demo • Built with Tailwind CSS</p>
+        <p class="text-sm opacity-50 mt-2">No build step required • CDN-based • Production ready</p>
+    </footer>
+    
+    <script>
+        // ============================================
+        // TOAST NOTIFICATIONS
+        // ============================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast-enter px-6 py-4 rounded-lg shadow-lg text-white max-w-sm ${
+                type === 'success' ? 'bg-green-500' :
+                type === 'error' ? 'bg-red-500' :
+                type === 'warning' ? 'bg-yellow-500' :
+                'bg-blue-500'
+            }`;
+            toast.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <span class="text-2xl">${
+                        type === 'success' ? '✅' :
+                        type === 'error' ? '❌' :
+                        type === 'warning' ? '⚠️' :
+                        'ℹ️'
+                    }</span>
+                    <p class="font-medium">${message}</p>
+                </div>
+            `;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // ============================================
+        // PROGRESS SIMULATION
+        // ============================================
+        function simulateProgress() {
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progressPercent = document.getElementById('progressPercent');
+            
+            let progress = 0;
+            const steps = [
+                { percent: 20, text: 'Loading model...' },
+                { percent: 40, text: 'Processing layers...' },
+                { percent: 60, text: 'Extracting features...' },
+                { percent: 80, text: 'Generating visualization...' },
+                { percent: 100, text: 'Complete!' }
+            ];
+            
+            let currentStep = 0;
+            
+            const interval = setInterval(() => {
+                if (currentStep < steps.length) {
+                    const step = steps[currentStep];
+                    progressBar.style.width = step.percent + '%';
+                    progressText.textContent = step.text;
+                    progressPercent.textContent = step.percent + '%';
+                    currentStep++;
+                } else {
+                    clearInterval(interval);
+                    showToast('Progress complete!', 'success');
+                    setTimeout(() => {
+                        progressBar.style.width = '0%';
+                        progressText.textContent = 'Ready';
+                        progressPercent.textContent = '0%';
+                    }, 2000);
+                }
+            }, 800);
+        }
+        
+        // ============================================
+        // WEBSOCKET DEMO
+        // ============================================
+        let ws = null;
+        
+        function connectWebSocket() {
+            const messagesDiv = document.getElementById('wsMessages');
+            messagesDiv.classList.remove('hidden');
+            
+            try {
+                ws = new WebSocket('ws://localhost:5001/ws');
+                
+                ws.onopen = () => {
+                    updateWSStatus('connected');
+                    addWSMessage('✅ Connected to backend');
+                    showToast('WebSocket connected', 'success');
+                    document.getElementById('wsConnectBtn').classList.add('hidden');
+                    document.getElementById('wsDisconnectBtn').classList.remove('hidden');
+                    document.getElementById('wsPingBtn').classList.remove('hidden');
+                };
+                
+                ws.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+                    addWSMessage(`📨 Received: ${data.type}`);
+                    console.log('WebSocket message:', data);
+                };
+                
+                ws.onerror = (error) => {
+                    addWSMessage('❌ Connection error');
+                    showToast('WebSocket error - is backend running?', 'error');
+                    updateWSStatus('error');
+                };
+                
+                ws.onclose = () => {
+                    addWSMessage('🔌 Disconnected');
+                    updateWSStatus('disconnected');
+                    document.getElementById('wsConnectBtn').classList.remove('hidden');
+                    document.getElementById('wsDisconnectBtn').classList.add('hidden');
+                    document.getElementById('wsPingBtn').classList.add('hidden');
+                };
+                
+            } catch (error) {
+                addWSMessage('❌ Failed to connect');
+                showToast('Connection failed: ' + error.message, 'error');
+            }
+        }
+        
+        function disconnectWebSocket() {
+            if (ws) {
+                ws.close();
+                ws = null;
+                showToast('WebSocket disconnected', 'info');
+            }
+        }
+        
+        function sendPing() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'ping' }));
+                addWSMessage('📤 Sent: ping');
+                showToast('Ping sent', 'info');
+            } else {
+                showToast('Not connected', 'warning');
+            }
+        }
+        
+        function updateWSStatus(status) {
+            const indicator = document.getElementById('wsIndicator');
+            const text = document.getElementById('wsText');
+            
+            if (status === 'connected') {
+                indicator.className = 'w-2 h-2 rounded-full bg-green-500 animate-pulse';
+                text.textContent = 'Connected';
+            } else if (status === 'error') {
+                indicator.className = 'w-2 h-2 rounded-full bg-red-500';
+                text.textContent = 'Error';
+            } else {
+                indicator.className = 'w-2 h-2 rounded-full bg-gray-400';
+                text.textContent = 'Disconnected';
+            }
+        }
+        
+        function addWSMessage(message) {
+            const messagesDiv = document.getElementById('wsMessages');
+            const timestamp = new Date().toLocaleTimeString();
+            messagesDiv.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+        window.addEventListener('load', () => {
+            showToast('Welcome to WhyteBox Modern UI!', 'success');
+        });
+    </script>
+</body>
+</html>

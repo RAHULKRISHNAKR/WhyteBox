@@ -4,7 +4,7 @@
  */
 
 class InferenceController {
-    constructor(apiBaseUrl = 'http://localhost:5000') {
+    constructor(apiBaseUrl = 'http://localhost:5001') {
         this.apiBaseUrl = apiBaseUrl;
         this.state = 'idle'; // idle, uploading, inferencing, displaying
         this.currentImage = null;

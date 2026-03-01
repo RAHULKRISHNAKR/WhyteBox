@@ -1,0 +1,796 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhyteBox - Neural Network Visualizer</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind Config -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#667eea',
+                        secondary: '#764ba2',
+                        accent: '#48c6ef',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- BabylonJS -->
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="../js/model-visualizer.js"></script>
+    
+    <!-- Custom Styles -->
+    <style>
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .toast-enter {
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .modal-enter {
+            animation: fadeIn 0.2s ease-out;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+            border-radius: 3px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 3px;
+        }
+        
+        /* Loading spinner */
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Progress bar animation */
+        .progress-bar {
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+
+<body class="gradient-bg min-h-screen flex flex-col overflow-hidden">
+    
+    <!-- Toast Container (for notifications) -->
+    <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2"></div>
+    
+    <!-- Header -->
+    <header class="glass-effect text-white shadow-lg flex-shrink-0">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold drop-shadow-lg">🧠 WhyteBox</h1>
+                    <p class="text-sm opacity-90">Neural Network Visualizer & Explainability Platform</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <!-- WebSocket Status Indicator -->
+                    <div id="wsStatus" class="flex items-center space-x-2 px-3 py-1 rounded-full bg-white/10">
+                        <div id="wsIndicator" class="w-2 h-2 rounded-full bg-gray-400"></div>
+                        <span id="wsText" class="text-xs">Disconnected</span>
+                    </div>
+                    <!-- Settings Button -->
+                    <button onclick="openSettings()" class="p-2 hover:bg-white/10 rounded-lg transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="flex-1 flex gap-4 p-4 min-h-0 overflow-hidden">
+        
+        <!-- Canvas Container -->
+        <div class="flex-1 bg-white rounded-2xl shadow-2xl overflow-hidden relative min-h-0">
+            <canvas id="renderCanvas" class="w-full h-full outline-none cursor-grab active:cursor-grabbing"></canvas>
+            
+            <!-- Loading Overlay -->
+            <div id="canvasLoading" class="absolute inset-0 bg-white/95 flex items-center justify-center hidden">
+                <div class="text-center">
+                    <div class="spinner mx-auto mb-4"></div>
+                    <p id="loadingText" class="text-gray-700 font-medium">Loading model...</p>
+                    <div class="w-64 h-2 bg-gray-200 rounded-full mt-4 overflow-hidden">
+                        <div id="loadingProgress" class="progress-bar h-full bg-gradient-to-r from-primary to-secondary" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Model Info Overlay (Top Right) -->
+            <div id="modelInfoOverlay" class="absolute top-4 right-4 glass-effect text-white px-4 py-3 rounded-lg shadow-lg hidden">
+                <div class="text-xs space-y-1">
+                    <div><span class="opacity-75">Model:</span> <span id="overlayModelName" class="font-semibold">-</span></div>
+                    <div><span class="opacity-75">Layers:</span> <span id="overlayLayerCount" class="font-semibold">-</span></div>
+                    <div><span class="opacity-75">Parameters:</span> <span id="overlayParamCount" class="font-semibold">-</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Controls Panel -->
+        <div class="w-80 bg-white/95 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            
+            <!-- Tabs -->
+            <div class="flex border-b border-gray-200">
+                <button onclick="switchTab('models')" id="tabModels" class="flex-1 px-4 py-3 font-medium text-sm transition border-b-2 border-primary text-primary">
+                    Models
+                </button>
+                <button onclick="switchTab('xai')" id="tabXai" class="flex-1 px-4 py-3 font-medium text-sm transition border-b-2 border-transparent text-gray-600 hover:text-primary">
+                    XAI
+                </button>
+                <button onclick="switchTab('advanced')" id="tabAdvanced" class="flex-1 px-4 py-3 font-medium text-sm transition border-b-2 border-transparent text-gray-600 hover:text-primary">
+                    Advanced
+                </button>
+            </div>
+            
+            <!-- Tab Content -->
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-4">
+                
+                <!-- Models Tab -->
+                <div id="contentModels" class="space-y-4">
+                    
+                    <!-- Available Models Section -->
+                    <section>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                            <svg class="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                            Available Models
+                        </h3>
+                        <div id="modelsList" class="space-y-2">
+                            <!-- Models will be loaded here -->
+                            <div class="text-center py-8 text-gray-400">
+                                <div class="spinner mx-auto mb-2"></div>
+                                <p class="text-sm">Loading models...</p>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- Model Info -->
+                    <section id="modelInfoSection" class="hidden">
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Model Information</h3>
+                        <div class="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg p-4 space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Name:</span>
+                                <span id="infoModelName" class="font-semibold text-gray-800">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Framework:</span>
+                                <span id="infoFramework" class="font-semibold text-gray-800">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Layers:</span>
+                                <span id="infoLayers" class="font-semibold text-gray-800">-</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Parameters:</span>
+                                <span id="infoParams" class="font-semibold text-gray-800">-</span>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <!-- Visualization Controls -->
+                    <section>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Visualization</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <span class="text-sm font-medium text-gray-700">Show Labels</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="toggleLabels" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <span class="text-sm font-medium text-gray-700">Show Connections</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="toggleConnections" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </section>
+                    
+                </div>
+                
+                <!-- XAI Tab -->
+                <div id="contentXai" class="space-y-4 hidden">
+                    
+                    <!-- Image Upload -->
+                    <section>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Input Image</h3>
+                        <div class="border-2 border-dashed border-primary/30 rounded-lg p-6 text-center hover:border-primary/60 transition cursor-pointer" onclick="document.getElementById('imageInput').click()">
+                            <input type="file" id="imageInput" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                            <svg class="w-12 h-12 mx-auto text-primary/40 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <p class="text-sm text-gray-600">Click to upload image</p>
+                            <p class="text-xs text-gray-400 mt-1">PNG, JPG up to 10MB</p>
+                        </div>
+                        <div id="imagePreview" class="mt-3 hidden">
+                            <img id="previewImg" class="w-full rounded-lg shadow-md">
+                        </div>
+                    </section>
+                    
+                    <!-- XAI Methods -->
+                    <section>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Explainability Methods</h3>
+                        <div class="space-y-2">
+                            <button onclick="runXAI('gradcam')" class="w-full px-4 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-lg font-medium hover:shadow-lg transition transform hover:-translate-y-0.5">
+                                🔥 Grad-CAM
+                            </button>
+                            <button onclick="runXAI('saliency')" class="w-full px-4 py-3 bg-gradient-to-r from-accent to-primary text-white rounded-lg font-medium hover:shadow-lg transition transform hover:-translate-y-0.5">
+                                🎯 Saliency Map
+                            </button>
+                            <button onclick="runXAI('integrated_gradients')" class="w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:shadow-lg transition transform hover:-translate-y-0.5">
+                                ⚡ Integrated Gradients
+                            </button>
+                            <button onclick="runXAI('attention')" class="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-teal-500 text-white rounded-lg font-medium hover:shadow-lg transition transform hover:-translate-y-0.5">
+                                👁️ Attention Visualization
+                            </button>
+                            <button onclick="compareXAI()" class="w-full px-4 py-3 bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-lg font-medium hover:shadow-lg transition transform hover:-translate-y-0.5">
+                                📊 Compare All Methods
+                            </button>
+                        </div>
+                    </section>
+                    
+                    <!-- Colormap Selection -->
+                    <section>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Colormap</h3>
+                        <select id="colormapSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                            <option value="jet">Jet (Default)</option>
+                            <option value="viridis">Viridis</option>
+                            <option value="plasma">Plasma</option>
+                            <option value="inferno">Inferno</option>
+                            <option value="magma">Magma</option>
+                            <option value="hot">Hot</option>
+                            <option value="cool">Cool</option>
+                        </select>
+                    </section>
+                    
+                </div>
+                
+                <!-- Advanced Tab -->
+                <div id="contentAdvanced" class="space-y-4 hidden">
+                    
+                    <!-- WebSocket Controls -->
+                    <section>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Real-Time Updates</h3>
+                        <div class="space-y-2">
+                            <button onclick="connectWebSocket()" id="wsConnectBtn" class="w-full px-4 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition">
+                                Connect WebSocket
+                            </button>
+                            <button onclick="disconnectWebSocket()" id="wsDisconnectBtn" class="w-full px-4 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition hidden">
+                                Disconnect WebSocket
+                            </button>
+                        </div>
+                    </section>
+                    
+                    <!-- Video Inference -->
+                    <section>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Video Inference</h3>
+                        <div class="border-2 border-dashed border-primary/30 rounded-lg p-6 text-center hover:border-primary/60 transition cursor-pointer" onclick="document.getElementById('videoInput').click()">
+                            <input type="file" id="videoInput" accept="video/*" class="hidden" onchange="handleVideoUpload(event)">
+                            <svg class="w-12 h-12 mx-auto text-primary/40 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            </svg>
+                            <p class="text-sm text-gray-600">Upload video for inference</p>
+                            <p class="text-xs text-gray-400 mt-1">MP4, AVI up to 100MB</p>
+                        </div>
+                    </section>
+                    
+                    <!-- Export Options -->
+                    <section>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Export</h3>
+                        <div class="space-y-2">
+                            <button onclick="exportVisualization()" class="w-full px-4 py-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-lg font-medium hover:shadow-lg transition">
+                                📸 Export as PNG
+                            </button>
+                            <button onclick="saveSession()" class="w-full px-4 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-lg font-medium hover:shadow-lg transition">
+                                💾 Save Session
+                            </button>
+                            <button onclick="loadSession()" class="w-full px-4 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-lg font-medium hover:shadow-lg transition">
+                                📂 Load Session
+                            </button>
+                        </div>
+                    </section>
+                    
+                    <!-- Performance Settings -->
+                    <section>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-3">Performance</h3>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <span class="text-sm font-medium text-gray-700">Lazy Loading</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="toggleLazyLoad" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <span class="text-sm font-medium text-gray-700">GPU Acceleration</span>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="toggleGPU" class="sr-only peer" checked>
+                                    <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                </label>
+                            </div>
+                        </div>
+                    </section>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+    </main>
+    
+    <!-- XAI Results Modal -->
+    <div id="xaiModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden modal-enter">
+            <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Explainability Results</h2>
+                    <p id="xaiModalSubtitle" class="text-sm text-gray-600 mt-1"></p>
+                </div>
+                <button onclick="closeXAIModal()" class="p-2 hover:bg-gray-100 rounded-lg transition">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="xaiModalContent" class="p-6 overflow-y-auto custom-scrollbar" style="max-height: calc(90vh - 100px);">
+                <!-- Content will be injected here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full modal-enter">
+            <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+                <h2 class="text-2xl font-bold text-gray-800">⚙️ Settings</h2>
+                <button onclick="closeSettings()" class="p-2 hover:bg-gray-100 rounded-lg transition">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Backend URL</label>
+                    <input type="text" id="backendUrl" value="http://localhost:5001" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Theme</label>
+                    <select class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option>Light</option>
+                        <option>Dark</option>
+                        <option>Auto</option>
+                    </select>
+                </div>
+                <button onclick="saveSettings()" class="w-full px-4 py-3 bg-gradient-to-r from-primary to-secondary text-white rounded-lg font-medium hover:shadow-lg transition">
+                    Save Settings
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // ============================================
+        // GLOBAL STATE
+        // ============================================
+        let visualizer = null;
+        let currentModel = null;
+        let selectedImageFile = null;
+        let ws = null;
+        const API_BASE = 'http://localhost:5001';
+        
+        // ============================================
+        // TOAST NOTIFICATIONS
+        // ============================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast-enter px-6 py-4 rounded-lg shadow-lg text-white max-w-sm ${
+                type === 'success' ? 'bg-green-500' :
+                type === 'error' ? 'bg-red-500' :
+                type === 'warning' ? 'bg-yellow-500' :
+                'bg-blue-500'
+            }`;
+            toast.innerHTML = `
+                <div class="flex items-center space-x-3">
+                    <span class="text-2xl">${
+                        type === 'success' ? '✅' :
+                        type === 'error' ? '❌' :
+                        type === 'warning' ? '⚠️' :
+                        'ℹ️'
+                    }</span>
+                    <p class="font-medium">${message}</p>
+                </div>
+            `;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(100%)';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+        
+        // ============================================
+        // TAB SWITCHING
+        // ============================================
+        function switchTab(tab) {
+            // Hide all content
+            document.getElementById('contentModels').classList.add('hidden');
+            document.getElementById('contentXai').classList.add('hidden');
+            document.getElementById('contentAdvanced').classList.add('hidden');
+            
+            // Reset all tab styles
+            document.getElementById('tabModels').className = 'flex-1 px-4 py-3 font-medium text-sm transition border-b-2 border-transparent text-gray-600 hover:text-primary';
+            document.getElementById('tabXai').className = 'flex-1 px-4 py-3 font-medium text-sm transition border-b-2 border-transparent text-gray-600 hover:text-primary';
+            document.getElementById('tabAdvanced').className = 'flex-1 px-4 py-3 font-medium text-sm transition border-b-2 border-transparent text-gray-600 hover:text-primary';
+            
+            // Show selected content and highlight tab
+            if (tab === 'models') {
+                document.getElementById('contentModels').classList.remove('hidden');
+                document.getElementById('tabModels').className = 'flex-1 px-4 py-3 font-medium text-sm transition border-b-2 border-primary text-primary';
+            } else if (tab === 'xai') {
+                document.getElementById('contentXai').classList.remove('hidden');
+                document.getElementById('tabXai').className = 'flex-1 px-4 py-3 font-medium text-sm transition border-b-2 border-primary text-primary';
+            } else if (tab === 'advanced') {
+                document.getElementById('contentAdvanced').classList.remove('hidden');
+                document.getElementById('tabAdvanced').className = 'flex-1 px-4 py-3 font-medium text-sm transition border-b-2 border-primary text-primary';
+            }
+        }
+        
+        // ============================================
+        // LOADING INDICATOR
+        // ============================================
+        function showLoading(text = 'Loading...', progress = 0) {
+            const loading = document.getElementById('canvasLoading');
+            const loadingText = document.getElementById('loadingText');
+            const progressBar = document.getElementById('loadingProgress');
+            
+            loading.classList.remove('hidden');
+            loadingText.textContent = text;
+            progressBar.style.width = progress + '%';
+        }
+        
+        function hideLoading() {
+            document.getElementById('canvasLoading').classList.add('hidden');
+        }
+        
+        function updateProgress(progress, text) {
+            document.getElementById('loadingProgress').style.width = progress + '%';
+            if (text) document.getElementById('loadingText').textContent = text;
+        }
+        
+        // ============================================
+        // MODEL LOADING
+        // ============================================
+        async function loadAvailableModels() {
+            try {
+                const response = await fetch(`${API_BASE}/api/models`);
+                const data = await response.json();
+                
+                const modelsList = document.getElementById('modelsList');
+                modelsList.innerHTML = '';
+                
+                if (data.models && data.models.length > 0) {
+                    data.models.forEach(model => {
+                        const button = document.createElement('button');
+                        button.className = 'w-full px-4 py-3 bg-gradient-to-r from-primary/10 to-secondary/10 hover:from-primary/20 hover:to-secondary/20 rounded-lg text-left transition transform hover:scale-105';
+                        button.innerHTML = `
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-semibold text-gray-800">${model.name}</p>
+                                    <p class="text-xs text-gray-600">${model.framework}</p>
+                                </div>
+                                <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </div>
+                        `;
+                        button.onclick = () => loadModel(model.name, model.framework);
+                        modelsList.appendChild(button);
+                    });
+                } else {
+                    modelsList.innerHTML = '<p class="text-center text-gray-400 py-4">No models available</p>';
+                }
+            } catch (error) {
+                console.error('Error loading models:', error);
+                showToast('Failed to load models', 'error');
+            }
+        }
+        
+        async function loadModel(modelName, framework) {
+            showLoading('Loading model...', 10);
+            
+            try {
+                updateProgress(30, 'Fetching model data...');
+                const response = await fetch(`${API_BASE}/api/extract`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model_path: modelName,
+                        framework: framework
+                    })
+                });
+                
+                if (!response.ok) throw new Error('Failed to load model');
+                
+                updateProgress(60, 'Processing model structure...');
+                const data = await response.json();
+                
+                updateProgress(80, 'Creating visualization...');
+                if (visualizer) visualizer.dispose();
+                
+                visualizer = new ModelVisualizer();
+                await visualizer.visualizeModel(data, 'renderCanvas');
+                
+                currentModel = {
+                    modelPath: modelName,
+                    framework: framework,
+                    name: modelName
+                };
+                
+                updateProgress(100, 'Complete!');
+                updateModelInfo(data);
+                
+                setTimeout(() => {
+                    hideLoading();
+                    showToast(`Model ${modelName} loaded successfully!`, 'success');
+                }, 500);
+                
+            } catch (error) {
+                console.error('Error loading model:', error);
+                hideLoading();
+                showToast('Failed to load model: ' + error.message, 'error');
+            }
+        }
+        
+        function updateModelInfo(data) {
+            // Update info section
+            document.getElementById('infoModelName').textContent = currentModel.name;
+            document.getElementById('infoFramework').textContent = currentModel.framework;
+            document.getElementById('infoLayers').textContent = data.layers?.length || '-';
+            document.getElementById('infoParams').textContent = data.total_params ? formatNumber(data.total_params) : '-';
+            
+            // Update overlay
+            document.getElementById('overlayModelName').textContent = currentModel.name;
+            document.getElementById('overlayLayerCount').textContent = data.layers?.length || '-';
+            document.getElementById('overlayParamCount').textContent = data.total_params ? formatNumber(data.total_params) : '-';
+            
+            document.getElementById('modelInfoSection').classList.remove('hidden');
+            document.getElementById('modelInfoOverlay').classList.remove('hidden');
+        }
+        
+        function formatNumber(num) {
+            if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+            if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+            return num.toString();
+        }
+        
+        // ============================================
+        // IMAGE UPLOAD
+        // ============================================
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            selectedImageFile = file;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('previewImg').src = e.target.result;
+                document.getElementById('imagePreview').classList.remove('hidden');
+                showToast('Image uploaded successfully', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        // ============================================
+        // XAI METHODS
+        // ============================================
+        async function runXAI(method) {
+            if (!currentModel) {
+                showToast('Please load a model first', 'warning');
+                return;
+            }
+            
+            if (!selectedImageFile) {
+                showToast('Please upload an image first', 'warning');
+                return;
+            }
+            
+            showLoading(`Running ${method}...`, 20);
+            
+            try {
+                const formData = new FormData();
+                formData.append('image', selectedImageFile);
+                formData.append('model_path', currentModel.modelPath);
+                formData.append('framework', currentModel.framework);
+                formData.append('method', method);
+                
+                const colormap = document.getElementById('colormapSelect').value;
+                formData.append('colormap', colormap);
+                
+                updateProgress(50, 'Processing...');
+                
+                const response = await fetch(`${API_BASE}/api/explainability`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) throw new Error('XAI request failed');
+                
+                updateProgress(80, 'Generating visualization...');
+                const data = await response.json();
+                
+                updateProgress(100, 'Complete!');
+                
+                setTimeout(() => {
+                    hideLoading();
+                    displayXAIResults(data, method);
+                    showToast(`${method} completed successfully`, 'success');
+                }, 500);
+                
+            } catch (error) {
+                console.error('XAI error:', error);
+                hideLoading();
+                showToast('XAI failed: ' + error.message, 'error');
+            }
+        }
+        
+        function displayXAIResults(data, method) {
+            const modal = document.getElementById('xaiModal');
+            const subtitle = document.getElementById('xaiModalSubtitle');
+            const content = document.getElementById('xaiModalContent');
+            
+            subtitle.textContent = `Method: ${method} | Class: ${data.target_class} | Confidence: ${(data.predictions[0].confidence * 100).toFixed(1)}%`;
+            
+            content.innerHTML = `
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-2">Original Image</h3>
+                        <img src="data:image/png;base64,${data.original_image}" class="w-full rounded-lg shadow-md">
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-gray-800 mb-2">${method} Heatmap</h3>
+                        <img src="data:image/png;base64,${data.heatmap}" class="w-full rounded-lg shadow-md">
+                    </div>
+                </div>
+                <div class="mt-4 p-4 bg-gray-50 rounded-lg">
+                    <h3 class="font-semibold text-gray-800 mb-2">Top Predictions</h3>
+                    <div class="space-y-2">
+                        ${data.predictions.slice(0, 5).map((pred, i) => `
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-gray-700">${i + 1}. Class ${pred.class}</span>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                        <div class="h-full bg-gradient-to-r from-primary to-secondary" style="width: ${pred.confidence * 100}%"></div>
+                                    </div>
+                                    <span class="text-sm font-semibold text-gray-800">${(pred.confidence * 100).toFixed(1)}%</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        
+        function closeXAIModal() {
+            const modal = document.getElementById('xaiModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+        
+        async function compareXAI() {
+            if (!currentModel || !selectedImageFile) {
+                showToast('Please load a model and upload an image first', 'warning');
+                return;
+            }
+            
+            showLoading('Comparing XAI methods...', 10);
+            
+            try {
+                const formData = new FormData();
+                formData.append('image', selectedImageFile);
+                formData.append('model_path', currentModel.modelPath);
+                formData.append('framework', currentModel.framework);
+                
+                updateProgress(30, 'Running Grad-CAM...');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                updateProgress(60, 'Running Saliency Map...');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                updateProgress(90, 'Running Integrated Gradients...');
+                
+                const response = await fetch(`${API_BASE}/api/explainability/compare`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) throw new Error('Compare request failed');
+                
+                const data = await response.json();
+                
+                updateProgress(100, 'Complete!');
+                
+                setTimeout(() => {
+                    hideLoading();
+                    displayCompareResults(data);
+                    showToast('Comparison completed successfully', 'success');
+                }, 500);
+                
+            } catch (error) {
+                console.error('Compare error:', error);
+                hideLoading();
+                showToast('Comparison failed: ' + error.message, 'error');
+            }
+        }
+        
+        function displayCompareResults(data) {
+            const modal = document.getElementById('xaiModal');
+            const subtitle = document.getElementById('xaiModalSubtitle');
+            const content = document.getElementById('xaiModalContent');
+            
+            subtitle.textContent = `Comparing 3 XAI Methods | Class: ${data.target_class}`;
+            
+            content.innerHTML = `
+                <div class="grid grid-cols-3 gap-4">
+                    ${Object.entries(data.methods).map(([method, result]) => `
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <h3 class="font-semibold text-gray-800 mb-2 text-center">${method}</h3>
+                            <img src="data:image/png;base64,${result.heatmap}" class="w-full rounded-lg shadow-md mb-2">
+                            <p class="text-xs text-gray-600 text-center">Confidence: ${(result.confidence * 100).toFixed(1)}%</p>

@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: whytebox-postgres
+    environment:
+      POSTGRES_USER: whytebox
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: whytebox
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U whytebox"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - whytebox-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: whytebox-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - whytebox-network
+
+  # Backend API
+  backend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.backend.dev
+    container_name: whytebox-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - backend_cache:/root/.cache
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://whytebox:password@postgres:5432/whytebox
+      - REDIS_URL=redis://redis:6379/0
+      - DEBUG=true
+      - ENVIRONMENT=development
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - whytebox-network
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Frontend
+  frontend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/Dockerfile.frontend.dev
+    container_name: whytebox-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000/api/v1
+      - VITE_WS_URL=ws://localhost:8000/ws
+    networks:
+      - whytebox-network
+    command: npm run dev -- --host 0.0.0.0 --port 3000
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  backend_cache:
+    driver: local
+
+networks:
+  whytebox-network:
+    driver: bridge
+
+# Made with Bob

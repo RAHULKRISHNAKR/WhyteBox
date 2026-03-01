@@ -2,7 +2,9 @@
 
 # API Settings
 API_HOST = '0.0.0.0'
-API_PORT = 5000
+# Note: Port 5001 is used instead of 5000 due to macOS AirPlay Receiver conflict
+# macOS Monterey and later use port 5000 for AirPlay Receiver by default
+API_PORT = 5001
 API_DEBUG = True
 
 # File Upload Settings

@@ -1,0 +1,1465 @@
+
+Project Phase I Report
+
+submitted by
+
+AZEEM N (Reg. No. MAC22CD024) KEERTHANA K (Reg. No. MAC22CD035) RAHUL KRISHNA K R (Reg. No. MAC22CD050)
+to
+APJ ABDUL KALAM TECHNOLOGICAL UNIVERSITY
+in partial fulfilment of the requirements for the award of the Degree of
+BACHELOR OF TECHNOLOGY
+in
+COMPUTER SCIENCE AND ENGINEERING ( DATA SCIENCE )
+
+
+
+Project Phase I Report
+
+submitted by
+
+AZEEM N (Reg. No. MAC22CD024) KEERTHANA K (Reg. No. MAC22CD035) RAHUL KRISHNA K R (Reg. No. MAC22CD050)
+to
+APJ ABDUL KALAM TECHNOLOGICAL UNIVERSITY
+in partial fulfilment of the requirMain_Project_Phase_1_Report_Group.txtements for the award of the Degree of
+BACHELOR OF TECHNOLOGY
+in
+COMPUTER SCIENCE AND ENGINEERING ( DATA SCIENCE )
+
+
+DEPARTMENT OF COMPUTER SCIENCE AND ENGINEERING MAR ATHANASIUS COLLEGE OF ENGINEERING
+( AUTONOMOUS ) KOTHAMANGALAM
+
+
+
+CERTIFICATE
+
+
+   This is to certify that the report entitled AI-Integrated 3D Visualization Platform Facilitating Educational Exploration of Neural Networks submitted by Mr. Azeem N (Reg. No. MAC22CD024), Ms. Keerthana K (Reg. No. MAC22CD035), Mr. Rahul Krishna K R (Reg. No. MAC22CD050), towards partial fulfillment of the requirement for the award of Degree of Bachelor of Technology in Computer Science and Engineering ( Data Science ) from APJ Abdul Kalam Technological University for November 2025 is a bonafide record of the project carried out by them under our supervision and guidance.
+
+
+...........................	...........................
+Prof. Preethy P K	Prof. Rotney Roy Meckamalil
+Project Guide	Project Guide
+
+
+...........................	...........................
+Prof. Suzen Saju Kallungal	Prof. Joby George
+Project Coordinator	Head of the Department
+
+
+
+
+
+
+
+Date:	Dept. Seal
+
+
+
+
+
+
+
+ACKNOWLEDGEMENT
+
+
+   First and foremost, We sincerely thank the 'God Almighty' for his grace for the successful and timely completion of the project.
+   We express our sincere gratitude and thanks to Dr. Bos Mathew Jos, Principal and Prof. Joby George, Head of the Department for providing the necessary facilities and their encouragement and support.
+   We owe special thanks to our project guides Prof. Preethy P K and Prof. Rotney Roy Meckamalil and project coordinator Prof. Suzen Saju Kallungal for their corrections, suggestions and sincere efforts to co-ordinate the project under a tight schedule.
+   We express our sincere thanks to staff members in the Department of Com- puter Science and Engineering who have taken sincere efforts in guiding and correcting us in conducting this project.
+   Finally, We would like to acknowledge the heartfelt efforts, comments, criti- cisms, co-operation and tremendous support given to us by our dear friends during the preparation of the project and also during the presentation without which this work would have been all the more difficult to accomplish.
+
+
+
+
+
+
+
+ABSTRACT
+
+
+   The WhyteBox project aims to bridge the gap between complex deep learning models and human interpretability through a modular visualization ecosystem. In its first phase, the project focuses on developing a robust backend pipeline capa- ble of extracting, converting, validating, and serving structural information from neural network models across multiple frameworks - including PyTorch, Tensor- Flow/Keras, and ONNX. The backend automatically detects model architectures, infers layer shapes and connections, and converts them into a universal JSON schema optimized for visualization. A built-in validation engine ensures struc- tural integrity and consistency across frameworks, while a REST API and CLI interface enable seamless integration with downstream visualization tools. This phase establishes the technical foundation for the next stage of the project, where 3D Visualization and Explainable AI (XAI) capabilities will be implemented to enable interactive exploration and interpretation of neural networks. By combin- ing automation, cross-framework compatibility, and scalability, WhyteBox aims to become a reliable backend solution for model introspection and explainability.
+
+
+
+
+
+Table of Contents
+
+
+
+
+
+ACKNOWLEDGEMENT
+i
+ABSTRACT
+ii
+List of Figures
+vi
+List of Abbreviations
+vii
+1	Introduction
+1
+1.1	Introduction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+1
+1.2	Objective	. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2
+1.3	Background . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+2
+1.3.1	Deep Learning Frameworks	. . . . . . . . . . . . . . . . .
+2
+1.3.2	Model Representation and JSON Schema . . . . . . . . . .
+3
+1.3.3	REST API and CLI Architecture  . . . . . . . . . . . . . .
+3
+1.3.4	Libraries Used . . . . . . . . . . . . . . . . . . . . . . . . .
+4
+1.3.5	Software Description  . . . . . . . . . . . . . . . . . . . . .
+5
+2	Literature Review
+6
+2.1	Generalized CNN Visualization Systems	. . . . . . . . . . . . . .
+6
+2.1.1	Summary	. . . . . . . . . . . . . . . . . . . . . . . . . . .
+6
+2.1.2	Observations	. . . . . . . . . . . . . . . . . . . . . . . . .
+6
+2.1.3	Drawbacks . . . . . . . . . . . . . . . . . . . . . . . . . . .
+7
+2.2	Explainability in Black-Box Models . . . . . . . . . . . . . . . . .
+7
+2.2.1	Summary	. . . . . . . . . . . . . . . . . . . . . . . . . . .
+7
+2.2.2	Observations	. . . . . . . . . . . . . . . . . . . . . . . . .
+7
+2.2.3	Drawbacks . . . . . . . . . . . . . . . . . . . . . . . . . . .
+7
+2.3	Lightweight CNN . . . . . . . . . . . . . . . . . . . . . . . . . . .
+8
+
+
+2.3.1	Summary	. . . . . . . . . . . . . . . . . . . . . . . . . . .
+8
+
+2.3.2	Observations	. . . . . . . . . . . . . . . . . . . . . . . . .
+8
+
+2.3.3	Drawbacks . . . . . . . . . . . . . . . . . . . . . . . . . . .
+8
+2.4
+Explainable AI for Non-Experts . . . . . . . . . . . . . . . . . . .
+8
+
+2.4.1	Summary	. . . . . . . . . . . . . . . . . . . . . . . . . . .
+9
+
+2.4.2	Observations	. . . . . . . . . . . . . . . . . . . . . . . . .
+9
+
+2.4.3	Drawbacks . . . . . . . . . . . . . . . . . . . . . . . . . . .
+9
+2.5
+Gradient-Based Visual Explanations	. . . . . . . . . . . . . . . .
+9
+
+2.5.1	Summary	. . . . . . . . . . . . . . . . . . . . . . . . . . .
+9
+
+2.5.2	Observations	. . . . . . . . . . . . . . . . . . . . . . . . .
+10
+
+2.5.3	Drawbacks . . . . . . . . . . . . . . . . . . . . . . . . . . .
+10
+2.6
+Interpretable CNN Architectures	. . . . . . . . . . . . . . . . . .
+10
+
+2.6.1	Summary	. . . . . . . . . . . . . . . . . . . . . . . . . . .
+10
+
+2.6.2	Observations	. . . . . . . . . . . . . . . . . . . . . . . . .
+10
+
+2.6.3	Drawbacks . . . . . . . . . . . . . . . . . . . . . . . . . . .
+11
+2.7
+Discriminative Localization in CNNs	. . . . . . . . . . . . . . . .
+11
+
+2.7.1	Summary	. . . . . . . . . . . . . . . . . . . . . . . . . . .
+11
+
+2.7.2	Observations	. . . . . . . . . . . . . . . . . . . . . . . . .
+11
+
+2.7.3	Drawbacks . . . . . . . . . . . . . . . . . . . . . . . . . . .
+11
+2.8
+Understanding CNNs through Deconvolution . . . . . . . . . . . .
+12
+
+2.8.1	Summary	. . . . . . . . . . . . . . . . . . . . . . . . . . .
+12
+
+2.8.2	Observations	. . . . . . . . . . . . . . . . . . . . . . . . .
+12
+
+2.8.3	Drawbacks . . . . . . . . . . . . . . . . . . . . . . . . . . .
+12
+
+
+3 Design and Implementation	13
+3.1 System Architecture	13
+3.2 System Components	14
+3.3 Workflow	15
+3.4 Interactive Model Conversion	16
+3.5 Caching and Optimization	17
+4 Results and Discussion	18
+4.1 Phase 1: Interactive Model Conversion	18
+4.1.1 Conversion Workflow Evaluation	20
+4.1.2 Performance and Reliability	20
+4.1.3 Discussion	21
+5 Future Scope	22
+6 Conclusion	23
+7 Annexure	24
+REFERENCES	34
+
+
+List of Figures
+
+
+3.1 System Architecture of WhyteBox Backend	14
+3.2 Interactive Model Conversion Flow in WhyteBox	16
+
+4.1 Interactive Model Conversion Output 1	19
+4.2 Interactive Model Conversion Output 2	19
+4.3 Interactive Model Conversion Output 3	20
+
+
+
+
+
+
+
+List of Abbreviations
+
+
+API	Application Programming Interface
+CLI	Command-Line Interface
+JSON	JavaScript Object Notation
+XAI	Explainable Artificial Intelligence
+REST	Representational State Transfer
+GPU	Graphics Processing Unit
+ONNX	Open Neural Network Exchange
+CNN	Convolutional Neural Network
+LRP	Layer-wise Relevance Propagation
+SHAP	SHapley Additive exPlanations
+Grad-CAM	Gradient-weighted Class Activation Mapping ML	Machine Learning
+AI	Artificial Intelligence
+
+
+
+
+
+
+
+ Chapter 1 Introduction
+
+1.1 Introduction
+
+   Deep learning has revolutionized fields such as computer vision, natural lan- guage processing, and data analytics. However, as neural networks become deeper and more complex, understanding their internal structure and behavior becomes increasingly difficult. Most existing visualization tools either focus on simple architectural diagrams or lack cross-framework compatibility, limiting their prac- tical use for developers and researchers.
+   The WhyteBox project addresses this gap by providing a modular backend system that extracts, standardizes, and serves detailed structural information about neural network models. Designed for interoperability, the system supports PyTorch, TensorFlow/Keras, and ONNX frameworks, enabling unified visualiza- tion and analysis across different model types.
+   The backend forms the core infrastructure for the upcoming 3D visualization and explainability modules. It automates layer detection, connection mapping, and data conversion into a universal JSON schema, making model visualiza- tion seamless and framework-agnostic. In essence, WhyteBox transforms opaque neural architectures into interpretable, structured data ready for advanced visu- alization and explainable AI integration.
+
+
+
+1.2 Objective
+
+   The primary objective of the WhyteBox backend is to establish a universal, extensible foundation for deep learning model visualization and interpretability. The goals of this phase include:
+� Model Extraction: Identify and extract layer-wise information (type, parameters, shapes, connections) from neural network models.
+� Data Standardization: Convert model data into a universal JSON format that preserves both structural and metadata integrity.
+� Validation Pipeline: Ensure consistency and correctness of the converted data through schema-based validation.
+� API & CLI Integration: Enable interaction via a REST API and command-line interface, supporting both developers and automated tools.
+� Visualization Readiness: Generate output optimized for downstream visualization modules, forming the basis for 3D interactive rendering in later phases.
+
+
+1.3 Background
+
+   The WhyteBox project is built upon multiple modern technologies that enable the extraction, conversion, and visualization of neural network architectures. To understand the technical foundation of this system, it is essential to review the core components and frameworks that make such interoperability possible.
+
+1.3.1 Deep Learning Frameworks
+
+   Deep learning frameworks such as PyTorch, TensorFlow/Keras, and ONNX provide the building blocks for creating, training, and exporting neural network models. Each framework represents models in distinct internal formats:
+� PyTorch uses a dynamic computation graph and serialized .pt or .pth
+models.
+
+
+� Keras/TensorFlow rely on static graphs stored as .h5 or .pb files.
+
+� ONNX (Open Neural Network Exchange) serves as an interoperability stan- dard that allows model conversion between different frameworks.
+
+   WhyteBox's backend incorporates specialized extractors for each framework, capable of automatically identifying the model type, extracting layers, tensor shapes, parameters, and connection topologies. This ensures consistent data re- trieval irrespective of the model's origin.
+
+1.3.2 Model Representation and JSON Schema
+
+   To achieve framework independence, WhyteBox converts all extracted model data into a universal JSON schema. This schema defines a standardized structure for representing:
+
+� Layers: type, parameters, shape, activation
+
+� Connections: source-destination relationships
+
+� Metadata: framework info, model name, layer count
+
+   The use of a strict schema validator ensures that every model representation is syntactically and semantically correct before being passed to visualization mod- ules. This approach makes WhyteBox compatible with any frontend visualization engine and lays the groundwork for scalable 3D representations.
+
+1.3.3 REST API and CLI Architecture
+
+   The WhyteBox backend exposes its functionality through two primary inter- faces:
+
+� REST API (via Flask): Enables web or frontend clients to upload mod- els, trigger conversion, and retrieve JSON output through HTTP endpoints.
+
+� Command-Line Interface (CLI): Provides developers with a lightweight terminal tool for quick conversions and debugging.
+
+
+
+   Both interfaces interact with the same backend core - consisting of ex- tractors, converters, and validators - ensuring consistent output across envi- ronments. Additionally, the system employs caching to optimize performance and minimize redundant computations, making WhyteBox both scalable and developer-friendly.
+
+1.3.4 Libraries Used
+
+   The WhyteBox backend leverages a set of robust and reliable Python libraries to enable model extraction, conversion, validation, and API interaction. Each library is carefully chosen for its stability, community support, and compatibility with modern deep learning frameworks:
+
+� PyTorch / TensorFlow / ONNX: Core libraries for loading and ana- lyzing deep learning models.
+
+� Flask: Lightweight web framework used to build the REST API endpoints for model upload and data retrieval.
+
+� JSON / jsonschema: Used for serialization and schema validation of model architecture data.
+
+� NumPy: Provides numerical operations required for tensor and parameter manipulation.
+
+� Click: Enables the design of a structured and user-friendly Command-Line Interface (CLI).
+
+� Werkzeug / Requests: Facilitates HTTP request handling and testing of REST API calls.
+
+� Pickle / TorchScript / ONNX Runtime: Utilized for model parsing, conversion, and interoperability between frameworks.
+
+   These libraries collectively form the backbone of WhyteBox's backend system, ensuring scalability, efficiency, and interoperability across different AI develop- ment environments.
+
+
+
+1.3.5 Software Description
+
+   The WhyteBox backend was developed and tested in a modular software en- vironment optimized for flexibility and collaborative development. The primary tools and platforms used are described below.
+
+1.3.5.1 Visual Studio Code
+
+   Visual Studio Code (VS Code) serves as the primary integrated development environment (IDE) for WhyteBox development. Its features such as Python ex- tensions, integrated terminal, Git support, and debugging tools make it highly efficient for backend development. VS Code also supports virtual environments and dependency management, ensuring smooth integration of Python packages and consistent builds across systems.
+
+1.3.5.2 Web Browser Environment
+
+   A modern web browser environment (such as Google Chrome or Microsoft Edge) is used for testing and interacting with the Flask-based REST API. Using browser tools like Postman or native developer consoles, requests can be sent to the API endpoints to verify model uploads, conversions, and JSON outputs. This environment also provides a preview mechanism for upcoming 3D visualization modules, which will be rendered directly in the browser during Phase 2.
+
+1.3.5.3 GitHub and Git Version Control
+
+   Git is employed as the distributed version control system for managing code revisions and maintaining project history. GitHub serves as the central repository for collaborative development, issue tracking, and version management. Branch- ing strategies and pull requests are used to ensure clean integration of new fea- tures, documentation updates, and bug fixes. This workflow supports team-based development, continuous integration, and reproducibility - essential traits for a scalable open-source backend like WhyteBox.
+
+
+
+
+
+
+
+    Chapter 2 Literature Review
+
+2.1 Generalized CNN Visualization Systems
+
+Toward Generalized Visualization System for Various CNN Models: Module and Layer View
+Authors: Y. Kim, J. Chun, S. Son and H. Park
+Source: ieeexplore.ieee.org
+
+
+2.1.1 Summary
+
+   This paper introduces CNNExplorer, a generalized visualization system de- signed to make convolutional neural networks (CNNs) interpretable for beginners. The system employs a two-level view architecture: a high-level module view that abstracts complex models into grouped layers and a detailed layer view that vi- sualizes data transformations within each module. Built using PyTorch, Svelte, and Flask, CNNExplorer integrates models from HuggingFace and allows users to visualize inference using their own images. A summative user study validated the tool's usability among non-computer science graduates.
+
+2.1.2 Observations
+
+� Implements a two-level visualization (module and layer view) for CNN in- terpretability.
+� Compatible with multiple architectures, including ResNet and GoogLeNet.
+� Provides an intuitive web-based interface for model exploration.
+
+
+
+2.1.3 Drawbacks
+
+� Limited visualization depth for complex architectures.
+� Lacks integration with 3D or temporal data models.
+� User study sample size relatively small for broader generalization.
+
+
+2.2 Explainability in Black-Box Models
+
+A Survey of Methods for Explaining Black Box Models
+Authors: R. Guidotti, A. Monreale, F. Turini, D. Pedreschi and F. Giannotti
+Source: ieeexplore.ieee.org
+
+
+2.2.1 Summary
+
+   This survey comprehensively categorizes methods for explaining black-box models in machine learning. It classifies approaches based on the type of ex- planation, the nature of the model, and the input data. Techniques like decision trees, rule extraction, feature importance, and saliency analysis are systematically reviewed. The paper formalizes interpretability problems, offering a framework for model explanation, outcome explanation, inspection, and transparent model design.
+
+2.2.2 Observations
+
+� Provides a structured taxonomy for existing explainable AI (XAI) methods.
+� Clarifies the conceptual differences between interpretability, explainability, and comprehensibility.
+� Serves as a foundation for future XAI research classification.
+
+2.2.3 Drawbacks
+
+� No standardized definition for "explanation" or "comprehensibility".
+� Limited empirical evaluation of interpretability measures.
+� Focused mainly on tabular, image, and text data, ignoring other modalities.
+
+
+
+2.3 Lightweight CNN
+
+LCNN: Lightweight CNN Architecture for Software Defect Feature Identification Using Explainable AI
+Authors: M. Begum et al.
+Source: ieeexplore.ieee.org
+
+
+2.3.1 Summary
+
+   This paper proposes a lightweight convolutional neural network (LCNN) ar- chitecture for software defect prediction using the NASA CM1 dataset. Both 1D-CNN and 2D-CNN models are tested, with 1D-CNN preferred due to its compatibility with explainable AI (XAI) tools such as LIME and SHAP. The approach identifies root causes of software defects through interpretable visual explanations, providing transparency to model predictions.
+
+2.3.2 Observations
+
+� Incorporates XAI methods (LIME and SHAP) for CNN explainability.
+� Achieves high accuracy with computational efficiency.
+� Highlights LIME's superiority in visualizing tabular CNN predictions.
+
+2.3.3 Drawbacks
+
+� Dataset dependency limits generalization.
+� 2D-CNN excluded due to interpretability constraints.
+� Lack of large-scale validation across multiple datasets.
+
+
+2.4 Explainable AI for Non-Experts
+
+Unraveling ML Models of Emotion With NOVA: Multi-Level Explain- able AI for Non-Experts
+Authors: A. Heimerl, K. Weitz, T. Baur and E. Andr�e
+Source: ieeexplore.ieee.org
+
+
+
+2.4.1 Summary
+
+   This work introduces NOVA, an interactive annotation tool leveraging coop- erative machine learning (CML) and explainable AI (XAI) to support emotion recognition by non-experts. Using semi-supervised learning, NOVA iteratively trains models with partial human-labeled data, enhancing model trust and in- terpretability through LIME-based visualizations and confidence metrics. User studies demonstrate improvements in trust and understanding among non-expert participants.
+
+2.4.2 Observations
+
+� Integrates human-in-the-loop ML with XAI visualization.
+� Empowers non-experts to annotate and refine ML models interactively.
+� Psychological evaluation validates its usability and trust enhancement.
+
+2.4.3 Drawbacks
+
+� Visual explanations may still lead to subjective interpretations.
+� Limited to emotion recognition tasks.
+� Requires iterative human involvement, increasing annotation time.
+
+
+2.5 Gradient-Based Visual Explanations
+
+Grad-CAM: Visual Explanations from Deep Networks via Gradient- Based Localization
+Authors: R. R. Selvaraju, M. Cogswell, A. Das, R. Vedantam, D. Parikh and
+D. Batra
+Source: ieeexplore.ieee.org
+
+
+2.5.1 Summary
+
+   Grad-CAM generates class-discriminative visual explanations for CNN-based models using the gradients of target concepts flowing into the final convolutional
+
+
+
+layer. The resulting heatmaps localize critical image regions responsible for pre- dictions. When combined with guided backpropagation, it forms high-resolution visualizations, enhancing interpretability across classification, captioning, and vi- sual question answering tasks.
+
+2.5.2 Observations
+
+� Applicable to any CNN model without architectural modifications.
+� Highlights spatial regions influencing model predictions.
+� Improves user understanding of CNN decision mechanisms.
+
+2.5.3 Drawbacks
+
+� Produces coarse heatmaps with limited detail.
+� Less effective for early-layer visualization.
+� Struggles with images containing multiple instances.
+
+
+2.6 Interpretable CNN Architectures
+
+Interpretable CNNs for Object Classification
+Authors: Q. Zhang, X. Wang, Y. N. Wu, H. Zhou and S.-C. Zhu
+Source: ieeexplore.ieee.org
+
+
+2.6.1 Summary
+
+   This paper proposes an interpretable CNN architecture that enforces each high-level filter to represent a specific object part rather than abstract patterns. A mutual information-based filter loss and masking mechanism ensure semantic consistency, allowing filters to correspond directly to object components without explicit part annotations. This proactive interpretability model contrasts with post-hoc explanation methods.
+
+2.6.2 Observations
+
+� Learns part-level interpretable filters during training.
+
+
+� Provides intrinsic transparency compared to post-hoc XAI.
+� Offers potential for integration with 3D visual representations.
+
+2.6.3 Drawbacks
+
+� Limited to single-object, uncluttered images.
+� Reduced robustness against adversarial noise.
+� May slightly lower classification accuracy on large-scale datasets.
+
+
+2.7 Discriminative Localization in CNNs
+
+Learning Deep Features for Discriminative Localization Authors: B. Zhou, A. Khosla, A. Lapedriza, A. Oliva and A. Torralba Source: ieeexplore.ieee.org
+
+2.7.1 Summary
+
+   This paper presents Class Activation Mapping (CAM), showing that CNNs trained for classification can also perform object localization using global aver- age pooling (GAP). By summing weighted feature maps, CAM identifies image regions that contribute to specific class predictions, enabling weakly supervised localization without bounding box annotations.
+
+2.7.2 Observations
+
+� Introduces CAM as a simple yet powerful localization method.
+� Demonstrates generalization across visual recognition tasks.
+� Efficient-requires only a single forward pass.
+
+2.7.3 Drawbacks
+
+� Requires specific GAP-based architectures.
+� Minor drop in classification accuracy compared to baseline models.
+� Limited localization resolution in deeper networks.
+
+
+
+2.8 Understanding CNNs through Deconvolu- tion
+Visualizing and Understanding Convolutional Networks Authors: M. D. Zeiler and R. Fergus
+Source: ieeexplore.ieee.org
+
+
+2.8.1 Summary
+
+   This foundational work introduces the deconvolutional network (deconvnet) to visualize CNN feature activations. By projecting feature maps back to input space, it reveals the input patterns that excite specific neurons at each layer, offering a detailed view of hierarchical feature learning. Occlusion analysis is also performed to identify crucial input regions affecting predictions.
+
+2.8.2 Observations
+
+� Pioneering method for visualizing learned CNN features.
+� Helps identify important receptive fields and debugging architecture issues.
+� Demonstrates hierarchical feature learning from edges to objects.
+
+2.8.3 Drawbacks
+
+� Visual reconstructions are approximate and not generative.
+
+� Computationally intensive for deep networks.
+
+� Limited insight into temporal or 3D CNNs.
+
+
+
+
+
+
+
+Chapter 3
+Design and Implementation
+
+   The WhyteBox backend is designed to extract, convert, and validate neural network models from multiple deep learning frameworks and prepare them for interactive visualization and analysis. The system ensures modularity, scalability, and real-time responsiveness, enabling users to upload models, convert them to a universal JSON format, validate the structural integrity of the data, and interact with it through both command-line and REST API interfaces. The architecture is optimized for flexibility and future expansion, supporting planned integration with 3D visualization modules and Explainable AI (XAI) techniques to provide deeper insights into model behavior.
+
+
+3.1 System Architecture
+
+   The overall architecture of WhyteBox consists of four primary modules: Ex- tractors, Converters, Validators, and Interfaces, each performing a distinct role in the processing pipeline. The Extractor module is responsible for identifying the framework of the input model, which could be PyTorch, Keras, or ONNX, and retrieving essential architectural information including layer types, input and output shapes, trainable parameters, connectivity between layers, and model metadata such as name, version, and size. Once the model is extracted, the Converter module transforms the data into a universal JSON format that is in- dependent of the originating framework. This module also enriches the data with visualization metadata, including layer positions, colors, and groupings, while preserving sequential and skip connections. The Validator module ensures that
+
+
+
+the JSON output conforms to a predefined schema, checking for missing fields, incompatible data types, and broken connections to guarantee correctness be- fore output delivery. Users can interact with the system via two interfaces: a REST API that handles online uploads, model conversion, and JSON retrieval, and a command-line interface that enables local model processing with detailed logging, selective layer conversion, and real-time feedback. Complementing these modules, the caching system stores processed models and JSON outputs, reducing redundant computations and improving efficiency for repeated uploads.
+
+
+Figure 3.1: System Architecture of WhyteBox Backend
+
+
+
+3.2 System Components
+
+   The Extractor module forms the first stage of the workflow. It automatically identifies the model framework and extracts a detailed representation of the model architecture. This includes recognizing layer types such as convolutional, linear, or pooling layers, determining input and output tensor shapes, counting trainable
+
+
+
+parameters, and mapping connectivity and skip connections. The intermediate representation generated by the Extractor serves as input to the Converter mod- ule, which standardizes the data into a universal JSON schema. The Converter adds visualization-specific attributes that allow each layer to be correctly dis- played in future 3D visualization modules, including color coding, grouping, and spatial layout information. Following conversion, the Validator examines the JSON data to ensure that all required fields are present, data types are consis- tent, and layer connections are valid. Only after passing validation is the data made available to the Interfaces, which provide users with interactive access. The REST API supports web-based model uploads, conversion requests, and JSON downloads, whereas the CLI allows local execution, verbose logging, and selective conversion of layers for debugging. The caching system enhances performance by storing previously processed models and outputs, reducing processing time for repeated conversions and supporting versioning of updated models to maintain a history of changes.
+
+
+3.3 Workflow
+
+   The WhyteBox backend follows a modular and sequential workflow designed to ensure reliability, scalability, and real-time performance. Initially, users upload models through the REST API or provide them via CLI commands. Supported formats include PyTorch's .pt, Keras's .h5, and ONNX's .onnx files. The sys- tem automatically detects the framework of the uploaded model and selects the appropriate Extractor. The Extractor then parses the model, retrieving detailed information about each layer, its parameters, and connectivity. This interme- diate representation is passed to the Converter, which produces a framework- independent JSON file enriched with visualization metadata and structured for 3D rendering. The Validator then checks the JSON against a predefined schema, ensuring structural integrity and correctness. Once validation is complete, the output is either returned via the REST API or saved locally through the CLI. To improve performance, the caching module stores previously processed models, enabling faster retrieval for repeated uploads and reducing redundant computa-
+
+
+
+tion.
+
+
+3.4 Interactive Model Conversion
+
+   The system supports interactive model conversion through both the REST API and CLI interfaces.  Through the REST API, users can upload models, track real-time conversion progress, and request partial or selective layer conver- sion. The CLI provides a local interface for inspecting layer hierarchies, reviewing detailed logs, and performing selective conversions. This interactive capability al- lows users to debug, analyze, and visualize model data efficiently, while ensuring that the JSON output is reliable and conforms to schema specifications. The inte- gration of caching ensures that repeated conversions are faster, and the enriched metadata prepares the system for seamless connection to future 3D visualization and XAI modules.
+
+Figure 3.2: Interactive Model Conversion Flow in WhyteBox
+
+
+
+3.5 Caching and Optimization
+
+   The caching and optimization module enhances the system's performance and scalability. By storing previously processed models and their corresponding JSON outputs, the system avoids redundant computation, reducing latency and im- proving throughput for repeated operations. Versioning support allows updated models to be processed efficiently while preserving historical outputs. These fea- tures collectively ensure that WhyteBox can handle large models in real time and provide a strong foundation for Phase 2, which will focus on 3D interactive visualization and advanced analysis.
+
+
+
+
+
+
+
+      Chapter 4 Results and Discussion
+
+4.1 Phase 1: Interactive Model Conversion
+
+   In the first phase of the WhyteBox project, the backend system was developed to extract, convert, and validate neural network models from multiple frameworks, including PyTorch, Keras, and ONNX. The core objective of this stage was to ensure that models of varying architectures and complexities could be seamlessly transformed into a framework-agnostic JSON representation, preserving all essen- tial information such as layer configurations, parameters, inter-layer connectivity, activation functions, and metadata.
+   To achieve this, the system integrated model introspection and graph parsing techniques to automatically traverse the computation graph, detect sequential and skip connections, and record input-output tensor shapes for every layer. Robust validation mechanisms were implemented to cross-check model integrity and verify that the converted structure matched the original network topology.
+   The backend supported both RESTful API endpoints and a command-line interface (CLI), giving users flexibility to perform model conversion, monitor progress in real time, and export validated models for visualization. Detailed log- ging, error handling, and performance benchmarking modules were also included to improve traceability and reliability across conversions.
+
+
+
+
+
+Figure 4.1: Interactive Model Conversion Output 1
+
+
+
+
+Figure 4.2: Interactive Model Conversion Output 2
+
+
+
+
+
+Figure 4.3: Interactive Model Conversion Output 3
+
+
+4.1.1 Conversion Workflow Evaluation
+
+   The system was tested using a variety of neural network models, ranging from simple CNNs to larger architectures such as ResNet-18 and VGG16. Models were uploaded through the REST API or processed locally via the CLI. Upon receiv- ing a model, the backend automatically identified the framework, extracted layer types, input/output shapes, trainable parameters, and connection topology. The extracted data was then converted into the universal JSON schema, enriched with visualization metadata including layer attributes, positional information, and connection mapping. The Validator module ensured that all output adhered to the schema, detecting any inconsistencies or missing connections before deliv- ery. The interactive workflow allowed real-time feedback, enabling users to track progress, preview layer hierarchies, and verify output correctness efficiently.
+
+4.1.2 Performance and Reliability
+
+   The conversion system demonstrated strong performance and reliability across all tested models. Small models were processed within a few seconds, while larger models completed in under 12 seconds, showing scalability suitable for real-time
+
+
+
+usage. Re-uploading previously processed models retrieved results almost in- stantly due to the caching system, which effectively minimized redundant com- putations and improved throughput. Both REST API and CLI interfaces proved intuitive and responsive, with API progress updates enhancing user awareness and CLI logs providing detailed insights into extraction and conversion stages. The schema validation guaranteed that every output JSON maintained struc- tural integrity, making it ready for downstream visualization modules without additional corrections.
+Table 4.1: Performance and Reliability of Model Conversion in WhyteBox
+
+Model
+Layers
+API Conver-
+sion Time
+CLI Conver-
+sion Time
+Validation
+Status
+Simple CNN
+10
+2 sec
+2 sec
+Passed
+VGG16
+16
+5 sec
+5 sec
+Passed
+ResNet-18
+20
+6 sec
+6 sec
+Passed
+
+
+
+4.1.3 Discussion
+
+   The results highlight several important strengths of the WhyteBox backend. First, the system's interoperability ensures compatibility with multiple frame- works and model types, significantly broadening its applicability. Second, the dual interface design offers both developer-friendly CLI tools and interactive REST API access for frontend integration, enhancing user experience. Third, caching and modular design optimize performance and scalability, allowing effi- cient handling of large models and repeated operations. Finally, while Phase 1 focused on accurate extraction and conversion, future integration of layer-wise explainability metadata will enable interactive 3D visualization and advanced in- terpretability features. Overall, the results confirm that WhyteBox provides a reliable, extensible, and user-friendly platform capable of converting neural net- work models into structured, validated outputs ready for further analysis and visualization.
+
+
+
+
+
+
+
+  Chapter 5 Future Scope
+
+   The WhyteBox backend developed in Phase 1 provides a robust and modu- lar foundation for neural network extraction, conversion, and validation, but its potential extends well beyond the current implementation.
+   One immediate enhancement is the integration of 3D interactive visualization, which would allow users to explore neural network architectures spatially, rotate, zoom, and navigate through layers while visual cues distinguish different layer types and hierarchy. In parallel, the addition of Explainable AI (XAI) capabilities will enable the visualization of layer-wise contributions using techniques such as SHAP, Grad-CAM, helping users interpret model predictions and identify critical layers.
+   The platform could also evolve to support multi-user collaboration, with cloud-based storage, secure sharing, and role-based access, facilitating team-based model exploration and analysis. Performance optimization is another key area, with improvements such as enhanced caching, and incremental model updates allowing efficient processing of very large models.
+   Furthermore, WhyteBox can be extended to support additional frameworks like MXNet or Caffe, as well as custom plugins for domain-specific layers, in- creasing its versatility for research and industry use. Finally, the platform has strong potential in research and educational applications, offering interactive ex- ploration for students, automated architecture diagrams for publications, and tools for detailed experiment documentation.
+   Overall, the future scope of WhyteBox positions it as a comprehensive solution for visualization, interpretability, and analysis of deep learning models.
+
+
+
+
+
+
+
+Chapter 6 Conclusion
+
+   Phase 1 of the WhyteBox project successfully established a robust back- end framework capable of extracting, converting, and validating neural network models from multiple deep learning frameworks, including PyTorch, Keras, and ONNX. The system achieves framework independence by transforming hetero- geneous model architectures into a universal JSON schema, ensuring consistent, validated, and visualization-ready outputs.
+   Through both the REST API and CLI, users can interactively convert mod- els with detailed feedback, selective layer conversion, and comprehensive logging, demonstrating the system's usability, flexibility, and reliability. Performance eval- uation shows that conversions are efficient and scalable, with caching mechanisms further enhancing speed for repeated processing.
+   The modular design of the backend lays a strong foundation for Phase 2, where 3D interactive visualization and Explainable AI integration will provide deeper interpretability and intuitive exploration of neural networks. Overall, Phase 1 validates WhyteBox as a reliable, extensible, and user-friendly platform, ready to support advanced visualization, interpretability, and collaborative analysis of deep learning models.
+
+
+
+
+
+
+
+Chapter 7 Annexure
+
+
+
+1
+2
+
+3
+4
+
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+
+
+
+38	compress_output : Compress  JSON  output
+39	add_visualization_hints : Add hints for optimal visualization
+40
+41	self. include_weights  =  include_weights
+42	self. compress_output  =  compress_output
+43	self. add_visualization_hints  =  add_visualization_hints
+44
+45	logger. info (  Initialized  UniversalConverter  )
+46
+47	def convert( self , extracted_data : Dict[ str , Any ]) -> Dict[ str , Any ]:
+48
+49	Convert extracted model data to visualization format.
+50
+51	Args:
+52	extracted_data : Dictionary from extractor containing :
+53	-  metadata
+54	-  layers
+55	-  connections
+56
+57	Returns:
+58	Visualization - ready  dictionary
+59
+60	logger. info ( Converting extracted data to visualization format ... )
+61
+62	try :
+63	#  Validate  input
+64	self. _validate_input ( extracted_data )
+65
+66	#  Build  visualization  data
+67	viz_data  =  {
+68	' metadata ':
+self. _convert_metadata ( extracted_data [' metadata ']),
+69	' layers ':
+self. _convert_layers ( extracted_data [' layers ']),
+70	' connections ':
+self. _convert_connections ( extracted_data [' connections ']),
+71	' architecture ':
+self. _generate_architecture_summary ( extracted_data )
+72	}
+73
+74	#  Add  visualization  hints
+75	if  self. add_visualization_hints :
+76	viz_data  [' visualization_hints   ']          = self. _generate_visualization_hints ( extracted_data )
+77
+78	# Add  topology  analysis
+79	viz_data  [' topology  ']         = self. _analyze_topology ( extracted_data )
+80
+81	logger. info (	Conversion completed successfully )
+82
+83	return  viz_data
+84
+85	except Exception as e:
+86	logger. error( f	Conversion failed : { str( e)} )
+
+
+
+87	raise
+88
+89	def _validate_input ( self , data : Dict[ str , Any ]) -> None :
+90	Validate  that  input  data  has  required  structure .
+91	required_keys  =  [' metadata ',  ' layers ',  ' connections ']
+92	for key in required_keys :
+93	if key not in data :
+94	raise Value Error( f Missing required key in extracted data : { key } )
+95
+96	if not  isinstance ( data [' layers '],  list):
+97	raise Value Error( ' layers ' must be a list )
+98
+99	if not isinstance ( data [' connections '], list):
+100	raise  Value Error(  ' connections ' must  be  a  list  )
+101
+102	def _convert_metadata ( self , metadata : Dict[ str , Any ]) -> Dict[ str , Any ]:
+103	Convert and enhance metadata .
+104	converted = {
+105	' model_name ': metadata . get(' model_name ',
+' Unknown Model '),
+106	' framework ':  metadata . get(' framework ',  ' unknown '),
+107	'     framework_version           ': metadata . get(' framework_version ', ' unknown '),
+108	' converter_version ':  ' 1.0.0 ',
+109	' total_layers ':  metadata . get(' total_layers ',  0),
+110	' total_parameters ':  metadata . get(' total_parameters ',
+0),
+111	'  trainable_parameters    ': metadata . get(' trainable_parameters ', metadata . get(' total_parameters ', 0)),
+112	' input_shape ':  metadata . get(' input_shape ',  []),
+113	' output_shape ':  metadata . get(' output_shape ',  []),
+114	' timestamp ': datetime . now (). isoformat (),
+115	' conversion_timestamp ':  datetime . now (). isoformat ()
+116	}
+117
+118	return  converted
+119
+120	def _convert_layers ( self , layers: List[ Dict[ str , Any ]]) -> List[ Dict[ str , Any ]]:
+121	Convert layers with enhanced information .
+122	converted_layers  =  []
+123
+124	for  layer  in  layers:
+125	converted_layer  =  {
+126	' id ':  layer. get(' id '),
+127	' name ': layer. get(' name '),
+128	' type ':  layer. get(' type '),
+129	' index ':  layer. get(' index '),
+130	' input_shape ':  layer. get(' input_shape '),
+131	' output_shape ': layer. get(' output_shape '),
+132	' parameters ':  layer. get(' parameters ',  {}),
+133	' activation ':  layer. get(' activation '),
+134	' trainable ':  layer. get(' trainable ',  True ),
+135	'    parameter_count        ': self. _count_layer_parameters ( layer)
+
+
+
+136
+}
+137
+
+138
+#  Add  weight  information  if  requested
+139
+if  self. include_weights  and  ' weights ' in  layer:
+140	converted_layer [' weights ']  =  layer[' weights ']
+141
+142	#  Add  visualization - specific  attributes
+143	converted_layer [' visualization ']  =  {
+144	' color ': self. _assign_layer_color ( layer[' type ']),
+145	' opacity ':  1.0 ,
+146	' size_hint ':  self. _calculate_size_hint ( layer),
+147	' display_name ': self. _format_display_name ( layer)
+148	}
+149
+150	converted_layers . append ( converted_layer )
+151
+152	return  converted_layers
+153
+154	def _convert_connections ( self , connections: List[ Dict[ str , Any ]]) -> List[ Dict[ str , Any ]]:
+155	Convert connections with enhanced information .
+156	converted_connections  =  []
+157
+158	for  conn  in  connections:
+159	converted_conn = {
+160	' id ': f conn_{ len ( converted_connections )} ,
+161	' source_layer ': conn . get(' from_layer ') or conn . get(' source_layer '),
+162	' target_layer ': conn . get(' to_layer ') or conn . get(' target_layer '),
+163	' connection_type ':  conn . get(' connection_type ',
+' sequential '),
+164	' data_flow ': conn . get(' data_flow ', ' forward '),
+165	' visualization ':  {
+166	' color ':
+self. _assign_connection_color ( conn . get(' connection_type '
+167	' width ':
+self. _calculate_connection_width ( conn ),
+168	' style ':
+self. _get_connection_style ( conn . get(' connection_type '))
+169	}
+170	}
+171
+172	converted_connections . append ( converted_conn )
+173
+174	return  converted_connections
+175
+176	def _generate_architecture_summary ( self , data : Dict[ str , Any ]) -> Dict[ str , Any ]:
+177	Generate high - level architecture summary .
+178	layers  =  data [' layers ']
+179
+180	#  Count  layer  types
+181	layer_type_counts  =  {}
+182	for  layer  in  layers:
+183	layer_type = layer. get(' type ', ' Unknown ')
+184	layer_type_counts [ layer_type ]  =
+layer_type_counts . get( layer_type , 0)  +  1
+
+
+
+185
+186	# Identify  stages/ blocks ( simplified )
+187	stages  =  self. _identify_stages ( layers)
+188
+189	return {
+190	' layer_type_distribution ':  layer_type_counts ,
+191	' stages ':  stages ,
+192	' depth ': len ( layers),
+193	'      has_skip_connections            ':  self. _has_skip_connections ( data [' connections ']),
+194	'   architecture_type       ': self. _infer_architecture_type ( data )
+195	}
+196
+197	def _generate_visualization_hints ( self , data : Dict[ str , Any ]) -> Dict[ str , Any ]:
+198	Generate hints for optimal visualization .
+199	layers  =  data [' layers ']
+200
+201	return {
+202	' recommended_layout ':  self. _recommend_layout ( data ),
+203	' color_scheme ':  ' gradient ',
+204	'    camera_position        ':  self. _suggest_camera_position ( data ),
+205	' layer_spacing ':  2.0 ,
+206	' vertical_spacing ':  1.5 ,
+207	' show_feature_maps ':  True ,
+208	' show_connections ':  True ,
+209	' interactive_layers ': [ layer[' id '] for layer in layers if self. _is_interesting_layer ( layer)],
+210	'     highlight_layers          ':  self. _identify_important_layers ( layers)
+211	}
+212
+213	def _analyze_topology ( self , data : Dict[ str , Any ]) -> Dict[ str , Any ]:
+214	Analyze network  topology .
+215	layers  =  data [' layers ']
+216	connections  =  data [' connections ']
+217
+218	#  Build  adjacency  information
+219	adjacency  =  {}
+220	for  conn  in  connections:
+221	from_id = conn . get(' source_layer ') or conn . get(' from_layer ')
+222	to_id = conn . get(' target_layer ') or conn . get(' to_layer ')
+223
+224	if from_id  not in  adjacency :
+225	adjacency [ from_id ] = {' incoming ': [],
+' outgoing ':  []}
+226	if to_id not in adjacency :
+227	adjacency [ to_id ] = {' incoming ': [], ' outgoing ': []}
+228
+229	adjacency [ from_id ][' outgoing ']. append ( to_id )
+230	adjacency [ to_id ][' incoming ']. append ( from_id )
+231
+
+
+
+232	return {
+233	' is_sequential ': len ( connections) == len ( layers) - 1 and all(
+234	conn [' connection_type '] == ' sequential ' for conn in connections
+235	),
+236	' has_branches ': any ( len ( adj[' outgoing ']) > 1 for adj in adjacency . values ()),
+237	' has_merges ': any ( len ( adj[' incoming ']) > 1 for adj in adjacency . values ()),
+238	' max_branching_factor ': max (( len ( adj[' outgoing ']) for adj in adjacency . values ()), default =1),
+239	' max_merge_factor ': max (( len ( adj[' incoming ']) for adj in adjacency . values ()), default =1),
+240	' adjacency ':  adjacency
+241	}
+242
+243	def _count_layer_parameters ( self , layer: Dict[ str , Any ]) -> int:
+244	Count parameters in a layer.
+245	if  ' weights ' in  layer:
+246	return layer[' weights ']. get(' total_params ', 0)
+247	return  0
+248
+
+249
+def
+_assign_layer_color ( self ,  layer_type :  str)
+->
+str:
+250
+
+Assign color based on layer type .
+
+
+251
+color_map  = {
+252
+' Conv1 d ':  '#4 A90E2 ',
+253
+' Conv2 d ':  '#4 A90E2 ',
+254
+' Conv3 d ':  '#4 A90E2 ',
+255
+' Linear ':  '#50 C878 ',
+256
+' Dense ':  '#50 C878 ',
+257
+' MaxPool ':  '# F 5 A 623 ',
+258
+' Avg Pool ':  '# F 5 A 623 ',
+259
+' Batch Norm ':  '# BD 10 E 0 ',
+260
+' Dropout ':  '# B 8 E 986 ',
+261
+' ReLU ':  '# FF 6 B 6 B ',
+262
+' Sigmoid ':  '# FF 6 B 6 B ',
+263
+' Tanh ':  '# FF 6 B 6 B ',
+264
+' Flatten ': '#8 B8B8B ',
+265
+' Reshape ': '#8 B8B8B '
+266
+}
+267
+
+268
+#  Match  partial  names
+269
+for key , color in color_map . items ():
+270
+if key . lower ()  in  layer_type . lower ():
+271
+return color
+272
+
+273	return  '# CCCCCC '  #  Default  gray
+274
+275	def _assign_connection_color ( self , connection_type : str) -> str:
+276	Assign color based on connection type .
+277	color_map  =  {
+278	' sequential ':  '#4 A90E2 ',
+279	' skip ': '# F 5 A 623 ',
+280	' merge ': '#50 C878 ',
+281	' branch ':  '# BD 10 E 0 '
+
+
+
+282	}
+283	return color_map . get( connection_type , '# CCCCCC ')
+284
+285	def _calculate_size_hint ( self , layer: Dict[ str , Any ]) -> float:
+286	Calculate relative size hint for visualization .
+287	output_shape = layer. get(' output_shape ', [])
+288	if not output_shape or not isinstance ( output_shape , list):
+289	return 1.0
+290
+291	#  Calculate  based  on  output  dimensions
+292	size = 1.0
+293	for dim in output_shape [1:]:	# Skip batch dimension
+294	if isinstance ( dim , int) and dim > 0:
+295	size *= ( dim  **  0.3)	# Cube root scaling
+296
+297	return min ( max( size / 10 , 0.5) , 3.0)	# Clamp between
+0.5 and 3.0
+298
+299	def _calculate_connection_width ( self , connection : Dict[ str , Any ]) -> float:
+300	Calculate  connection  line  width .
+301	connection_type  =  connection . get(' connection_type ',
+' sequential ')
+302	width_map  =  {
+303	' sequential ':  1.0 ,
+304	' skip ':  1.5 ,
+305	' merge ':  2.0 ,
+306	' branch ': 1.5
+307	}
+308	return width_map . get( connection_type , 1.0)
+309
+310	def _get_connection_style ( self , connection_type : str) -> str:
+311	Get connection line style .
+312	style_map  =  {
+313	' sequential ':  ' solid ',
+314	' skip ': ' dashed ',
+315	' merge ':  ' solid ',
+316	' branch ':  ' dotted '
+317	}
+318	return  style_map . get( connection_type ,  ' solid ')
+319
+320	def _format_display_name ( self , layer: Dict[ str , Any ]) -> str:
+321	Format a user - friendly display name .
+322	name = layer. get(' name ', '')
+323	layer_type = layer. get(' type ', '')
+324
+325	# If name is generic , enhance it
+326	if name . startswith (' layer_ ') or not name :
+327	return  f  { layer_type } _{ layer. get(' index ',  0)}
+328
+329	return  name
+330
+331	def _identify_stages ( self , layers: List[ Dict[ str , Any ]]) -> List[ Dict[ str , Any ]]:
+332	Identify  architectural  stages/ blocks.
+333	stages  = []
+
+
+
+334
+current_stage = []
+335
+current_type  =  None
+336
+
+337
+for layer in layers:
+338
+layer_type = layer. get(' type ', '')
+339
+340
+#  Start  new  stage  on  certain  layer  types
+341
+if layer_type  in [' Conv2 d ', ' Conv1 d '] and
+current_type and current_type != layer_type :
+342	if current_stage :
+343	stages. append ({
+344	' layers ': [ l[' id '] for l in current_stage ],
+345	' type ':  current_type
+346	})
+347	current_stage = [ layer]
+348	current_type = layer_type
+349	else :
+350	current_stage . append ( layer)
+351	if not current_type :
+352	current_type = layer_type
+353
+354	if current_stage :
+355	stages. append ({
+356	' layers ': [ l[' id '] for l in current_stage ],
+357	' type ':  current_type
+358	})
+359
+360	return  stages
+361
+362	def _has_skip_connections ( self , connections: List[ Dict[ str , Any ]]) -> bool:
+363	Check if model has skip connections.
+364	return any ( conn . get(' connection_type ') in [' skip ',
+' merge ']  for  conn  in  connections)
+365
+366	def _infer_architecture_type ( self , data : Dict[ str , Any ]) -> str:
+367	Infer  the  type  of  architecture .
+368	model_name  =  data [' metadata ']. get(' model_name ',
+''). lower ()
+369
+370	if ' resnet ' in  model_name :
+371	return  ' ResNet '
+372	elif ' vgg ' in model_name :
+373	return  ' VGG '
+374	elif  ' inception ' in  model_name :
+375	return  ' Inception '
+376	elif ' mobilenet ' in model_name :
+377	return  ' Mobile Net '
+378	elif ' efficientnet ' in model_name :
+379	return  ' EfficientNet '
+380	elif  self. _has_skip_connections ( data [' connections ']):
+381	return  ' Residual '
+382	else :
+383	return   ' Sequential '
+384
+385	def _recommend_layout ( self , data : Dict[ str , Any ]) -> str:
+
+
+
+386	Recommend visualization layout.
+387	topology  =  self. _analyze_topology ( data )
+388
+389	if  topology [' is_sequential ']:
+390	return  ' linear '
+391	elif  topology [' has_branches ']  or  topology [' has_merges ']:
+392	return  ' graph '
+393	else :
+394	return   ' hierarchical '
+395
+396	def _suggest_camera_position ( self , data : Dict[ str , Any ]) -> Dict[ str , float ]:
+397	Suggest  initial  camera  position .
+398	num_layers  =  len ( data [' layers '])
+399
+400	return {
+401	' x': num_layers * 1.5 ,
+402	' y': 5.0 ,
+403	' z': num_layers * 2.0 ,
+404	' target_x ': num_layers * 0.5 ,
+405	' target_y ':  0.0 ,
+406	' target_z ':  0.0
+407	}
+408
+409	def _is_interesting_layer ( self , layer: Dict[ str , Any ]) -> bool:
+410	Determine  if  layer  is  interesting  for  interaction .
+411	interesting_types = [' Conv2 d ', ' Conv1 d ', ' Dense ', ' Linear ', ' Attention ']
+412	layer_type = layer. get(' type ', '')
+413	return  any ( t  in  layer_type  for  t  in  interesting_types )
+414
+415	def _identify_important_layers ( self , layers: List[ Dict[ str , Any ]]) -> List[ str]:
+416	Identify  important  layers  to  highlight.
+417	important  =  []
+418
+419	#  First  and  last  layers
+420	if  layers:
+421	important. append ( layers [0][ ' id '])
+422	important. append ( layers [ -1][' id '])
+423
+424	#  Layers  with  many  parameters
+425	for  layer  in  layers:
+426	param_count = self. _count_layer_parameters ( layer)
+427	if param_count  > 1000000 :	# More than 1 M parameters
+428
+
+important. append ( layer[' id '])
+429
+
+
+430
+
+return important
+431
+
+
+432
+def
+save_to_file (
+433
+
+self ,
+434
+
+viz_data : Dict[ str , Any ],
+435
+
+output_path :  str ,
+436
+
+pretty_print : bool = True
+437
+) -> None :
+438
+
+439
+Save visualization data to JSON file .
+
+
+
+440
+
+441
+Args:
+442
+viz_data : Visualization data dictionary
+443
+output_path : Output file path
+444
+pretty_print : Format JSON for readability
+445
+446
+447
+
+448
+
+449
+with open ( output_path , ' w')
+as f:
+450
+if  pretty_print  and  not
+self. compress_output :
+451
+json . dump ( viz_data ,
+f, indent =2)
+452
+else :
+
+453
+json . dump ( viz_data ,
+f)
+454
+
+
+455
+456
+
+457
+458
+459
+460
+461
+462
+
+463
+input_path : Input file path
+464
+
+465
+Returns:
+466
+Visualization  data  dictionary
+467
+
+468
+with  open ( input_path , ' r')  as  f:
+469
+data = json . load ( f)
+470
+471
+
+472
+
+Listing 7.1: UniversalConverter Backend Implementation
+
+
+
+
+
+
+
+REFERENCES
+
+[1] Y. LeCun, Y. Bengio, and G. Hinton, "Deep learning," *Nature*, vol. 521, no. 7553, pp. 436-444, 2015.
+[2] K. Simonyan and A. Zisserman, "Very deep convolutional networks for large- scale image recognition," 2014, arXiv:1409.1556.
+[3] A. Dosovitskiy, L. Beyer, A. Kolesnikov, D. Weissenborn, X. Zhai, T. Un- terthiner, M. Dehghani, M. Minderer, G. Heigold, S. Gelly, J. Uszkoreit, and N. Houlsby, "An image is worth 16x16 words: Transformers for image recognition at scale," 2020, arXiv:2010.11929.
+[4] J. Devlin, M.-W. Chang, K. Lee, and K. Toutanova, "BERT: Pre- training of deep bidirectional transformers for language understanding," 2018, arXiv:1810.04805.
+[5] A. Vaswani, "Attention is all you need," in *Proc. Adv. Neural Inf. Process. Syst.*, 2017, pp. 5998-6008.
+[6] L. A. Gatys, A. S. Ecker, and M. Bethge, "Image style transfer using con- volutional neural networks," in *Proc. IEEE Conf. Comput. Vis. Pattern Recognit. (CVPR)*, Jun. 2016, pp. 2414-2423.
+[7] J.-Y. Zhu, T. Park, P. Isola, and A. A. Efros, "Unpaired image-to-image translation using cycle-consistent adversarial networks," in *Proc. IEEE Int. Conf. Comput. Vis. (ICCV)*, Oct. 2017, pp. 2242-2251.
+[8] P. Rajpurkar, E. Chen, O. Banerjee, and E. J. Topol, "AI in health and medicine," *Nature Med.*, vol. 28, no. 1, pp. 31-38, Jan. 2022.
+
+[9] A. Esteva, B. Kuprel, R. A. Novoa, J. Ko, S. M. Swetter, H. M. Blau, and
+S. Thrun, "Dermatologist-level classification of skin cancer with deep neural networks," *Nature*, vol. 542, no. 7639, pp. 115-118, Feb. 2017.
+[10] M. F. Dixon, I. Halperin, and P. Bilokon, *Machine Learning in Finance*, vol. 1170. Cham, Switzerland: Springer, 2020.
+[11] K. O'Shea and R. Nash, "An introduction to convolutional neural networks," 2015, arXiv:1511.08458.
+[12] K. He, X. Zhang, S. Ren, and J. Sun, "Deep residual learning for image recog- nition," in *Proc. IEEE Conf. Comput. Vis. Pattern Recognit. (CVPR)*, Jun. 2016, pp. 770-778.
+[13] J. Bergstra and Y. Bengio, "Random search for hyper-parameter optimiza- tion," *J. Mach. Learn. Res.*, vol. 13, no. 2, pp. 1-27, 2012.
+[14] J. Howard and S. Ruder, "Universal language model fine-tuning for text classification," 2018, arXiv:1801.06146.
+[15] J. Yosinski, J. Clune, Y. Bengio, and H. Lipson, "How transferable are fea- tures in deep neural networks?" in *Proc. Adv. Neural Inf. Process. Syst.*, 2014, pp. 3320-3328.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

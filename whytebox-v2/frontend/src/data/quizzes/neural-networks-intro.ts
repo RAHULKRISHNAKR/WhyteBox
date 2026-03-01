@@ -1,0 +1,132 @@
+/**
+ * Neural Networks Introduction Quiz
+ * Tests basic understanding of neural network concepts
+ */
+
+import { Quiz } from '../../types/quiz';
+
+export const neuralNetworksIntroQuiz: Quiz = {
+  id: 'neural-networks-intro',
+  title: 'Neural Networks 101',
+  description: 'Test your foundational knowledge of neural networks, including architecture, training, and basic concepts.',
+  category: 'Fundamentals',
+  difficulty: 'easy',
+  estimatedTime: 10,
+  passingScore: 60,
+  tags: ['neural-networks', 'basics', 'fundamentals', 'deep-learning'],
+  questions: [
+    {
+      id: 'q1',
+      type: 'multiple-choice',
+      difficulty: 'easy',
+      question: 'What is a neuron in a neural network?',
+      explanation: 'A neuron is a computational unit that takes inputs, applies weights and a bias, and passes the result through an activation function to produce an output.',
+      points: 10,
+      options: [
+        { id: 'a', text: 'A computational unit that processes inputs', isCorrect: true },
+        { id: 'b', text: 'A type of activation function', isCorrect: false },
+        { id: 'c', text: 'A layer in the network', isCorrect: false },
+        { id: 'd', text: 'A training algorithm', isCorrect: false },
+      ],
+      tags: ['basics', 'architecture'],
+    },
+    {
+      id: 'q2',
+      type: 'true-false',
+      difficulty: 'easy',
+      question: 'Deep learning refers to neural networks with multiple hidden layers.',
+      explanation: 'True. Deep learning specifically refers to neural networks with multiple (typically more than 2) hidden layers, allowing them to learn hierarchical representations.',
+      points: 10,
+      correctAnswer: true,
+      tags: ['terminology', 'basics'],
+    },
+    {
+      id: 'q3',
+      type: 'multiple-choice',
+      difficulty: 'easy',
+      question: 'What is the purpose of an activation function?',
+      explanation: 'Activation functions introduce non-linearity into the network, allowing it to learn complex patterns. Without activation functions, the network would only be able to learn linear relationships.',
+      points: 10,
+      options: [
+        { id: 'a', text: 'To introduce non-linearity', isCorrect: true },
+        { id: 'b', text: 'To normalize inputs', isCorrect: false },
+        { id: 'c', text: 'To reduce overfitting', isCorrect: false },
+        { id: 'd', text: 'To speed up training', isCorrect: false },
+      ],
+      hints: ['Think about what makes neural networks powerful'],
+      tags: ['activation-functions', 'theory'],
+    },
+    {
+      id: 'q4',
+      type: 'fill-in-blank',
+      difficulty: 'easy',
+      question: 'The process of adjusting weights to minimize error is called ___.',
+      explanation: 'Training (or learning) is the process where the network adjusts its weights through backpropagation to minimize the loss function.',
+      points: 10,
+      template: 'The process of adjusting weights to minimize error is called ___.',
+      correctAnswers: ['training', 'learning', 'optimization'],
+      caseSensitive: false,
+      tags: ['training', 'terminology'],
+    },
+    {
+      id: 'q5',
+      type: 'multiple-choice',
+      difficulty: 'medium',
+      question: 'Which of the following is NOT a common activation function?',
+      explanation: 'Gradient Descent is an optimization algorithm, not an activation function. Common activation functions include ReLU, Sigmoid, and Tanh.',
+      points: 15,
+      options: [
+        { id: 'a', text: 'ReLU', isCorrect: false },
+        { id: 'b', text: 'Sigmoid', isCorrect: false },
+        { id: 'c', text: 'Gradient Descent', isCorrect: true },
+        { id: 'd', text: 'Tanh', isCorrect: false },
+      ],
+      tags: ['activation-functions'],
+    },
+    {
+      id: 'q6',
+      type: 'true-false',
+      difficulty: 'medium',
+      question: 'Backpropagation is used to compute gradients for updating weights.',
+      explanation: 'True. Backpropagation is the algorithm that computes gradients of the loss with respect to each weight by applying the chain rule backwards through the network.',
+      points: 15,
+      correctAnswer: true,
+      tags: ['backpropagation', 'training'],
+    },
+    {
+      id: 'q7',
+      type: 'multiple-choice',
+      difficulty: 'medium',
+      question: 'What is the main purpose of a loss function?',
+      explanation: 'The loss function measures how well the network\'s predictions match the actual targets. It provides a single number that the training process tries to minimize.',
+      points: 15,
+      options: [
+        { id: 'a', text: 'To measure prediction error', isCorrect: true },
+        { id: 'b', text: 'To activate neurons', isCorrect: false },
+        { id: 'c', text: 'To normalize data', isCorrect: false },
+        { id: 'd', text: 'To prevent overfitting', isCorrect: false },
+      ],
+      hints: ['Think about what guides the training process'],
+      tags: ['loss-function', 'training'],
+    },
+    {
+      id: 'q8',
+      type: 'matching',
+      difficulty: 'medium',
+      question: 'Match each term with its correct definition:',
+      explanation: 'Epoch = one complete pass through training data, Batch = subset of training data, Learning rate = step size for weight updates, Overfitting = model memorizes training data.',
+      points: 15,
+      pairs: [
+        { id: 'p1', left: 'Epoch', right: 'One complete pass through training data' },
+        { id: 'p2', left: 'Batch', right: 'Subset of training data processed together' },
+        { id: 'p3', left: 'Learning Rate', right: 'Step size for weight updates' },
+        { id: 'p4', left: 'Overfitting', right: 'Model memorizes training data' },
+      ],
+      tags: ['terminology', 'training'],
+    },
+  ],
+  createdAt: new Date('2024-01-10'),
+  updatedAt: new Date('2024-01-10'),
+};
+
+// Made with Bob

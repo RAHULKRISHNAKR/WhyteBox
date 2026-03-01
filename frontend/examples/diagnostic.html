@@ -57,7 +57,7 @@
 
     <div class="test-section">
         <h2>Step 1: Backend Connection Test</h2>
-        <button onclick="testBackend()">Test Backend (Port 5000)</button>
+        <button onclick="testBackend()">Test Backend (Port 5001)</button>
         <div id="backend-result"></div>
     </div>
 
@@ -96,7 +96,7 @@
             result.innerHTML = 'Testing...';
 
             try {
-                const response = await fetch('http://localhost:5000/api/health');
+                const response = await fetch('http://localhost:5001/api/health');
                 const data = await response.json();
 
                 if (data.status === 'healthy') {

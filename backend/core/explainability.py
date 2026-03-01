@@ -280,9 +280,13 @@ class GuidedBackpropGenerator:
     def _register_guided_relu_hooks(self):
         """Patch ReLU layers so only positive gradients through positive activations pass."""
         def guided_relu_backward(module, grad_input, grad_output):
-            # Clone before clamping — grad_input[0] is a view of an autograd buffer;
-            # returning it modified in-place raises a RuntimeError in PyTorch.
-            return (torch.clamp(grad_input[0].clone(), min=0.0),)
+            # Must return a new tensor, not a view or modified version
+            # Use detach() and clone() to ensure we create a completely new tensor
+            if grad_input[0] is not None:
+                grad = grad_input[0].detach().clone()
+                grad = grad.clamp(min=0.0)
+                return (grad,)
+            return grad_input
 
         for module in self.model.modules():
             if isinstance(module, torch.nn.ReLU):
@@ -340,6 +344,130 @@ class GuidedBackpropGenerator:
             if isinstance(input_data, np.ndarray):
                 input_data = torch.from_numpy(input_data).float()
             return self.generate_guided_backprop_pytorch(input_data, target_class)
+        else:
+            raise NotImplementedError(f"Framework {self.framework} not yet implemented")
+
+class IntegratedGradientsGenerator:
+    """
+    Integrated Gradients
+    
+    Computes attribution by integrating gradients along a path from a baseline
+    (typically all zeros) to the actual input. This method satisfies important
+    axioms like sensitivity and implementation invariance, making it more robust
+    than simple gradient-based methods.
+    
+    Reference: Sundararajan et al. "Axiomatic Attribution for Deep Networks" (2017)
+    """
+    
+    def __init__(self, model, framework='pytorch'):
+        """
+        Initialize Integrated Gradients generator
+        
+        Args:
+            model: Neural network model
+            framework: 'pytorch' or 'keras'
+        """
+        self.model = model
+        self.framework = framework.lower()
+        
+    def generate_integrated_gradients_pytorch(
+        self,
+        input_tensor: torch.Tensor,
+        target_class: int,
+        baseline: Optional[torch.Tensor] = None,
+        steps: int = 50
+    ) -> np.ndarray:
+        """
+        Generate Integrated Gradients attribution for PyTorch model
+        
+        Args:
+            input_tensor: Input image tensor [1, C, H, W]
+            target_class: Target class index
+            baseline: Baseline tensor (default: zeros)
+            steps: Number of interpolation steps (default: 50)
+            
+        Returns:
+            Attribution map as numpy array [H, W] normalized to [0, 1]
+        """
+        self.model.eval()
+        
+        # Create baseline (all zeros if not provided)
+        if baseline is None:
+            baseline = torch.zeros_like(input_tensor)
+            
+        # Generate interpolated inputs between baseline and actual input
+        # alphas shape: [steps]
+        alphas = torch.linspace(0, 1, steps + 1, device=input_tensor.device)
+        
+        # Compute gradients at each interpolated input
+        gradients = []
+        
+        for alpha in alphas:
+            # Interpolated input: baseline + alpha * (input - baseline)
+            interpolated = baseline + alpha * (input_tensor - baseline)
+            interpolated.requires_grad = True
+            
+            # Forward pass
+            output = self.model(interpolated)
+            
+            # Handle tuple outputs (GoogLeNet, InceptionV3)
+            if isinstance(output, (tuple, list)):
+                output = output[0]
+                
+            # Backward pass for target class
+            self.model.zero_grad()
+            target_score = output[0, target_class]
+            target_score.backward()
+            
+            # Store gradient
+            gradients.append(interpolated.grad.detach().clone())
+            
+        # Stack gradients: [steps+1, 1, C, H, W]
+        gradients = torch.stack(gradients)
+        
+        # Average gradients (trapezoidal rule approximation)
+        avg_gradients = torch.mean(gradients, dim=0)
+        
+        # Integrated gradients = (input - baseline) * avg_gradients
+        integrated_grads = (input_tensor - baseline) * avg_gradients
+        
+        # Take absolute value and max across color channels
+        attribution = integrated_grads.abs()
+        attribution, _ = torch.max(attribution, dim=1)
+        attribution = attribution.squeeze().cpu().numpy()
+        
+        # Normalize to [0, 1]
+        attribution = (attribution - attribution.min()) / (attribution.max() - attribution.min() + 1e-8)
+        
+        return attribution
+        
+    def generate(
+        self,
+        input_data: Union[torch.Tensor, np.ndarray],
+        target_class: int,
+        baseline: Optional[Union[torch.Tensor, np.ndarray]] = None,
+        steps: int = 50
+    ) -> np.ndarray:
+        """
+        Generate Integrated Gradients (framework-agnostic interface)
+        
+        Args:
+            input_data: Input tensor or numpy array
+            target_class: Target class index
+            baseline: Baseline tensor or numpy array (optional)
+            steps: Number of interpolation steps (default: 50)
+            
+        Returns:
+            Attribution map as numpy array [H, W] normalized to [0, 1]
+        """
+        if self.framework == 'pytorch':
+            if isinstance(input_data, np.ndarray):
+                input_data = torch.from_numpy(input_data).float()
+            if baseline is not None and isinstance(baseline, np.ndarray):
+                baseline = torch.from_numpy(baseline).float()
+            return self.generate_integrated_gradients_pytorch(
+                input_data, target_class, baseline, steps
+            )
         else:
             raise NotImplementedError(f"Framework {self.framework} not yet implemented")
 
