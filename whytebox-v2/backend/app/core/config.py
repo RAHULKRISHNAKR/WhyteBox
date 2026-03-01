@@ -53,6 +53,26 @@ class Settings(BaseSettings):
     #   ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
     ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:5173,http://localhost:8000"
 
+    @field_validator("DATABASE_URL", mode="before")
+    @classmethod
+    def ensure_async_db_driver(cls, v: object) -> str:
+        """Rewrite sync PostgreSQL URLs to use the asyncpg driver.
+
+        Render (and many PaaS providers) supply DATABASE_URL as:
+          postgres://...   or   postgresql://...
+        SQLAlchemy's asyncio extension requires:
+          postgresql+asyncpg://...
+        """
+        if not isinstance(v, str):
+            return v
+        # Handle Render's shorthand "postgres://" scheme
+        if v.startswith("postgres://"):
+            v = v.replace("postgres://", "postgresql+asyncpg://", 1)
+        # Handle plain "postgresql://" without a driver specifier
+        elif v.startswith("postgresql://"):
+            v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
+
     @field_validator("ALLOWED_ORIGINS", mode="before")
     @classmethod
     def parse_cors_origins(cls, v: object) -> str:
