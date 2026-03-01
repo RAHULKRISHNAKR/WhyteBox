@@ -79,6 +79,9 @@ coverage/
 *.onnx
 *.pb
 models/
+# Allow Python source packages named 'models' (e.g. app/models/)
+!**/app/models/
+!**/app/models/**
 uploads/
 
 # Temporary files
