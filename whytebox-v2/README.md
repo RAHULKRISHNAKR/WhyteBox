@@ -1,6 +1,6 @@
 # WhyteBox v2.0 - Neural Network Visualization Platform
 
-> **🚀 Modern rebuild of WhyteBox as a production-ready educational platform**
+> **Modern rebuild of WhyteBox as a production-ready educational platform**
 
 ## 📋 Project Status
 
