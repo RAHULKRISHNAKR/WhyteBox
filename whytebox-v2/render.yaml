@@ -41,6 +41,8 @@ services:
     # rootDir is relative to the repo root.
     # The repo IS whytebox-v2/ so backend/ is at the top level.
     rootDir: backend
+    # Lock Python version to avoid unexpected upgrades breaking torch wheels
+    pythonVersion: "3.11.0"
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app.main:app --worker-class uvicorn.workers.UvicornWorker --workers 1 --bind 0.0.0.0:$PORT --timeout 120 --keepalive 5 --access-logfile - --error-logfile - --log-level info
     # Root /health endpoint defined in main.py — always available, no DB dependency
