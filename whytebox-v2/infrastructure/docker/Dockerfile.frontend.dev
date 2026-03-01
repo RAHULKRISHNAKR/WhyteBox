@@ -1,18 +1,22 @@
+# WhyteBox Frontend — Development Dockerfile
+#
+# Vite dev server with HMR (Hot Module Replacement).
+# Source code is bind-mounted from the host (see docker-compose.yml).
+# Do NOT use this image in production.
+
 FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Install deps first (cached layer — only re-runs when package.json changes)
 COPY frontend/package*.json ./
-
-# Install dependencies
 RUN npm ci
 
-# Copy application
+# Copy source (overridden by bind mount in docker-compose.yml)
 COPY frontend/ .
 
-# Expose port
-EXPOSE 3000
+EXPOSE 5173
 
-# Run development server
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
+# Development: Vite dev server with HMR
+# --host 0.0.0.0 makes it accessible from outside the container
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]

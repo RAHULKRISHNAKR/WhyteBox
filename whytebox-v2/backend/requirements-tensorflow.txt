@@ -1,0 +1,17 @@
+# Optional TensorFlow dependencies for WhyteBox
+#
+# Install ONLY if you need TensorFlow model support.
+# These are NOT included in the default requirements.txt to keep
+# the Docker image small enough for free-tier deployment.
+#
+# Usage:
+#   pip install -r requirements.txt
+#   pip install -r requirements-tensorflow.txt
+#
+# WARNING: This adds ~4GB to the Docker image.
+# Do NOT use on Render.com free tier or Railway free tier.
+
+tensorflow==2.15.0
+tf2onnx==1.16.1
+onnx-tf==1.10.0
+tensorflowjs==4.15.0

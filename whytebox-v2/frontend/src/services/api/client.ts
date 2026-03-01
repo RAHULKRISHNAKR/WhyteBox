@@ -13,9 +13,12 @@ import { addNotification } from '@/store/slices/uiSlice'
 import { logout } from '@/store/slices/authSlice'
 
 // Create axios instance
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+// VITE_API_URL is the full base URL including /api/v1 path (set at build time).
+// Falls back to localhost:8000/api/v1 for local development.
+// Env var name matches .env.prod.example and docker-compose.prod.yml VITE_API_URL.
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1';
 const apiClient: AxiosInstance = axios.create({
-  baseURL: `${API_BASE_URL}/api/v1`,
+  baseURL: API_BASE_URL,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',

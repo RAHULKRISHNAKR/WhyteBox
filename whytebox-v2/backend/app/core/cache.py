@@ -118,6 +118,11 @@ class CacheManager:
             await self.redis_client.close()
             logger.info("Disconnected from Redis")
     
+    @property
+    def is_connected(self) -> bool:
+        """Return True if Redis client is available."""
+        return self.redis_client is not None
+
     async def get(self, key: str) -> Optional[Any]:
         """
         Get value from cache.
@@ -128,6 +133,9 @@ class CacheManager:
         Returns:
             Cached value or None if not found
         """
+        if not self.is_connected:
+            self._stats["misses"] += 1
+            return None
         try:
             value = await self.redis_client.get(key)
             if value is not None:
@@ -162,6 +170,8 @@ class CacheManager:
         Returns:
             True if successful, False otherwise
         """
+        if not self.is_connected:
+            return False
         try:
             # Serialize value
             if isinstance(value, (str, int, float)):
@@ -191,6 +201,8 @@ class CacheManager:
         Returns:
             True if key was deleted, False otherwise
         """
+        if not self.is_connected:
+            return False
         try:
             result = await self.redis_client.delete(key)
             self._stats["deletes"] += 1
@@ -210,6 +222,8 @@ class CacheManager:
         Returns:
             Number of keys deleted
         """
+        if not self.is_connected:
+            return 0
         try:
             keys = []
             async for key in self.redis_client.scan_iter(match=pattern):
@@ -227,6 +241,8 @@ class CacheManager:
     
     async def exists(self, key: str) -> bool:
         """Check if key exists in cache."""
+        if not self.is_connected:
+            return False
         try:
             return await self.redis_client.exists(key) > 0
         except RedisError as e:
@@ -235,6 +251,8 @@ class CacheManager:
     
     async def get_ttl(self, key: str) -> Optional[int]:
         """Get remaining TTL for key in seconds."""
+        if not self.is_connected:
+            return None
         try:
             ttl = await self.redis_client.ttl(key)
             return ttl if ttl > 0 else None
@@ -387,6 +405,8 @@ class CacheManager:
     
     async def get_info(self) -> Dict[str, Any]:
         """Get Redis server info."""
+        if not self.is_connected:
+            return {"status": "Redis not connected (running without cache)"}
         try:
             info = await self.redis_client.info()
             return {
@@ -402,6 +422,8 @@ class CacheManager:
     
     async def clear_all(self) -> bool:
         """Clear all cache entries. Use with caution!"""
+        if not self.is_connected:
+            return False
         try:
             await self.redis_client.flushdb()
             logger.warning("Cleared all cache entries")
