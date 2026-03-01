@@ -51,7 +51,7 @@ class Settings(BaseSettings):
     # Stored as a raw string; parsed into a list via the validator below.
     # In .env, use comma-separated values (NOT a JSON array):
     #   ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173
-    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:5173,http://localhost:8000"
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:5173,http://localhost:8000,https://whytebox-v22.vercel.app,https://*.vercel.app"
 
     @field_validator("DATABASE_URL", mode="before")
     @classmethod
@@ -85,7 +85,7 @@ class Settings(BaseSettings):
         """
         if v is None or (isinstance(v, str) and not v.strip()):
             # Return default when env var is missing or empty
-            return "http://localhost:3000,http://localhost:5173,http://localhost:8000"
+            return "http://localhost:3000,http://localhost:5173,http://localhost:8000,https://whytebox-v22.vercel.app,https://*.vercel.app"
         if isinstance(v, list):
             return ",".join(str(o) for o in v)
         return str(v)

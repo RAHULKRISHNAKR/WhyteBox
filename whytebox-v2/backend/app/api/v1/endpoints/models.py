@@ -76,7 +76,7 @@ def _normalize_model_meta(raw: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-@router.get("/")
+@router.get("")
 async def list_models() -> Dict[str, Any]:
     """
     List all available models (pretrained + uploaded).
