@@ -253,9 +253,22 @@ Access at: http://YOUR_SERVER_IP
 **Cause**: `ALLOWED_ORIGINS` doesn't include your Vercel URL.  
 **Fix**: Update `ALLOWED_ORIGINS` in Render environment variables.
 
-### "Module not found" on Render build
-**Cause**: `rootDir` in `render.yaml` must match your repo structure.  
-**Fix**: Verify `rootDir: whytebox-v2/backend` matches your actual path.
+### "Root directory does not exist" on Render build
+**Cause**: Render is looking for `whytebox-v2/backend` but the repo root **is** `whytebox-v2/`, so `backend/` is already at the top level.
+**This was a bug in the original `render.yaml` — it has been fixed to `rootDir: backend`.**
+
+If you already created the service manually (not via Blueprint), the dashboard setting overrides `render.yaml`. Fix it in two ways:
+
+**Option A — Fix in Render dashboard (fastest):**
+1. Go to Render → `whytebox-backend` → **Settings**
+2. Find **Root Directory** field
+3. Change it from `whytebox-v2/backend` to `backend`
+4. Click **Save Changes** → Render will redeploy automatically
+
+**Option B — Delete and re-deploy via Blueprint:**
+1. Delete the existing `whytebox-backend` service in Render
+2. Go to **New** → **Blueprint** → connect your repo
+3. Render detects the fixed `render.yaml` and creates the service with `rootDir: backend`
 
 ### Frontend shows "Network Error"
 **Cause**: `VITE_API_URL` is wrong or backend is sleeping.  

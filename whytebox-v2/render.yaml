@@ -3,6 +3,10 @@
 #
 # Free tier deployment for educational use.
 #
+# IMPORTANT: This render.yaml lives in the repo root (whytebox-v2/).
+# Render clones the repo so the working directory IS the repo root.
+# rootDir paths are relative to the repo root — NOT to this file's location.
+#
 # Services deployed:
 #   1. whytebox-backend  — FastAPI web service (free tier)
 #   2. whytebox-db       — PostgreSQL database (free tier, 90-day limit)
@@ -34,8 +38,9 @@ services:
     plan: free
     region: oregon
     runtime: python
-    # Build from the backend/ subdirectory
-    rootDir: whytebox-v2/backend
+    # rootDir is relative to the repo root.
+    # The repo IS whytebox-v2/ so backend/ is at the top level.
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app.main:app --worker-class uvicorn.workers.UvicornWorker --workers 1 --bind 0.0.0.0:$PORT --timeout 120 --keepalive 5 --access-logfile - --error-logfile - --log-level info
     # Root /health endpoint defined in main.py — always available, no DB dependency
