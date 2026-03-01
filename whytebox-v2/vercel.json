@@ -2,8 +2,6 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "name": "whytebox",
-  "comment": "Root-level Vercel config for the whytebox-v2 monorepo. Points Vercel at the frontend/ subdirectory.",
-
   "buildCommand": "cd frontend && npm ci && npm run build",
   "outputDirectory": "frontend/dist",
   "installCommand": "cd frontend && npm ci",
